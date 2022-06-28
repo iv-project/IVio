@@ -27,3 +27,14 @@ find_package (BIO QUIET REQUIRED)
 
 add_library ("io_interface" INTERFACE)
 target_compile_options ("io_interface" INTERFACE "-pedantic" "-Wall" "-Wextra")
+
+### Add where needed ###
+# include (seqan_require_test)
+# seqan_require_test ()
+
+# include (seqan_require_benchmark)
+# seqan_require_benchmark ()
+
+### Usage ###
+# add_executable ("program" program.cpp)
+# target_link_libraries ("program" PUBLIC seqan3::seqan3 bio::bio gtest_main benchmark_main)
