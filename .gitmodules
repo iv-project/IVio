@@ -4,3 +4,12 @@
 [submodule "lib/seqan"]
 	path = lib/seqan
 	url = https://github.com/seqan/seqan.git
+[submodule "lib/submodules/cereal"]
+	path = lib/submodules/cereal
+	url = https://github.com/USCiLab/cereal
+[submodule "lib/submodules/sdsl-lite"]
+	path = lib/submodules/sdsl-lite
+	url = https://github.com/xxsds/sdsl-lite
+[submodule "lib/b.i.o."]
+	path = lib/b.i.o.
+	url = https://github.com/h-2/b.i.o..git
