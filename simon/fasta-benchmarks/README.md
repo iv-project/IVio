@@ -16,5 +16,24 @@ mmap_cont 0.000000 4124
 seqan2 1.630000 4124
 seqan3 2.780000 4672
 best 1.290000 4192
+```
 
+The benchmark is running a ACGTN counter:
+```
+template <typename Reader>
+void benchmark(Reader&& reader) {
+    std::array<int, 5> ctChars{};
+    for (auto && [id, seq] : reader) {
+        for (auto c : seq) {
+            ctChars[c] += 1;
+        }
+    }
+
+    size_t a{};
+    for (size_t i{0}; i<ctChars.size(); ++i) {
+        std::cout << i << ": " << ctChars[i] << "\n";
+        a += ctChars[i];
+    }
+    std::cout << "total: " << a << "\n";
+}
 ```
