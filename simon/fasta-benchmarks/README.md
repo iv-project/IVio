@@ -41,13 +41,14 @@ void benchmark(Reader&& reader) {
 # Implemented techniques
 - *view*: a view onto the memory (support .fa and .gz)
 - *cont*: a view onto contigous and converted to rank memory (support .fa and .gz)
-- *mmap view*: a view onto contigous memory using mmap (support .fa and .gz)
-- *mmap2 view*: a view onto contigous memory using mmap and mmap for zlib (requires overcommit memory) (support .gz)
+- *mmap_view*: a view onto memory using mmap (support .fa and .gz)
+- *mmap_view2*: a view onto memory using mmap and mmap for zlib (requires overcommit memory) (support .gz)
 - *seqan2*: using seqan2 IO
 - *seqan3*: using seqan3 IO
-- *best*: chooses *mmap2_view* if .gz and available. Other wise chooses *mmap view*. (support .fa and .gz)
+- *best*: chooses *mmap_view2* if .gz and available. Other wise chooses *mmap view*. (support .fa and .gz)
 
 # Results
+These results alsways take the best out of three runs. Since this was running on a hot sommer day on a laptop, the timings are quite unstable.
 ## HG 38
 hg38.fa file with only A, C, G and Ts stored.  The sequences are long. The file is around 3GB large
 ### hg38.fa
