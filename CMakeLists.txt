@@ -12,6 +12,7 @@ endif ()
 list (APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 list (APPEND CMAKE_PREFIX_PATH "${CMAKE_CURRENT_LIST_DIR}/lib/seqan3/build_system")
 list (APPEND CMAKE_PREFIX_PATH "${CMAKE_CURRENT_LIST_DIR}/lib/b.i.o./build_system")
+list (APPEND CMAKE_PREFIX_PATH "${CMAKE_CURRENT_LIST_DIR}/lib/seqan/util/cmake")
 
 include (seqan_require_ccache)
 seqan_require_ccache ()
@@ -25,8 +26,20 @@ find_package (SeqAn3 QUIET REQUIRED)
 set (BIO_DEPENDENCY_INCLUDE_DIRS "${CMAKE_CURRENT_LIST_DIR}/lib/seqan3/include")
 find_package (BIO QUIET REQUIRED)
 
-add_library ("io_interface" INTERFACE)
-target_compile_options ("io_interface" INTERFACE "-pedantic" "-Wall" "-Wextra")
+set (SEQAN_INCLUDE_PATH "${CMAKE_CURRENT_LIST_DIR}/lib/seqan/include")
+find_package (SeqAn QUIET REQUIRED)
+add_library (seqan_seqan INTERFACE)
+target_compile_definitions (seqan_seqan INTERFACE ${SEQAN_DEFINITIONS})
+target_compile_options (seqan_seqan INTERFACE ${SEQAN_CXX_FLAGS})
+target_link_libraries (seqan_seqan INTERFACE "${SEQAN_LIBRARIES}")
+target_include_directories (seqan_seqan INTERFACE "${SEQAN_INCLUDE_DIRS}")
+add_library (seqan::seqan ALIAS seqan_seqan)
+
+add_library (io_interface INTERFACE)
+target_compile_options (io_interface INTERFACE "-pedantic" "-Wall" "-Wextra")
+target_include_directories (io_interface INTERFACE "${CMAKE_CURRENT_LIST_DIR}/lib/seqan3/test/include")
+
+add_subdirectory (enrico)
 
 ### Add where needed ###
 # include (seqan_require_test)

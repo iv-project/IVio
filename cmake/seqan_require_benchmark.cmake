@@ -28,7 +28,7 @@ macro (seqan_require_benchmark)
     add_library (gbenchmark ALIAS benchmark_main)
 
     add_custom_target (gbenchmark_build DEPENDS gbenchmark)
-    if (NOT TARGET gtest_build)
+    if (NOT TARGET gbenchmark_build)
         add_custom_target (gbenchmark_build DEPENDS gbenchmark)
         target_compile_options ("benchmark_main" PUBLIC "-w")
     endif ()
