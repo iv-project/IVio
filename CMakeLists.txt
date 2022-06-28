@@ -36,7 +36,7 @@ target_include_directories (seqan_seqan INTERFACE "${SEQAN_INCLUDE_DIRS}")
 add_library (seqan::seqan ALIAS seqan_seqan)
 
 add_library (io_interface INTERFACE)
-target_compile_options (io_interface INTERFACE "-pedantic" "-Wall" "-Wextra")
+target_compile_options (io_interface INTERFACE "-pedantic" "-Wall" "-Wextra" "-Wno-interference-size")
 target_include_directories (io_interface INTERFACE "${CMAKE_CURRENT_LIST_DIR}/lib/seqan3/test/include")
 
 add_subdirectory (enrico)
