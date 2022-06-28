@@ -8,7 +8,7 @@
 
 This should output something like:
 ```
-iew 1.170000 4136
+view 1.170000 4136
 cont 1.230000 4140
 mmap_view 1.390000 4188
 mmap_view2 0.000000 4104
@@ -37,3 +37,17 @@ void benchmark(Reader&& reader) {
     std::cout << "total: " << a << "\n";
 }
 ```
+
+# Results
+## HG 38
+hg38.fa file with only A, C, G and Ts stored.  The sequences are long. The file is around 3GB large
+### hg38.fa
+![hg38.fa](data/hg38.fa.png)
+### hg38.fa.gz
+![hg38.fa](data/hg38.fa.gz.png)
+## Illumina sampled
+illumina.fa file with A, C, G, T and Ns. The sequeneces are short, the file is around 1GB large.
+### illumina.fa
+![illumina.fa](data/illumina.fa.png)
+### illumina.fa.gz
+![illumina.fa](data/illumina.fa.gz.png)
