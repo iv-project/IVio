@@ -82,6 +82,37 @@ void fasta_read_from_disk_seqan3(benchmark::State & state)
     state.counters["bytes_per_second"] = seqan3::test::bytes_per_second(bytes_per_run);
 }
 
+// seqan3::format_fasta needs to have read_id and read_seq set as public
+void fasta_read_from_disk_stream_seqan3(benchmark::State & state)
+{
+    seqan3::sequence_file_input_options<seqan3::dna15> options{};
+
+    size_t const sequence_length = state.range(0);
+    std::string fasta_file = generate_fastq_string(sequence_length);
+    seqan3::test::tmp_filename file_name = create_fasta_file_for(fasta_file);
+
+    for (auto _ : state)
+    {
+        std::ifstream fin{file_name.get_path(), std::ios_base::in | std::ios::binary};
+        auto stream_view = seqan3::detail::istreambuf(fin);
+        seqan3::format_fasta reader{};
+        std::string id{};
+        std::vector<seqan3::dna5> sequence{};
+        while (!((std::istreambuf_iterator<char>{fin} == std::istreambuf_iterator<char>{})))
+        {
+            reader.read_id(stream_view, options, id);
+            reader.read_seq(stream_view, options, sequence);
+            benchmark::ClobberMemory();
+            id.clear();
+            sequence.clear();
+        }
+    }
+
+    size_t bytes_per_run = fasta_file.size();
+    state.counters["bytes_per_run"] = bytes_per_run;
+    state.counters["bytes_per_second"] = seqan3::test::bytes_per_second(bytes_per_run);
+}
+
 void fasta_read_from_stream_seqan2(benchmark::State & state)
 {
     size_t const sequence_length = state.range(0);
@@ -141,9 +172,10 @@ void fasta_read_from_disk_seqan2(benchmark::State & state)
     state.counters["bytes_per_second"] = seqan3::test::bytes_per_second(bytes_per_run);
 }
 
-BENCHMARK(fasta_read_from_stream_seqan3)->Arg(50)->Arg(100)->Arg(250)->Arg(1000);
-BENCHMARK(fasta_read_from_disk_seqan3)->Arg(50)->Arg(100)->Arg(250)->Arg(1000);
-BENCHMARK(fasta_read_from_stream_seqan2)->Arg(50)->Arg(100)->Arg(250)->Arg(1000);
-BENCHMARK(fasta_read_from_disk_seqan2)->Arg(50)->Arg(100)->Arg(250)->Arg(1000);
+BENCHMARK(fasta_read_from_stream_seqan3)->Arg(50)->Arg(1000);
+BENCHMARK(fasta_read_from_disk_seqan3)->Arg(50)->Arg(1000);
+BENCHMARK(fasta_read_from_stream_seqan2)->Arg(50)->Arg(1000);
+BENCHMARK(fasta_read_from_disk_seqan2)->Arg(50)->Arg(1000);
 
+BENCHMARK(fasta_read_from_disk_stream_seqan3)->Arg(50)->Arg(1000);
 BENCHMARK_MAIN();
