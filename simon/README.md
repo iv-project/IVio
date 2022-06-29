@@ -239,6 +239,9 @@ seqan3::seq_io::reader reader{"example.fasta",
 ### ex6.cpp
 ```
 // Select different fields (sam)
+=========================
+
+// current implementation:
 
 using aligned_sequence_type = std::vector<seqan3::gapped<seqan3::dna5>>;
 using alignment_type = std::pair<aligned_sequence_type, aligned_sequence_type>;
@@ -254,7 +257,7 @@ using sam_record_type = seqan3::sam_record<types, fields>;
 // Hannes implementation:
 // I don't know
 
-// sgg io some suggestions
+// sgg_io some suggestions
 
 // Idea 1
 auto in = sgg_io::sam_io::reader{
