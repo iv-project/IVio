@@ -1,5 +1,18 @@
 # IO design ideas:
 
+## Motivation/Goals
+The SeqAn3 library targets 2 audiences:
+1. People who want to use SeqAn3 to write their own tool.
+2. People who want to implement a new cool algorithm for research (bachelor, master, phd, papers).
+n. It is not targeted at people who can get elaborated training session on how to use the software (like in enterprise systems for companies)
+
+From this we can derive a few ideas:
+- reduce the number of configuration points (best just having one)
+- reduce the amount of configuration parameters (best having perfect default parameters and not making them configurable ;-))
+- names for options, everything that is named, is much easier to use
+
+
+
 ## Fasta - Input:
 
 ### sketch how code could look like:
@@ -8,13 +21,9 @@ auto in = sequence_file_input {
     .input = "myfile.fasta",
     .alphabet = seqan3::dna5{},              // default `seqan3::dna15{}`
     .quality_alphabet = seqan3::phread42{},  // default `seqan3::pthread42{}` (is any think else even use full?)
-    .formats = seqan3::format_input_embl {
-        .complete_header = false
-    } | seqan3::format_input_fasta{} | seqan3::format_input_formatq{} | format::format_input_genbank{} | format_input_sam{}},
-    # or
-    .formats = seqan3::format_input_all{} | seqan3::format_input_embl {
-        .complete_header = false
-    };
+    .format_embl = {
+        .complete_header = true,
+    }
 };
 
 for (auto [id, seq, qual] : in) {
@@ -51,14 +60,17 @@ for (auto&& record : in) {
 ```
 auto out = seqan3::sequence_file_output {
     .output = "somefile.fastq",
-    .format = seqan3::format_output_fasta {
-        .letters_per_line = 80, // by default 80
-    } | seqan3::format_output_fastq {
-        .double_id = false, // don't know what this is
-    } | seqan3::format_output_embl {
-        .complete_header = false; // complete header
-    } | seqan3::format_output_genbank {
-        .complete_header = false; // complete header
+    .format.fasta {
+        .letters_per_line = 100, // by default 80
+    },
+    .format_fastq {
+        .double_id = false, // don't know what this is or means
+    },
+    .format_embl {
+        .complete_header = false, // by default false
+    },
+    .format_genbank {
+        .complete_header = false, // by default false
     }
 };
 
@@ -159,10 +171,12 @@ seqan3::seq_io::reader reader{"example.fasta", seqan3::seq_io::reader_options{.t
 // truncate_ids wont exists anymore, using complete_header example instead
 auto in = seqan3::sgg_io::reader{
     .input = "x.fasta",
-    .format = seqan3::format_input_all{} | seqan3::format_input_embl {
-        .complete_header = true
+    .format_embl = {
+        .complete_header = true,
     }
 };
+// or compact
+// `seqan3::sgg_io::reader reader{"x.fasta", .format_embl{.complete_header = true}}`
 ```
 ### ex4.cpp
 ```
