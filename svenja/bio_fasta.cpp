@@ -6,7 +6,7 @@ int main(int, char ** argv)
 
     int sum{0};
     for (auto && rec : in)
-        sum += std::ranges::size(rec.sequence());
+        sum += std::ranges::size(rec.seq());
 
     std::cout << sum << std::endl;
 }

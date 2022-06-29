@@ -12,4 +12,4 @@
 	url = https://github.com/xxsds/sdsl-lite
 [submodule "lib/b.i.o."]
 	path = lib/b.i.o.
-	url = https://github.com/h-2/b.i.o..git
+	url = https://github.com/eseiler/b.i.o..git
