@@ -46,18 +46,30 @@ void benchmark(Reader&& reader) {
 - *seqan2*: using seqan2 IO
 - *seqan3*: using seqan3 IO
 - *best*: chooses *mmap_view2* if .gz and available. Other wise chooses *mmap view*. (support .fa and .gz)
+- *bio*: using b.i.o. IO
 
 # Results
 These results alsways take the best out of three runs. Since this was running on a hot sommer day on a laptop, the timings are quite unstable.
 ## HG 38
-hg38.fa file with only A, C, G and Ts stored.  The sequences are long. The file is around 3GB large
+hg38.fa file with only A, C, G and Ts stored.  The sequences are long. The file is around 3GB large. (left .fa, right .fa.gz)
 ### hg38.fa
-![hg38.fa](data/hg38.fa.png)
-### hg38.fa.gz
-![hg38.fa](data/hg38.fa.gz.png)
+![hg38.fa](data/hg38.png)
 ## Illumina sampled
-illumina.fa file with A, C, G, T and Ns. The sequeneces are short, the file is around 1GB large.
+illumina.fa file with A, C, G, T and Ns. The sequeneces are short, the file is around 1GB large. (left. fa, right .fa.gz)
 ### illumina.fa
-![illumina.fa](data/illumina.fa.png)
-### illumina.fa.gz
-![illumina.fa](data/illumina.fa.gz.png)
+![illumina.fa](data/illumina.png)
+
+## As text
+```
+           illu.fa     illu.fa.gz  hg38.fa     hg38.fa.gz
+view       1.25        3.95        5.99        12.49
+cont       1.27        4.05        6.86        13.06
+mmap_view  1.33        4.08        2.97        12.06
+mmap_view2 -           3.85        -           11.48
+mmap_cont  -           4.07        -           12.90
+seqan2     1.89        4.15        6.50        12.94
+seqan3     3.94        5.64        9.63        16.86
+bio        1.94        4.22        8.33        14.97
+best       1.31        3.77        2.92        11.55
+```
+
