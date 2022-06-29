@@ -40,6 +40,7 @@ target_compile_options (io_interface INTERFACE "-pedantic" "-Wall" "-Wextra" "-W
 target_include_directories (io_interface INTERFACE "${CMAKE_CURRENT_LIST_DIR}/lib/seqan3/test/include")
 
 add_subdirectory (enrico)
+add_subdirectory (svenja)
 
 ### Add where needed ###
 # include (seqan_require_test)
