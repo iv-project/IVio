@@ -9,7 +9,9 @@ n. It is not targeted at people who can get elaborated training session on how t
 From this we can derive a few ideas:
 - reduce the number of configuration points (best just having one)
 - reduce the amount of configuration parameters (best having perfect default parameters and not making them configurable ;-))
-- names for options, everything that is named, is much easier to use
+- names for options, everything that is named is much easier to use and remember
+
+
 
 
 
@@ -119,7 +121,7 @@ for (auto && rec : in)
 // -------------------------------------------------------------------------------------------------------------------------
 
 // sgg io
-seqan3::sgg_io::reader in{.input = "x.fasta"}; // seqan3::sgg_io::reader{"x.fasta"} would also work
+sgg_io::seq_io::reader in{.input = "x.fasta"}; // sgg_io::seq_io::reader{"x.fasta"} would also work
 for (auto && rec : in)
     seqan3::debug_stream << rec.sequence();
 ```
@@ -146,7 +148,7 @@ for (auto & [ i, s, q ] : reader)
 // -------------------------------------------------------------------------------------------------------------------------
 
 // sgg io
-auto in = seqan3::sgg_io::reader{.input = "x.fasta"};
+auto in = sgg_io::seq_io::reader{.input = "x.fasta"};
 for (auto & [i, s, q] : in)
     seqan3::debug_stream << "ID: " << i << '\n';
 ```
@@ -169,7 +171,7 @@ seqan3::seq_io::reader reader{"example.fasta", seqan3::seq_io::reader_options{.t
 
 // sgg io
 // truncate_ids wont exists anymore, using complete_header example instead
-auto in = seqan3::sgg_io::reader{
+auto in = sgg_io::seq_io::reader{
     .input = "x.fasta",
     .format_embl = {
         .complete_header = true,
@@ -205,7 +207,7 @@ seqan3::seq_io::reader reader{"example.fasta",
 
 
 // sgg io
-auto in = seqan3::sgg_io::reader{
+auto in = sgg_io::seq_io::reader{
     .input = "x.fasta",
     .alphabet = char{},
 };
@@ -213,7 +215,7 @@ auto in = seqan3::sgg_io::reader{
 
 ### ex5.cpp
 ```
-// Select different fields
+// Select different fields (fasta)
 =========================
 
 // current implementation:
@@ -231,4 +233,69 @@ seqan3::seq_io::reader reader{"example.fasta",
 
 // sgg io
 // not needed, since there is no benefit in skipping these fields, just makes the api bloated
+```
+
+
+### ex6.cpp
+```
+// Select different fields (sam)
+
+using aligned_sequence_type = std::vector<seqan3::gapped<seqan3::dna5>>;
+using alignment_type = std::pair<aligned_sequence_type, aligned_sequence_type>;
+
+using types = seqan3::type_list<std::vector<seqan3::dna5>, std::string, alignment_type>;
+using fields = seqan3::fields<seqan3::field::seq, seqan3::field::id, seqan3::field::alignment>;
+
+seqan3::sam_file_output fout{filename};
+using sam_record_type = seqan3::sam_record<types, fields>;
+
+// -------------------------------------------------------------------------------------------------------------------------
+
+// Hannes implementation:
+// I don't know
+
+// sgg io some suggestions
+
+// Idea 1
+auto in = sgg_io::sam_io::reader{
+    .input = "x.sam",
+    .fields = std::tuple<std::tuple<seqan3::field::id,  char>,
+                         std::tuple<seqan3::field::seq, seqan3::dna5>,
+                         std::tuple<seqan3::field::alignment, std::pair<seqan3::gapped<seqan3::dna5>, seqan3::gapped<seqan3::dna5>>>>{}
+};
+
+// Idea 1b: Idea 1 but with extra using namespaces to make reading easier
+using namespace seqan3;
+using namespace seqan3::field;
+auto in = sgg_io::sam_io::reader{
+    .input = "x.sam",
+    .fields = std::tuple<std::tuple<id,  char>,
+                         std::tuple<seq, dna5>,
+                         std::tuple<alignment, std::pair<gapped<dna5>, gapped<dna5>>>>{}
+
+};
+
+// Idea 2 with compacter fields
+using namespace seqan3;
+using namespace seqan3::field;
+auto in = sgg_io::sam_io::reader{
+    .input = "x.sam",
+    .fields = std::tuple<id<char>,
+                         seq<dna5>,
+                         alignment<gapped<dna5>, gapped<dna5>>>{},
+
+};
+
+// Idea 3 with designated initializer, con: user can't reshuffle order of fields, pro: user can't reshuffle order of fields
+
+using namespace seqan3;
+using namespace seqan3::field;
+auto in = sgg_io::sam_io::reader{
+    .input = "x.sam",
+    .fields = Fields {
+        .id = char{},
+        .seq = dna5{},
+        .alignment = alignment<gapped<dna5>, gapped<dna5>>{},
+    },
+};
 ```
