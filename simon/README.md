@@ -301,4 +301,18 @@ auto in = sgg_io::sam_io::reader{
         .alignment = alignment<gapped<dna5>, gapped<dna5>>{},
     },
 };
+
+// Idea 4 this is combinable with a lot of the other parameters, by using a special variable called `type` and combining it with [[no_unique_address]] we can avoid any memory usage by this structure
+
+using namespace seqan3;
+using namespace seqan3::field;
+auto in = sgg_io::sam_io::reader{
+    .input = "x.sam",
+    .fields = Fields {
+        .id = type<char>,
+        .seq = type<dna5>,
+        .alignment = type<alignment<gapped<dna5>, gapped<dna5>>>,
+    },
+};
+
 ```
