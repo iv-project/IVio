@@ -45,6 +45,7 @@ void benchmark(Reader&& reader) {
 - *mmap_view2*: a view onto memory using mmap and mmap for zlib (requires overcommit memory) (support .gz)
 - *seqan2*: using seqan2 IO
 - *seqan3*: using seqan3 IO
+- *seqan223*: using seqan2 IO, but using a seqan3 alphabet
 - *best*: chooses *mmap_view2* if .gz and available. Other wise chooses *mmap view*. (support .fa and .gz)
 - *bio*: using b.i.o. IO
 
