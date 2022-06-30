@@ -1,5 +1,5 @@
 #include <seqan3/io/sequence_file/all.hpp>
-#include "fasta_seqan223_reader.h"
+#include "io2/seq_io_reader.h"
 
 namespace {
 

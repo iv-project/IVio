@@ -1,13 +1,13 @@
 #pragma once
 
-#include <seqan/seq_io.h>
-#include <filesystem>
-#include <ranges>
-#include <optional>
-#include <functional>
-#include <seqan3/alphabet/nucleotide/dna5.hpp>
+#include "alphabet_seqan223.h"
 
-#include "seqan223.h"
+#include <filesystem>
+#include <optional>
+#include <seqan/seq_io.h>
+#include <seqan3/alphabet/nucleotide/dna5.hpp>
+#include <string_view>
+
 
 namespace io2 {
 

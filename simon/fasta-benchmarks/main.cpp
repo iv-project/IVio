@@ -42,7 +42,6 @@ constexpr static std::array<char, 256> ccmap = []() {
 #include "fasta_reader_mmap.h"
 #include "fasta_reader_mmap2.h"
 #include "fasta_reader_best.h"
-#include "fasta_seqan223_reader.h"
 
 #include <ranges>
 #include <iostream>
