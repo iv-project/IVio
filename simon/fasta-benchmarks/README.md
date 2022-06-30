@@ -62,14 +62,14 @@ illumina.fa file with A, C, G, T and Ns. The sequeneces are short, the file is a
 ## As text
 ```
            illu.fa     illu.fa.gz  hg38.fa     hg38.fa.gz
-view       1.25        3.95        5.99        12.49
-cont       1.27        4.05        6.86        13.06
-mmap_view  1.33        4.08        2.97        12.06
-mmap_view2 -           3.85        -           11.48
-mmap_cont  -           4.07        -           12.90
-seqan2     1.89        4.15        6.50        12.94
-seqan3     3.94        5.64        9.63        16.86
-bio        1.94        4.22        8.33        14.97
-best       1.31        3.77        2.92        11.55
+view       1.17        3.94        5.70        11.58
+cont       1.23        3.95        6.46        12.31
+mmap_view  1.28        4.01        2.81        11.37
+mmap_view2 -           3.68        -           10.94
+mmap_cont  -           4.01        -           11.97
+seqan2     1.83        4.03        6.60        12.55
+seqan3     3.52        5.18        9.38        15.44
+seqan223   1.82        4.00        5.98        12.08
+bio        1.86        4.12        8.01        14.44
+best       1.26        3.68        2.82        10.90
 ```
-
