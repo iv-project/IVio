@@ -2,6 +2,7 @@
 #include "fasta_seqan223_reader.h"
 
 namespace {
+
 template <typename Reader>
 void benchmark(Reader&& reader) {
     std::array<int, 5> ctChars{};
@@ -28,7 +29,7 @@ void seqan3_bench(std::string const& _file) {
 }
 
 void seqan223_bench(std::string const& _file) {
-    auto reader = sgg_io::seq_io::reader {
+    auto reader = io2::seq_io::reader {
         .input = _file,
 //        .alphabet = sgg_io::type<seqan3::dna4>, // by default dna5
     };
