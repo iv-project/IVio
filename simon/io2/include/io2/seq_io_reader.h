@@ -22,8 +22,8 @@ namespace seq_io {
  */
 template <typename AlphabetS3>
 struct record {
-    sequence_view<AlphabetS3> seq;
     std::string_view          id;
+    sequence_view<AlphabetS3> seq;
     uint8_t                   qual; //!TODO
 };
 
@@ -89,8 +89,8 @@ struct reader {
         readRecord(storage.id, storage.seq, input.fileIn);
 
         return record<AlphabetS3> {
-            .seq = toSeqan3(storage.seq),
             .id  = to_view(storage.id),
+            .seq = toSeqan3(storage.seq),
         };
     }
 
