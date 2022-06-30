@@ -44,6 +44,9 @@ struct reader {
         std::string path;
         seqan::SeqFileIn fileIn{seqan::toCString(path)};
 
+        Input(char const* _path)
+            : path{_path}
+        {}
         Input(std::string const& _path)
             : path{_path}
         {}
@@ -87,7 +90,7 @@ struct reader {
 
         return record<AlphabetS3> {
             .seq = toSeqan3(storage.seq),
-            .id = std::string_view{&storage.id[0], &storage.id[0]+length(storage.id)},
+            .id  = to_view(storage.id),
         };
     }
 
