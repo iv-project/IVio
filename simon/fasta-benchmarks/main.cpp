@@ -42,6 +42,7 @@ constexpr static std::array<char, 256> ccmap = []() {
 #include "fasta_reader_mmap.h"
 #include "fasta_reader_mmap2.h"
 #include "fasta_reader_best.h"
+#include "fasta_seqan223_reader.h"
 
 #include <ranges>
 #include <iostream>
@@ -70,6 +71,7 @@ void benchmark(Reader&& reader) {
 
 void seqan2_bench(std::string const& file);
 void seqan3_bench(std::string const& file);
+void seqan223_bench(std::string const& file);
 void bio_bench(std::string const& file);
 
 int main(int argc, char** argv) {
@@ -85,6 +87,9 @@ int main(int argc, char** argv) {
         return 0;
     } else if (method == "seqan3") {
         seqan3_bench(file);
+        return 0;
+    } else if (method == "seqan223") {
+        seqan223_bench(file);
         return 0;
     } else if (method == "bio") {
         bio_bench(file);

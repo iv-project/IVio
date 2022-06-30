@@ -1,32 +1,36 @@
-#include <seqan3/alphabet/nucleotide/dna5.hpp>
-#include <seqan3/argument_parser/all.hpp>
-#include <seqan3/core/debug_stream.hpp>
 #include <seqan3/io/sequence_file/all.hpp>
-#include <filesystem>
-#include <sstream>
+#include "fasta_seqan223_reader.h"
 
-template <typename... Ts>
-void noOpt(Ts&&...) {
-    asm("");
-}
-
-
-void seqan3_bench(std::string const& _file) {
-
-    std::filesystem::path fasta_file{_file};
-
+namespace {
+template <typename Reader>
+void benchmark(Reader&& reader) {
     std::array<int, 5> ctChars{};
-
-    auto fin  = seqan3::sequence_file_input{fasta_file};
-    for (auto && [seq, id, qual] : fin) {
+    //!TODO this should really be [id, seq, qual], seqan3 is backwards
+    for (auto && [seq, id, qual] : reader) {
         for (auto c : seq) {
             ctChars[c.to_rank()] += 1;
         }
     }
+
     size_t a{};
-    for (int i{0}; i<ctChars.size(); ++i) {
+    for (size_t i{0}; i<ctChars.size(); ++i) {
         std::cout << i << ": " << ctChars[i] << "\n";
         a += ctChars[i];
     }
     std::cout << "total: " << a << "\n";
+}
+}
+
+
+void seqan3_bench(std::string const& _file) {
+    std::filesystem::path fasta_file{_file};
+    benchmark(seqan3::sequence_file_input{fasta_file});
+}
+
+void seqan223_bench(std::string const& _file) {
+    auto reader = sgg_io::seq_io::reader {
+        .input = _file,
+        .alphabet = sgg_io::type<seqan3::dna5>,
+    };
+    benchmark(reader);
 }
