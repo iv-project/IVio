@@ -30,7 +30,7 @@ void seqan3_bench(std::string const& _file) {
 void seqan223_bench(std::string const& _file) {
     auto reader = sgg_io::seq_io::reader {
         .input = _file,
-        .alphabet = sgg_io::type<seqan3::dna5>,
+//        .alphabet = sgg_io::type<seqan3::dna4>, // by default dna5
     };
     benchmark(reader);
 }
