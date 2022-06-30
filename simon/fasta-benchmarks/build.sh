@@ -5,7 +5,7 @@ FLAGS="-march=native -O3 -DNDBEUG"
 #FLAGS="-O0 -ggdb"
 
 g++ -std=c++20 ${FLAGS} -lz -o benchmark \
-    main.cpp seqan2.cpp seqan3.cpp bio.cpp \
+    main.cpp seqan2.cpp seqan3.cpp io2.cpp bio.cpp \
     -I ../io2/include \
     -DSEQAN_HAS_ZLIB  -I../../lib/seqan/include \
     -DBIO_HAS_ZLIB -I../../lib/b.i.o./include \

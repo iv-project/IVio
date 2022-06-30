@@ -70,7 +70,7 @@ void benchmark(Reader&& reader) {
 
 void seqan2_bench(std::string const& file);
 void seqan3_bench(std::string const& file);
-void seqan223_bench(std::string const& file);
+void io2_bench(std::string const& file);
 void bio_bench(std::string const& file);
 
 int main(int argc, char** argv) {
@@ -87,8 +87,8 @@ int main(int argc, char** argv) {
     } else if (method == "seqan3") {
         seqan3_bench(file);
         return 0;
-    } else if (method == "seqan223") {
-        seqan223_bench(file);
+    } else if (method == "io2") {
+        io2_bench(file);
         return 0;
     } else if (method == "bio") {
         bio_bench(file);

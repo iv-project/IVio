@@ -1,12 +1,14 @@
-#include <seqan3/io/sequence_file/all.hpp>
+#include "io2/seq_io_reader.h"
 
-void seqan3_bench(std::string const& _file) {
-    std::filesystem::path fasta_file{_file};
-    auto reader = seqan3::sequence_file_input{fasta_file};
+void io2_bench(std::string const& _file) {
+    auto reader = io2::seq_io::reader {
+        .input = _file,
+//        .alphabet = sgg_io::type<seqan3::dna4>, // by default dna5
+    };
 
     std::array<int, 5> ctChars{};
     //!TODO this should really be [id, seq, qual], seqan3 is backwards
-    for (auto && [seq, id, qual] : reader) {
+    for (auto && [id, seq, qual] : reader) {
         for (auto c : seq) {
             ctChars[c.to_rank()] += 1;
         }
