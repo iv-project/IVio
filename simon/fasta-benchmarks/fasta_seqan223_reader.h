@@ -93,7 +93,7 @@ namespace seq_io {
 template <typename AlphabetS3>
 inline auto toSeqan3(seqan::String<AlphabetAdaptor<AlphabetS3>> const& v) {
     return std::ranges::subrange{&v[0], &v[0] + length(v)} | std::views::transform([](auto const& v) {
-        return reinterpret_cast<AlphabetS3 const&>(v);
+        return seqan3::assign_rank_to(v.value, AlphabetS3{});
     });
 }
 
