@@ -16,4 +16,19 @@ target_link_libraries (${PROJECT_NAME}
     seqan3::seqan3
     io2::io2
     bio::bio
+    benchmark_main
+    )
+
+
+project (simon_enrico CXX)
+add_executable (${PROJECT_NAME}
+    enrico.cpp
+)
+
+target_link_libraries (${PROJECT_NAME}
+    io_interface
+    seqan::seqan
+    seqan3::seqan3
+    io2::io2
+    bio::bio
     benchmark_main)

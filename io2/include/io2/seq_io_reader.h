@@ -45,17 +45,42 @@ struct reader {
     /** Wrapper to allow path and stream inputs
      */
     struct Input {
-        seqan::SeqFileIn fileIn;
+        using File = seqan::SeqFileIn;
+        using Stream = seqan::Iter<std::istream, seqan::StreamIterator<seqan::Input>>;
+
+        std::variant<File, Stream> fileIn;
+
+        // function that avoids std::variant lookup
+        using F = std::function<void(seqan::CharString&, seqan::String<detail::AlphabetAdaptor<AlphabetS3>>&, seqan::String<detail::AlphabetAdaptor<QualitiesS3>>&)>;
+        F readRecord;
+
+        bool atEnd{false};
+
 
         Input(char const* _path)
-            : fileIn{_path}
-        {}
+            : fileIn{std::in_place_index<0>, _path}
+        {
+            readRecord = [&](auto&...args) {
+                auto& file = std::get<0>(fileIn);
+                seqan::readRecord(args..., file);
+                atEnd = seqan::atEnd(file);
+            };
+        }
         Input(std::string const& _path)
             : Input(_path.c_str())
         {}
         Input(std::filesystem::path const& _path)
             : Input(_path.c_str())
         {}
+        Input(std::istream& istr)
+            : fileIn{std::in_place_index<1>, istr}
+        {
+            readRecord = [&](auto&...args) {
+                auto& stream = std::get<1>(fileIn);
+                seqan::readRecord(args..., stream, seqan::Fasta{});
+                atEnd = seqan::atEnd(stream);
+            };
+        }
     };
 
     // configurable from the outside
@@ -75,8 +100,8 @@ struct reader {
     } storage;
 
     auto next() -> record<AlphabetS3, QualitiesS3> const* {
-        if (atEnd(input.fileIn)) return nullptr;
-        readRecord(storage.id, storage.seq, storage.qual, input.fileIn);
+        if (input.atEnd) return nullptr;
+        input.readRecord(storage.id, storage.seq, storage.qual);
 
         storage.return_record = record<AlphabetS3, QualitiesS3> {
             .id  = to_view(storage.id),
@@ -85,7 +110,6 @@ struct reader {
         };
         return &storage.return_record;
     }
-
 
     friend auto begin(reader& _reader) {
         using iter = detail::iterator<reader, record<AlphabetS3, QualitiesS3>>;
