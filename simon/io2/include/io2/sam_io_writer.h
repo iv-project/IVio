@@ -1,10 +1,9 @@
 #pragma once
 
 #include "alphabet_seqan223.h"
+#include "utils.h"
 
 #include <filesystem>
-#include <optional>
-#include <ranges>
 #include <seqan/bam_io.h>
 #include <seqan3/alphabet/nucleotide/dna5.hpp>
 #include <string_view>
@@ -26,10 +25,6 @@ inline auto toSeqan2(std::ranges::range auto rng) {
     return v;
 }
 
-template <typename rng_t, typename value_t>
-concept range_over = std::ranges::range<rng_t> and requires(rng_t r) {
-    { *r.begin() } -> std::convertible_to<value_t>;
-};
 
 
 template <typename AlphabetS3 = seqan3::dna5>

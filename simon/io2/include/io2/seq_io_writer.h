@@ -1,10 +1,9 @@
 #pragma once
 
 #include "alphabet_seqan223.h"
+#include "utils.h"
 
 #include <filesystem>
-#include <optional>
-#include <ranges>
 #include <seqan/seq_io.h>
 #include <seqan3/alphabet/nucleotide/dna5.hpp>
 #include <string_view>
@@ -49,15 +48,7 @@ struct writer {
     Output output;
     [[no_unique_address]] detail::empty_class<AlphabetS3> alphabet{};
 
-
-    // internal variables
-    template <typename id_t, typename seq_t>
-        requires std::ranges::range<id_t> and std::ranges::range<seq_t>
-                 and requires(id_t id, seq_t seq) {
-                    { *(id.begin()) } -> std::convertible_to<char>;
-                    { *(seq.begin()) } -> std::convertible_to<AlphabetS3>;
-                 }
-    void emplace_back(id_t const& id, seq_t const& seq) {
+    void emplace_back(range_over<char> auto const& id, range_over<AlphabetS3> auto const& seq) {
         writeRecord(output.fileOut, id, toSeqan2(seq));
     }
 };
