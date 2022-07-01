@@ -71,6 +71,7 @@ void benchmark(Reader&& reader) {
 void seqan2_bench(std::string const& file);
 void seqan3_bench(std::string const& file);
 void io2_bench(std::string const& file);
+void io2_copy_bench(std::string const& file);
 void bio_bench(std::string const& file);
 
 int main(int argc, char** argv) {
@@ -89,6 +90,9 @@ int main(int argc, char** argv) {
         return 0;
     } else if (method == "io2") {
         io2_bench(file);
+        return 0;
+    } else if (method == "io2-copy") {
+        io2_copy_bench(file);
         return 0;
     } else if (method == "bio") {
         bio_bench(file);
