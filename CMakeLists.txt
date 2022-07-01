@@ -41,6 +41,8 @@ target_include_directories (io_interface INTERFACE "${CMAKE_CURRENT_LIST_DIR}/li
 
 add_subdirectory (enrico)
 add_subdirectory (svenja)
+add_subdirectory (simon)
+add_subdirectory (io2)
 
 ### Add where needed ###
 # include (seqan_require_test)
