@@ -96,17 +96,17 @@ struct reader {
     // internal variables
     // storage for one record
     struct {
-        seqan::BamAlignmentRecord record;
+        seqan::BamAlignmentRecord       seqan2_record;
+        record<AlphabetS3, QualitiesS3> return_record;
     } storage;
 
-    auto next() -> std::optional<record<AlphabetS3, QualitiesS3>> {
-        if (atEnd(input.fileIn)) return std::nullopt;
-        readRecord(storage.record, input.fileIn);
+    auto next() -> record<AlphabetS3, QualitiesS3> const* {
+        if (atEnd(input.fileIn)) return nullptr;
+        readRecord(storage.seqan2_record, input.fileIn);
 
 
-        auto const& r = storage.record; // shorter name
-
-        return record<AlphabetS3, QualitiesS3> {
+        auto const& r = storage.seqan2_record; // shorter name
+        storage.return_record = record<AlphabetS3, QualitiesS3> {
             .qname    = to_view(r.qName),
             .flag     = static_cast<uint16_t>(r.flag),
             .rID      = r.rID,
@@ -117,10 +117,11 @@ struct reader {
             .rNextId  = r.rNextId,
             .pNext    = r.pNext,
             .tLen     = r.tLen,
-            .seq      = toSeqan3<AlphabetS3>(storage.record.seq),
-            .qual     = toSeqan3<QualitiesS3>(storage.record.qual),
+            .seq      = toSeqan3<AlphabetS3>(r.seq),
+            .qual     = toSeqan3<QualitiesS3>(r.qual),
             .tags     = to_view(r.tags),
         };
+        return &storage.return_record;
     }
 
     friend auto begin(reader& _reader) {

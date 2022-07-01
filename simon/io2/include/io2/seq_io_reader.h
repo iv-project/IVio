@@ -71,17 +71,20 @@ struct reader {
         seqan::CharString id;
         seqan::String<detail::AlphabetAdaptor<AlphabetS3>> seq;
         seqan::String<detail::AlphabetAdaptor<QualitiesS3>> qual;
+
+        record<AlphabetS3, QualitiesS3> return_record;
     } storage;
 
-    auto next() -> std::optional<record<AlphabetS3, QualitiesS3>> {
-        if (atEnd(input.fileIn)) return std::nullopt;
+    auto next() -> record<AlphabetS3, QualitiesS3> const* {
+        if (atEnd(input.fileIn)) return nullptr;
         readRecord(storage.id, storage.seq, storage.qual, input.fileIn);
 
-        return record<AlphabetS3, QualitiesS3> {
+        storage.return_record = record<AlphabetS3, QualitiesS3> {
             .id  = to_view(storage.id),
             .seq = toSeqan3(storage.seq),
             .qual = toSeqan3(storage.qual),
         };
+        return &storage.return_record;
     }
 
 
