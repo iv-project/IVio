@@ -121,7 +121,7 @@ for (auto && rec : in)
 // -------------------------------------------------------------------------------------------------------------------------
 
 // sgg io
-sgg_io::seq_io::reader in{.input = "x.fasta"}; // sgg_io::seq_io::reader{"x.fasta"} would also work
+io2::seq_io::reader in{.input = "x.fasta"}; // io2::seq_io::reader{"x.fasta"} would also work
 for (auto && rec : in)
     seqan3::debug_stream << rec.sequence();
 ```
@@ -148,7 +148,7 @@ for (auto & [ i, s, q ] : reader)
 // -------------------------------------------------------------------------------------------------------------------------
 
 // sgg io
-auto in = sgg_io::seq_io::reader{.input = "x.fasta"};
+auto in = io2::seq_io::reader{.input = "x.fasta"};
 for (auto & [i, s, q] : in)
     seqan3::debug_stream << "ID: " << i << '\n';
 ```
@@ -171,7 +171,7 @@ seqan3::seq_io::reader reader{"example.fasta", seqan3::seq_io::reader_options{.t
 
 // sgg io
 // truncate_ids wont exists anymore, using complete_header example instead
-auto in = sgg_io::seq_io::reader{
+auto in = io2::seq_io::reader{
     .input = "x.fasta",
     .format_embl = {
         .complete_header = true,
@@ -207,7 +207,7 @@ seqan3::seq_io::reader reader{"example.fasta",
 
 
 // sgg io
-auto in = sgg_io::seq_io::reader{
+auto in = sgg_io::seq_io::reader {
     .input = "x.fasta",
     .alphabet = char{},
 };
@@ -257,10 +257,10 @@ using sam_record_type = seqan3::sam_record<types, fields>;
 // Hannes implementation:
 // I don't know
 
-// sgg_io some suggestions
+// io2 some suggestions
 
 // Idea 1
-auto in = sgg_io::sam_io::reader{
+auto in = io2::sam_io::reader {
     .input = "x.sam",
     .fields = std::tuple<std::tuple<seqan3::field::id,  char>,
                          std::tuple<seqan3::field::seq, seqan3::dna5>,
@@ -270,7 +270,7 @@ auto in = sgg_io::sam_io::reader{
 // Idea 1b: Idea 1 but with extra using namespaces to make reading easier
 using namespace seqan3;
 using namespace seqan3::field;
-auto in = sgg_io::sam_io::reader{
+auto in = io2::sam_io::reader {
     .input = "x.sam",
     .fields = std::tuple<std::tuple<id,  char>,
                          std::tuple<seq, dna5>,
@@ -281,7 +281,7 @@ auto in = sgg_io::sam_io::reader{
 // Idea 2 with compacter fields
 using namespace seqan3;
 using namespace seqan3::field;
-auto in = sgg_io::sam_io::reader{
+auto in = io2::sam_io::reader {
     .input = "x.sam",
     .fields = std::tuple<id<char>,
                          seq<dna5>,
@@ -293,7 +293,7 @@ auto in = sgg_io::sam_io::reader{
 
 using namespace seqan3;
 using namespace seqan3::field;
-auto in = sgg_io::sam_io::reader{
+auto in = io2::sam_io::reader {
     .input = "x.sam",
     .fields = Fields {
         .id = char{},
@@ -306,13 +306,28 @@ auto in = sgg_io::sam_io::reader{
 
 using namespace seqan3;
 using namespace seqan3::field;
-auto in = sgg_io::sam_io::reader{
+auto in = io2::sam_io::reader {
     .input = "x.sam",
     .fields = Fields {
-        .id = type<char>,
-        .seq = type<dna5>,
-        .alignment = type<alignment<gapped<dna5>, gapped<dna5>>>,
+        .id = io2::type<char>,
+        .seq = io2::type<dna5>,
+        .alignment = io2::type<alignment<gapped<dna5>, gapped<dna5>>>,
     },
 };
+
+// Idea 4b, give type names the name `_t`
+
+using namespace seqan3;
+using namespace seqan3::field;
+auto in = io2::sam_io::reader {
+    .input = "x.sam",
+    .fields = Fields {
+        .id_t = io2::type<char>,
+        .seq_t = io2::type<dna5>,
+        .alignment_t = io2::type<alignment<gapped<dna5>, gapped<dna5>>>,
+    },
+};
+
+
 
 ```
