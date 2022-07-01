@@ -20,7 +20,7 @@ inline auto toSeqan2(std::ranges::range auto rng) {
     for (auto c : rng) {
         auto t = detail::AlphabetAdaptor<AlphabetS3>{};
         t.value = c.to_rank();
-        writeValue(v, t);
+        appendValue(v, t);
     }
     return v;
 }
