@@ -6,8 +6,8 @@
 #include <filesystem>
 #include <optional>
 #include <seqan/bam_io.h>
-#include <seqan3/alphabet/nucleotide/dna5.hpp>
 #include <seqan3/alphabet/cigar/cigar.hpp>
+#include <seqan3/alphabet/nucleotide/dna5.hpp>
 #include <seqan3/alphabet/quality/phred42.hpp>
 #include <string_view>
 

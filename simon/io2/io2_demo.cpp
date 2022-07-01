@@ -10,10 +10,12 @@ int main(int argc, char** argv) {
         auto reader = io2::seq_io::reader {
             .input     = "input.fasta",
             .alphabet  = io2::type<seqan3::dna15>,   // default is dna5
+            .qualities = io2::type<seqan3::phred42>, // default is phred42
         };
         for (auto && record : reader) { // or use: for (auto& [id, seq] : reader) {
             seqan3::debug_stream << record.id << "\n";
             seqan3::debug_stream << record.seq << "\n";
+            seqan3::debug_stream << record.qual << "\n";
         }
     }
 

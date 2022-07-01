@@ -7,6 +7,7 @@
 #include <optional>
 #include <seqan/seq_io.h>
 #include <seqan3/alphabet/nucleotide/dna5.hpp>
+#include <seqan3/alphabet/quality/phred42.hpp>
 #include <string_view>
 
 
@@ -19,13 +20,14 @@ namespace seq_io {
  * This record represents a single entry in the file.
  * It provides views into the file.
  */
-template <typename AlphabetS3>
+template <typename AlphabetS3, typename QualitiesS3>
 struct record {
-    using sequence_view = decltype(toSeqan3<AlphabetS3>({}));
+    using sequence_view  = decltype(toSeqan3<AlphabetS3>({}));
+    using qualities_view = decltype(toSeqan3<QualitiesS3>({}));
 
     std::string_view id;
     sequence_view    seq;
-    uint8_t          qual; //!TODO
+    qualities_view   qual;
 };
 
 
@@ -37,7 +39,8 @@ struct record {
  *       .alphabet = sgg_io::type<seqan3::dna5>, // default dna5
  *   };
  */
-template <typename AlphabetS3 = seqan3::dna5>
+template <typename AlphabetS3 = seqan3::dna5,
+          typename QualitiesS3 = seqan3::phred42>
 struct reader {
     /** Wrapper to allow path and stream inputs
      */
@@ -58,7 +61,8 @@ struct reader {
 
     // configurable from the outside
     Input input;
-    [[no_unique_address]] detail::empty_class<AlphabetS3> alphabet{};
+    [[no_unique_address]] detail::empty_class<AlphabetS3>  alphabet{};
+    [[no_unique_address]] detail::empty_class<QualitiesS3> qualities{};
 
 
     // internal variables
@@ -66,21 +70,23 @@ struct reader {
     struct {
         seqan::CharString id;
         seqan::String<detail::AlphabetAdaptor<AlphabetS3>> seq;
+        seqan::String<detail::AlphabetAdaptor<QualitiesS3>> qual;
     } storage;
 
-    auto next() -> std::optional<record<AlphabetS3>> {
+    auto next() -> std::optional<record<AlphabetS3, QualitiesS3>> {
         if (atEnd(input.fileIn)) return std::nullopt;
-        readRecord(storage.id, storage.seq, input.fileIn);
+        readRecord(storage.id, storage.seq, storage.qual, input.fileIn);
 
-        return record<AlphabetS3> {
+        return record<AlphabetS3, QualitiesS3> {
             .id  = to_view(storage.id),
             .seq = toSeqan3(storage.seq),
+            .qual = toSeqan3(storage.qual),
         };
     }
 
 
     friend auto begin(reader& _reader) {
-        using iter = detail::iterator<reader, record<AlphabetS3>>;
+        using iter = detail::iterator<reader, record<AlphabetS3, QualitiesS3>>;
         return iter{.reader = _reader};
     }
     friend auto end(reader const&) {
