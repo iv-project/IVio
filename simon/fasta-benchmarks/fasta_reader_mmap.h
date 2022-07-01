@@ -12,30 +12,6 @@ struct fasta_reader_mmap {
     using record_view = fasta_reader_view_record_view;
     using iter = fasta_reader_view_iter;
 
-/*    fasta_reader_mmap(Reader&& reader)
-        : file{std::move(reader)}
-        , currentPtr{begin(file)}
-    {}
-    fasta_reader_mmap(fasta_reader_mmap const&) = delete;
-    fasta_reader_mmap(fasta_reader_mmap&&) noexcept = default;
-    auto operator=(fasta_reader_mmap const&) = delete;*/
-
-/*    struct iter {
-        fasta_reader_mmap& reader;
-        std::optional<record_view> nextItem = reader.next();
-
-        auto operator*() const -> record_view {
-           return *nextItem;
-        }
-        auto operator++() -> iter& {
-            nextItem = reader.next();
-            return *this;
-        }
-        auto operator!=(std::nullptr_t _end) const {
-            return nextItem.has_value();
-        }
-    };*/
-
     friend auto begin(fasta_reader_mmap& reader) {
         return iter{[&reader]() { return reader.next(); }};
     }
