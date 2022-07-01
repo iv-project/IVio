@@ -1,14 +1,23 @@
 #include "io2/seq_io_reader.h"
 #include "io2/seq_io_writer.h"
 #include "io2/sam_io_reader.h"
+#include "io2/sam_io_writer.h"
+
 #include <seqan3/core/debug_stream.hpp>
 #include <seqan3/alphabet/all.hpp>
 
 int main(int argc, char** argv) {
+    // call ./io2 read|write <file>
+
+    if (argc != 3) return -1;
+
+    auto action = std::string{argv[1]};
+    auto file   = std::filesystem::path{argv[2]};
+
     // demonstrating reading a fasta file
-    {
+    if (action == "read" and (file.extension() == ".fasta" or file.extension() == ".gz")) {
         auto reader = io2::seq_io::reader {
-            .input     = "input.fasta",
+            .input     = file,
             .alphabet  = io2::type<seqan3::dna15>,   // default is dna5
             .qualities = io2::type<seqan3::phred42>, // default is phred42
         };
@@ -20,9 +29,9 @@ int main(int argc, char** argv) {
     }
 
     // demonstrating writing a fasta file
-    {
+    if (action == "write" and (file.extension() == ".fasta" or file.extension() == ".gz")) {
         auto writer = io2::seq_io::writer {
-            .output = "output.fastq",
+            .output = file,
             .alphabet = io2::type<seqan3::dna5>,
         };
 
@@ -35,9 +44,9 @@ int main(int argc, char** argv) {
 
 
     // demonstrating reading a bam file
-    {
+    if (action == "read" and (file.extension() == ".bam" or file.extension() == ".sam")) {
         auto reader = io2::sam_io::reader {
-            .input     = "sampled.bam",
+            .input     = file,
             .alphabet  = io2::type<seqan3::dna15>,   // default is dna5
             .qualities = io2::type<seqan3::phred42>, // default is phred42
         };
@@ -49,6 +58,21 @@ int main(int argc, char** argv) {
             seqan3::debug_stream << record.tags << "\n";
         }
     }
+
+    // demonstrating writting a bam file
+    if (action == "write" and (file.extension() == ".bam" or file.extension() == ".sam")) {
+        auto writer = io2::sam_io::writer {
+            .output     = file,
+//            .alphabet  = io2::type<seqan3::dna15>,   // default is dna5
+//            .qualities = io2::type<seqan3::phred42>, // default is phred42
+        };
+
+        std::string id="blub";
+        using namespace seqan3::literals;
+        std::vector<seqan3::dna5> seq = "ACCGGTT"_dna5;
+        writer.emplace_back(id, seq);
+    }
+
 
 
 }
