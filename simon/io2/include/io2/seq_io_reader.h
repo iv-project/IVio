@@ -45,17 +45,16 @@ struct reader {
     /** Wrapper to allow path and stream inputs
      */
     struct Input {
-        std::string path;
-        seqan::SeqFileIn fileIn{seqan::toCString(path)};
+        seqan::SeqFileIn fileIn;
 
         Input(char const* _path)
-            : path{_path}
+            : fileIn{_path}
         {}
         Input(std::string const& _path)
-            : path{_path}
+            : Input(_path.c_str())
         {}
         Input(std::filesystem::path const& _path)
-            : path{_path.string()}
+            : Input(_path.c_str())
         {}
     };
 

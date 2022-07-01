@@ -68,22 +68,19 @@ struct reader {
     /** Wrapper to allow path and stream inputs
      */
     struct Input {
-        std::string path;
-        seqan::BamFileIn fileIn{seqan::toCString(path)};
-        Input() {
-        }
+        seqan::BamFileIn fileIn;
 
         Input(char const* _path)
-            : Input(std::string{_path})
-        {}
-        Input(std::string const& _path)
-            : path{_path}
+            : fileIn{_path}
         {
             seqan::BamHeader header;
             readHeader(header, fileIn);
         }
+        Input(std::string const& _path)
+            : Input(_path.c_str())
+        {}
         Input(std::filesystem::path const& _path)
-            : Input(_path.string())
+            : Input(_path.c_str())
         {}
     };
 

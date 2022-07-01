@@ -40,17 +40,16 @@ struct writer {
     /** Wrapper to allow path and stream inputs
      */
     struct Output {
-        std::string path;
-        seqan::BamFileOut fileOut{seqan::toCString(path)};
+        seqan::BamFileOut fileOut;
 
         Output(char const* _path)
-            : path{_path}
+            : fileOut{_path}
         {}
         Output(std::string const& _path)
-            : path{_path}
+            : Output(_path.c_str())
         {}
         Output(std::filesystem::path const& _path)
-            : path{_path.string()}
+            : Output(_path.c_str())
         {}
     };
 
