@@ -96,11 +96,12 @@ inline constexpr auto type = detail::empty_class<T>{};
 
 template <typename T>
 inline auto to_view(seqan::String<T> const& v) {
-    return std::ranges::subrange{&v[0], &v[0] + length(v)};
+    auto ptr = &*begin(v, seqan::Standard());
+    return std::ranges::subrange{ptr, ptr + length(v)};
 }
 
 inline auto to_view(seqan::String<char> const& v) {
-    return std::string_view{&v[0], length(v)};
+    return std::string_view{&*begin(v, seqan::Standard()), length(v)};
 }
 
 
