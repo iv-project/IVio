@@ -14,8 +14,6 @@ namespace io2 {
 
 namespace seq_io {
 
-//!TODO swap seq and id, this is just for demonstration/seqan3 compatbility, but not really needed
-
 /* A single record
  *
  * This record represents a single entry in the file.
@@ -23,9 +21,11 @@ namespace seq_io {
  */
 template <typename AlphabetS3>
 struct record {
-    std::string_view          id;
-    sequence_view<AlphabetS3> seq;
-    uint8_t                   qual; //!TODO
+    using sequence_view = decltype(toSeqan3<AlphabetS3>({}));
+
+    std::string_view id;
+    sequence_view    seq;
+    uint8_t          qual; //!TODO
 };
 
 

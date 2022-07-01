@@ -14,32 +14,6 @@ namespace io2 {
 
 namespace seq_io {
 
-//!TODO swap seq and id, this is just for demonstration/seqan3 compatbility, but not really needed
-
-/* A single record
- *
- * This record represents a single entry in the file.
- * It provides views into the file.
- */
-template <typename AlphabetS3>
-struct write_record {
-    sequence_view<AlphabetS3> seq;
-    std::string_view          id;
-    uint8_t                   qual; //!TODO
-};
-
-
-/*template <typename AlphabetS3>
-inline auto toSeqan3(seqan::String<detail::AlphabetAdaptor<AlphabetS3>> const& v) {
-    return std::ranges::subrange{&v[0], &v[0] + length(v)} | std::views::transform([](auto const& v) {
-        return seqan3::assign_rank_to(v.value, AlphabetS3{});
-    });
-}
-
-template <typename AlphabetS3>
-using sequence_view = decltype(toSeqan3<AlphabetS3>({}));*/
-
-
 inline auto toSeqan2(std::ranges::range auto rng) {
     using AlphabetS3 = std::decay_t<decltype(*rng.begin())>;
     seqan::String<detail::AlphabetAdaptor<AlphabetS3>> v;
@@ -51,9 +25,6 @@ inline auto toSeqan2(std::ranges::range auto rng) {
     }
     return v;
 }
-
-/*template <typename AlphabetS3>
-using to_seqan2 = decltype(toSeqan2<AlphabetS3>({}));*/
 
 template <typename AlphabetS3 = seqan3::dna5>
 struct writer {

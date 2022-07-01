@@ -14,16 +14,6 @@
 
 namespace io2 {
 
-namespace sam_io {
-
-
-template <typename AlphabetS3, typename T>
-auto toSeqan3(seqan::String<T> const& v) {
-    return to_view(v) | std::views::transform([](auto const& v) {
-        return seqan3::assign_char_to(static_cast<char>(v), AlphabetS3{});
-    });
-}
-
 auto toSeqan3(seqan::String<seqan::CigarElement<>> const& v) {
     return to_view(v) | std::views::transform([](auto const& v) {
         using namespace seqan3::literals;
@@ -33,7 +23,7 @@ auto toSeqan3(seqan::String<seqan::CigarElement<>> const& v) {
     });
 }
 
-
+namespace sam_io {
 
 /* A single record
  *

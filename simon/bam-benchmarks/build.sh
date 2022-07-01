@@ -1,7 +1,7 @@
 #!/usr/bin/bash
 cd "$(dirname "$0")"
 
-g++ -std=c++20 -march=native -O3 -DNDEBUG -lz -o benchmark \
+g++-10 -std=c++20 -march=native -O3 -DNDEBUG -lz -o benchmark \
     main.cpp seqan3.cpp seqan2.cpp io2.cpp \
     -I../io2/include \
     -DSEQAN_HAS_ZLIB  -I../../lib/seqan/include \

@@ -111,8 +111,11 @@ inline auto toSeqan3(seqan::String<detail::AlphabetAdaptor<AlphabetS3>> const& v
     });
 }
 
-template <typename AlphabetS3>
-using sequence_view = decltype(toSeqan3<AlphabetS3>({}));
-
+template <typename AlphabetS3, typename T>
+auto toSeqan3(seqan::String<T> const& v) {
+    return to_view(v) | std::views::transform([](auto const& v) {
+        return seqan3::assign_char_to(static_cast<char>(v), AlphabetS3{});
+    });
+}
 
 }
