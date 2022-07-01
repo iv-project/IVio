@@ -1,6 +1,7 @@
 #pragma once
 
 #include "alphabet_seqan223.h"
+#include "iterator.h"
 
 #include <filesystem>
 #include <optional>
@@ -96,23 +97,6 @@ struct reader {
         {}
     };
 
-    /** Iterator that enables iterating over the reader
-     */
-    struct iter {
-        reader& reader_;
-        std::optional<record<AlphabetS3, QualitiesS3>> nextItem = reader_.next();
-
-        auto operator*() const {
-           return *nextItem;
-        }
-        auto operator++() -> iter& {
-            nextItem = reader_.next();
-            return *this;
-        }
-        auto operator!=(std::nullptr_t _end) const {
-            return nextItem.has_value();
-        }
-    };
     // configurable from the outside
     Input input;
     [[no_unique_address]] detail::empty_class<AlphabetS3>  alphabet{};
@@ -150,7 +134,8 @@ struct reader {
     }
 
     friend auto begin(reader& _reader) {
-        return iter{.reader_ = _reader};
+        using iter = detail::iterator<reader, record<AlphabetS3, QualitiesS3>>;
+        return iter{.reader = _reader};
     }
     friend auto end(reader const&) {
         return nullptr;
