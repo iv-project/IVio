@@ -70,7 +70,13 @@ int main(int argc, char** argv) {
         std::string id="blub";
         using namespace seqan3::literals;
         std::vector<seqan3::dna5> seq = "ACCGGTT"_dna5;
-        writer.emplace_back(id, seq);
+        writer.write({
+            .id  = id,
+            .seq = seq,
+        });
+        // alternative syntax:
+//        writer.emplace_back(id, seq);
+
     }
 
 
