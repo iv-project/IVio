@@ -16,12 +16,12 @@ namespace seq_io {
 inline auto toSeqan2(std::ranges::range auto rng) {
     using AlphabetS3 = std::decay_t<decltype(*rng.begin())>;
     seqan::String<detail::AlphabetAdaptor<AlphabetS3>> v;
-    reserve(v, size(rng));
-    for (auto c : rng) {
+    resize(v, size(rng), seqan::Exact());
+    std::ranges::copy(rng | std::views::transform([](auto c) {
         auto t = detail::AlphabetAdaptor<AlphabetS3>{};
         t.value = c.to_rank();
-        appendValue(v, t);
-    }
+        return t;
+    }), begin(v));
     return v;
 }
 
