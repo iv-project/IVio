@@ -1,7 +1,7 @@
 #!/usr/bin/bash
 cd "$(dirname "$0")"
 
-FLAGS="-march=native -O3 -DNDBEUG"
+FLAGS="-march=native -O3 -DNDEBUG"
 #FLAGS="-O0 -ggdb"
 
 g++ -std=c++20 ${FLAGS} -lz -o benchmark \
