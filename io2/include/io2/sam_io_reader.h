@@ -39,7 +39,6 @@ struct record {
     using cigar_view     = decltype(io2::sam_io::detail::toSeqan3(decltype(seqan::BamAlignmentRecord{}.cigar){}));
     using qualities_view = decltype(io2::toSeqan3<QualitiesS3>(decltype(seqan::BamAlignmentRecord{}.qual){}));
 
-
     std::string_view qname;
     uint16_t         flag;
     int32_t          rID;

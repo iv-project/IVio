@@ -59,43 +59,40 @@ struct writer {
 
 
     template <typename T>
-    struct view {
-        T* v{};
+    struct contigous_range {
+        T const* v{};
         size_t size{};
 
-        view() = default;
-        view(view const&) = default;
-        view(view&&) = delete;
+        contigous_range() = default;
+        contigous_range(contigous_range const&) = default;
+        contigous_range(contigous_range&&) = delete;
 
         template <typename rng_t>
             requires range_over<rng_t, T>
                 and std::ranges::contiguous_range<rng_t>
                 and std::ranges::sized_range<rng_t>
-        view(rng_t s)
+        contigous_range(rng_t const& s)
             : v{&*s.begin()}
             , size{s.size()}
         {}
 
-        friend auto begin(view& _view) {
-            return _view.v;
+        friend auto begin(contigous_range& _contigous_range) {
+            return _contigous_range.v;
         }
-        friend auto end(view const& _view) {
-            return _view.v + _view.size;
+        friend auto end(contigous_range const& _contigous_range) {
+            return _contigous_range.v + _contigous_range.size;
         }
-        friend auto size(view const& _view) {
-            return _view.size;
+        friend auto size(contigous_range const& _contigous_range) {
+            return _contigous_range.size;
         }
-        auto begin()       { return v; }
-        auto end()         { return v+size; }
+
         auto begin() const { return v; }
         auto end()   const { return v+size; }
-
-
     };
 
     struct record {
-        view<char>       id;
-        view<AlphabetS3> seq;
+        contigous_range<char>       id;
+        contigous_range<AlphabetS3> seq;
     };
 
     void write(record _record) {
