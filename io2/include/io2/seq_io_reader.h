@@ -9,11 +9,10 @@
 #include <seqan3/alphabet/nucleotide/dna5.hpp>
 #include <seqan3/alphabet/quality/phred42.hpp>
 #include <string_view>
+#include <variant>
 
 
-namespace io2 {
-
-namespace seq_io {
+namespace io2::seq_io {
 
 /* A single record
  *
@@ -121,5 +120,4 @@ struct reader {
 
 };
 
-}
 }

@@ -59,7 +59,7 @@ int main(int argc, char** argv) {
         }
     }
 
-    // demonstrating writting a bam file
+    // demonstrating writing a bam file
     if (action == "write" and (file.extension() == ".bam" or file.extension() == ".sam")) {
         auto writer = io2::sam_io::writer {
             .output     = file,

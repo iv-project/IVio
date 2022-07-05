@@ -9,16 +9,14 @@
 #include <string_view>
 
 
-namespace io2 {
-
-namespace sam_io {
+namespace io2::sam_io::detail {
 
 inline auto toSeqan2Alphabet(std::ranges::range auto rng) {
     using AlphabetS3 = std::decay_t<decltype(*rng.begin())>;
-    seqan::String<detail::AlphabetAdaptor<AlphabetS3>> v;
+    seqan::String<io2::detail::AlphabetAdaptor<AlphabetS3>> v;
     resize(v, size(rng), seqan::Exact());
     std::ranges::copy(rng | std::views::transform([](auto c) {
-        auto t = detail::AlphabetAdaptor<AlphabetS3>{};
+        auto t = io2::detail::AlphabetAdaptor<AlphabetS3>{};
         t.value = c.to_rank();
         return t;
     }), begin(v));
@@ -32,8 +30,10 @@ inline auto toSeqan2(std::ranges::range auto rng) {
     return v;
 }
 
+}
 
 
+namespace io2::sam_io {
 
 template <typename AlphabetS3 = seqan3::dna5>
 struct writer {
@@ -55,7 +55,7 @@ struct writer {
 
     // configurable from the outside
     Output output;
-    [[no_unique_address]] detail::empty_class<AlphabetS3> alphabet{};
+    [[no_unique_address]] io2::detail::empty_class<AlphabetS3> alphabet{};
 
 
     template <typename T>
@@ -100,18 +100,17 @@ struct writer {
 
     void write(record _record) {
         seqan::BamAlignmentRecord r;
-        r.qName = toSeqan2(_record.id);
-        r.seq   = toSeqan2Alphabet(_record.seq);
+        r.qName = detail::toSeqan2(_record.id);
+        r.seq   = detail::toSeqan2Alphabet(_record.seq);
         writeRecord(output.fileOut, r);
     }
 
     void emplace_back(range_over<char> auto const& id, range_over<AlphabetS3> auto const& seq) {
         seqan::BamAlignmentRecord record;
         record.qName = id;
-        record.seq   = toSeqan2Alphabet(seq);
+        record.seq   = detail::toSeqan2Alphabet(seq);
         writeRecord(output.fileOut, record);
     }
 };
 
-}
 }

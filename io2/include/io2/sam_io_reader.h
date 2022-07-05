@@ -12,7 +12,7 @@
 #include <string_view>
 
 
-namespace io2 {
+namespace io2::sam_io::detail {
 
 auto toSeqan3(seqan::String<seqan::CigarElement<>> const& v) {
     return to_view(v) | std::views::transform([](auto const& v) {
@@ -23,7 +23,9 @@ auto toSeqan3(seqan::String<seqan::CigarElement<>> const& v) {
     });
 }
 
-namespace sam_io {
+}
+
+namespace io2::sam_io {
 
 /* A single record
  *
@@ -33,9 +35,9 @@ namespace sam_io {
 template <typename AlphabetS3, typename QualitiesS3>
 struct record {
     // views for string types
-    using sequence_view  = decltype(toSeqan3<AlphabetS3>(decltype(seqan::BamAlignmentRecord{}.seq){}));
-    using cigar_view     = decltype(toSeqan3(decltype(seqan::BamAlignmentRecord{}.cigar){}));
-    using qualities_view = decltype(toSeqan3<QualitiesS3>(decltype(seqan::BamAlignmentRecord{}.qual){}));
+    using sequence_view  = decltype(io2::toSeqan3<AlphabetS3>(decltype(seqan::BamAlignmentRecord{}.seq){}));
+    using cigar_view     = decltype(io2::sam_io::detail::toSeqan3(decltype(seqan::BamAlignmentRecord{}.cigar){}));
+    using qualities_view = decltype(io2::toSeqan3<QualitiesS3>(decltype(seqan::BamAlignmentRecord{}.qual){}));
 
 
     std::string_view qname;
@@ -86,8 +88,8 @@ struct reader {
 
     // configurable from the outside
     Input input;
-    [[no_unique_address]] detail::empty_class<AlphabetS3>  alphabet{};
-    [[no_unique_address]] detail::empty_class<QualitiesS3> qualities{};
+    [[no_unique_address]] io2::detail::empty_class<AlphabetS3>  alphabet{};
+    [[no_unique_address]] io2::detail::empty_class<QualitiesS3> qualities{};
 
 
     // internal variables
@@ -110,7 +112,7 @@ struct reader {
             .beginPos = r.beginPos,
             .mapQ     = static_cast<uint8_t>(r.mapQ),
             .bin      = static_cast<uint16_t>(r.bin),
-            .cigar    = toSeqan3(r.cigar),
+            .cigar    = detail::toSeqan3(r.cigar),
             .rNextId  = r.rNextId,
             .pNext    = r.pNext,
             .tLen     = r.tLen,
@@ -122,7 +124,7 @@ struct reader {
     }
 
     friend auto begin(reader& _reader) {
-        using iter = detail::iterator<reader, record<AlphabetS3, QualitiesS3>>;
+        using iter = io2::detail::iterator<reader, record<AlphabetS3, QualitiesS3>>;
         return iter{.reader = _reader};
     }
     friend auto end(reader const&) {
@@ -131,5 +133,4 @@ struct reader {
 
 };
 
-}
 }
