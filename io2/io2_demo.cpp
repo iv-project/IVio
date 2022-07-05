@@ -51,7 +51,7 @@ int main(int argc, char** argv) {
             .qualities = io2::type<seqan3::phred42>, // default is phred42
         };
         for (auto && record : reader) {
-            seqan3::debug_stream << record.qname << "\n";
+            seqan3::debug_stream << record.id << "\n";
             seqan3::debug_stream << record.seq << "\n";
             seqan3::debug_stream << record.cigar << "\n";
             seqan3::debug_stream << record.qual << "\n";

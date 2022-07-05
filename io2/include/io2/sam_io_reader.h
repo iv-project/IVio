@@ -39,7 +39,7 @@ struct record {
     using cigar_view     = decltype(io2::sam_io::detail::toSeqan3(decltype(seqan::BamAlignmentRecord{}.cigar){}));
     using qualities_view = decltype(io2::toSeqan3<QualitiesS3>(decltype(seqan::BamAlignmentRecord{}.qual){}));
 
-    std::string_view qname;
+    std::string_view id;
     uint16_t         flag;
     int32_t          rID;
     int32_t          beginPos;
@@ -105,7 +105,7 @@ struct reader {
 
         auto const& r = storage.seqan2_record; // shorter name
         storage.return_record = record<AlphabetS3, QualitiesS3> {
-            .qname    = to_view(r.qName),
+            .id       = to_view(r.qName),
             .flag     = static_cast<uint16_t>(r.flag),
             .rID      = r.rID,
             .beginPos = r.beginPos,
