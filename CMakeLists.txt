@@ -23,6 +23,7 @@ find_package (BZip2 QUIET REQUIRED)
 set (SEQAN3_SUBMODULES_DIR "${CMAKE_CURRENT_LIST_DIR}/lib")
 find_package (SeqAn3 QUIET REQUIRED)
 
+set (BIO_SUBMODULES_DIR "/dev/null") # Prevent b.i.o. from including its seqan3 submodule
 set (BIO_DEPENDENCY_INCLUDE_DIRS "${CMAKE_CURRENT_LIST_DIR}/lib/seqan3/include")
 find_package (BIO QUIET REQUIRED)
 
