@@ -13,7 +13,8 @@ macro (seqan_require_benchmark)
 
     set (SEQAN_GBENCHMARK_GIT_TAG "main" CACHE STRING "googlebenchmark commit to use")
 
-    message (STATUS "Fetch Google Benchmark:")
+    message (STATUS "Fetch Google Benchmark")
+    set(CMAKE_MESSAGE_LOG_LEVEL "WARNING")
 
     include (FetchContent)
     FetchContent_Declare (
@@ -32,4 +33,5 @@ macro (seqan_require_benchmark)
         add_custom_target (gbenchmark_build DEPENDS gbenchmark)
         target_compile_options ("benchmark_main" PUBLIC "-w")
     endif ()
+    set(CMAKE_MESSAGE_LOG_LEVEL "INFO")
 endmacro ()
