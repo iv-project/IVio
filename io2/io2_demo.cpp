@@ -3,6 +3,7 @@
 
 #include <seqan3/core/debug_stream.hpp>
 #include <seqan3/alphabet/all.hpp>
+#include <iterator>
 
 
 void readSeqIo(std::filesystem::path file) {
@@ -43,6 +44,42 @@ void writeSeqIo(std::filesystem::path file) {
     // write a single entry. (Maybe only a version as for writeSamIo should exists)
     writer.emplace_back(id, seq);
 }
+
+void readAndCopySeqIo(std::filesystem::path file) {
+    // setup reader
+    auto reader = io2::seq_io::reader {
+        .input     = file,
+        .alphabet  = io2::type<seqan3::dna15>,   // default is dna5
+        .qualities = io2::type<seqan3::phred42>, // default is phred42
+    };
+
+    // list with all results
+    auto results = std::vector<decltype(reader)::record>{};
+
+    for (auto && record : reader) {
+        results.emplace_back(record);
+    }
+}
+
+void readCompleteFileSeqIo(std::filesystem::path file) {
+    // single line to read complete file
+    auto results = io2::seq_io::reader {
+        .input     = file,
+        .alphabet  = io2::type<seqan3::dna15>,
+        .qualities = io2::type<seqan3::phred42>,
+    } | seqan3::ranges::to<std::vector>();
+
+    // or short version
+    // auto results = io2::seq_io::reader<seqan3::dna15, seqan3::phred42>{file}
+    //   | seqan3::ranges::to<std::vector>();
+
+    for (auto const& r : results) {
+        seqan3::debug_stream << r.id << "\n";
+        seqan3::debug_stream << r.seq << "\n";
+        seqan3::debug_stream << r.qual << "\n";
+    }
+}
+
 
 void readSamIo(std::filesystem::path file) {
     // setup reader
@@ -98,6 +135,10 @@ int main(int argc, char** argv) {
         readSeqIo(file);
     } else if (action == "write" and io2::seq_io::validExtension(file)) {
         writeSeqIo(file);
+    } else if (action == "read_and_copy" and io2::seq_io::validExtension(file)) {
+        readAndCopySeqIo(file);
+    } else if (action == "read_complete_file" and io2::seq_io::validExtension(file)) {
+        readCompleteFileSeqIo(file);
     } else if (action == "read" and io2::sam_io::validExtension(file)) {
         readSamIo(file);
     } else if (action == "write" and io2::sam_io::validExtension(file)) {
