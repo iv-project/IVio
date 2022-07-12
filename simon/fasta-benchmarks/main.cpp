@@ -32,7 +32,6 @@ constexpr static std::array<char, 256> ccmap = []() {
     c['\r'] = (char)0xff;
     c[' '] = (char)0xff;
     c['\t'] = (char)0xff;
-    c['Z'] = 0xfe;
 
     return c;
 }();
@@ -68,6 +67,44 @@ void benchmark(Reader&& reader) {
     std::cout << "total: " << a << "\n";
 }
 
+void benchmarkDirect(std::filesystem::path path) {
+    auto reader = mmap_file_reader(path.c_str());
+
+
+    auto iter = begin(reader);
+    auto end_ = end(reader);
+
+    auto readUntil = [&](char c) {
+        auto ptr = (char const*)memchr(iter, c, end_-iter);
+        if (ptr == nullptr) {
+            return end_;
+        }
+        return ptr;
+    };
+
+    std::array<int, 256> ctChars{};
+
+    iter = readUntil('>');
+    while (iter != end_) {
+        auto startSeq = readUntil('\n');
+        if (startSeq == end_) break;
+        if (startSeq+1  == end_) break;
+        for (iter = startSeq+1; iter < end_ and *iter != '>'; ++iter) {
+            auto c = ccmap[*iter];
+            ctChars[c] += 1;
+        }
+        reader.doneUntil(iter);
+    }
+
+    size_t a{};
+    for (size_t i{0}; i<5; ++i) {
+        std::cout << i << ": " << ctChars[i] << "\n";
+        a += ctChars[i];
+    }
+    std::cout << "total: " << a << "\n";
+}
+
+
 void seqan2_bench(std::string const& file);
 void seqan3_bench(std::string const& file);
 void io2_bench(std::string const& file);
@@ -100,7 +137,9 @@ int main(int argc, char** argv) {
     }
 
 
-    if (method == "view" and ext == ".gz") {
+    if (method == "direct" and ext == ".fa") {
+        benchmarkDirect(file);
+    } else if (method == "view" and ext == ".gz") {
         benchmark(fasta_reader_view{zlib_reader(file.c_str())});
     } else if (method == "cont" and ext == ".gz") {
         benchmark(fasta_reader_contigous{zlib_reader(file.c_str())});

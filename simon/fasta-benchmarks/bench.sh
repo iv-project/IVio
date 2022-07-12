@@ -1,7 +1,7 @@
 #!/usr/bin/bash
 cd "$(dirname "$0")"
 
-methods=(view cont mmap_view mmap_view2 mmap_cont seqan2 seqan3 io2 io2-copy bio best)
+methods=(direct view cont mmap_view mmap_view2 mmap_cont seqan2 seqan3 io2 io2-copy bio best)
 
 file=$1
 timing=()
