@@ -4,6 +4,88 @@
 #include <seqan3/core/debug_stream.hpp>
 #include <seqan3/alphabet/all.hpp>
 
+
+void readSeqIo(std::filesystem::path file) {
+    // setup reader
+    auto reader = io2::seq_io::reader {
+        .input     = file,
+        .alphabet  = io2::type<seqan3::dna15>,   // default is dna5
+        .qualities = io2::type<seqan3::phred42>, // default is phred42
+    };
+
+    // version 1:
+    for (auto && record : reader) {
+        seqan3::debug_stream << record.id << "\n";
+        seqan3::debug_stream << record.seq << "\n";
+        seqan3::debug_stream << record.qual << "\n";
+    }
+
+    // version 2: // maybe this should not be supported, since sam and vcf won't support it
+    for (auto & [id, seq, qual] : reader) {
+        seqan3::debug_stream << id << "\n";
+        seqan3::debug_stream << seq << "\n";
+        seqan3::debug_stream << qual << "\n";
+    }
+}
+
+void writeSeqIo(std::filesystem::path file) {
+    // setup writer
+    auto writer = io2::seq_io::writer {
+        .output = file,
+        .alphabet = io2::type<seqan3::dna5>,
+    };
+
+    // generating some data
+    std::string id="blub";
+    using namespace seqan3::literals;
+    std::vector<seqan3::dna5> seq = "ACCGGTT"_dna5;
+
+    // write a single entry. (Maybe only a version as for writeSamIo should exists)
+    writer.emplace_back(id, seq);
+}
+
+void readSamIo(std::filesystem::path file) {
+    // setup reader
+    auto reader = io2::sam_io::reader {
+        .input     = file,
+        .alphabet  = io2::type<seqan3::dna15>,   // default is dna5
+        .qualities = io2::type<seqan3::phred42>, // default is phred42
+    };
+
+    // read records
+    for (auto && record : reader) {
+        seqan3::debug_stream << record.id << "\n";
+        seqan3::debug_stream << record.seq << "\n";
+        seqan3::debug_stream << record.cigar << "\n";
+        seqan3::debug_stream << record.qual << "\n";
+        seqan3::debug_stream << record.tags << "\n";
+    }
+}
+
+void writeSamIo(std::filesystem::path file) {
+    // setup writer
+    auto writer = io2::sam_io::writer {
+        .output     = file,
+//        .alphabet  = io2::type<seqan3::dna15>,   // default is dna5
+//        .qualities = io2::type<seqan3::phred42>, // default is phred42
+    };
+
+    // generating some data
+    std::string id="blub";
+    using namespace seqan3::literals;
+    std::vector<seqan3::dna5> seq = "ACCGGTT"_dna5;
+
+
+    // version 1: writting
+    writer.write({
+        .id  = id,
+        .seq = seq,
+    });
+
+    // version 2: writting (this will have very bad overview, with a lot of parameters)
+    writer.emplace_back(id, seq);
+}
+
 int main(int argc, char** argv) {
     // call ./io2 read|write <file>
 
@@ -12,71 +94,13 @@ int main(int argc, char** argv) {
     auto action = std::string{argv[1]};
     auto file   = std::filesystem::path{argv[2]};
 
-    // demonstrating reading a fasta file
     if (action == "read" and io2::seq_io::validExtension(file)) {
-        auto reader = io2::seq_io::reader {
-            .input     = file,
-            .alphabet  = io2::type<seqan3::dna15>,   // default is dna5
-            .qualities = io2::type<seqan3::phred42>, // default is phred42
-        };
-        for (auto && record : reader) { // or use: for (auto& [id, seq] : reader) {
-            seqan3::debug_stream << record.id << "\n";
-            seqan3::debug_stream << record.seq << "\n";
-            seqan3::debug_stream << record.qual << "\n";
-        }
+        readSeqIo(file);
+    } else if (action == "write" and io2::seq_io::validExtension(file)) {
+        writeSeqIo(file);
+    } else if (action == "read" and (file.extension() == ".bam" or file.extension() == ".sam")) {
+        readSamIo(file);
+    } else if (action == "write" and (file.extension() == ".bam" or file.extension() == ".sam")) {
+        writeSamIo(file);
     }
-
-    // demonstrating writing a fasta file
-    if (action == "write" and io2::seq_io::validExtension(file)) {
-        auto writer = io2::seq_io::writer {
-            .output = file,
-            .alphabet = io2::type<seqan3::dna5>,
-        };
-
-        std::string id="blub";
-        using namespace seqan3::literals;
-        std::vector<seqan3::dna5> seq = "ACCGGTT"_dna5;
-        writer.emplace_back(id, seq);
-    }
-
-
-
-    // demonstrating reading a bam file
-    if (action == "read" and (file.extension() == ".bam" or file.extension() == ".sam")) {
-        auto reader = io2::sam_io::reader {
-            .input     = file,
-            .alphabet  = io2::type<seqan3::dna15>,   // default is dna5
-            .qualities = io2::type<seqan3::phred42>, // default is phred42
-        };
-        for (auto && record : reader) {
-            seqan3::debug_stream << record.id << "\n";
-            seqan3::debug_stream << record.seq << "\n";
-            seqan3::debug_stream << record.cigar << "\n";
-            seqan3::debug_stream << record.qual << "\n";
-            seqan3::debug_stream << record.tags << "\n";
-        }
-    }
-
-    // demonstrating writing a bam file
-    if (action == "write" and (file.extension() == ".bam" or file.extension() == ".sam")) {
-        auto writer = io2::sam_io::writer {
-            .output     = file,
-//            .alphabet  = io2::type<seqan3::dna15>,   // default is dna5
-//            .qualities = io2::type<seqan3::phred42>, // default is phred42
-        };
-
-        std::string id="blub";
-        using namespace seqan3::literals;
-        std::vector<seqan3::dna5> seq = "ACCGGTT"_dna5;
-        writer.write({
-            .id  = id,
-            .seq = seq,
-        });
-        // alternative syntax:
-//        writer.emplace_back(id, seq);
-
-    }
-
-
-
 }
