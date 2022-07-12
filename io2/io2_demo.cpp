@@ -98,9 +98,9 @@ int main(int argc, char** argv) {
         readSeqIo(file);
     } else if (action == "write" and io2::seq_io::validExtension(file)) {
         writeSeqIo(file);
-    } else if (action == "read" and (file.extension() == ".bam" or file.extension() == ".sam")) {
+    } else if (action == "read" and io2::sam_io::validExtension(file)) {
         readSamIo(file);
-    } else if (action == "write" and (file.extension() == ".bam" or file.extension() == ".sam")) {
+    } else if (action == "write" and io2::sam_io::validExtension(file)) {
         writeSamIo(file);
     }
 }
