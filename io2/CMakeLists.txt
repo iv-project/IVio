@@ -23,12 +23,5 @@ add_library (${PROJECT_NAME}::${PROJECT_NAME} ALIAS ${PROJECT_NAME})
 
 if (${IO2_ROOT_PROJECT})
     enable_testing()
-    file(GLOB TEST_CPP_FILES
-         LIST_DIRECTORIES false
-         RELATIVE ${PROJECT_SOURCE_DIR}
-         CONFIGURE_DEPENDS
-         test/*.cpp)
-    add_executable(test_${PROJECT_NAME} ${TEST_CPP_FILES})
-    target_link_libraries(test_${PROJECT_NAME} ${PROJECT_NAME})
-    add_test(NAME test_${PROJECT_NAME} COMMAND test_${PROJECT_NAME})
+#    add_subdirectory(test)
 endif()

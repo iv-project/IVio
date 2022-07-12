@@ -1,7 +1,5 @@
-#include "io2/seq_io_reader.h"
-#include "io2/seq_io_writer.h"
-#include "io2/sam_io_reader.h"
-#include "io2/sam_io_writer.h"
+#include "io2/seq_io.h"
+#include "io2/sam_io.h"
 
 #include <seqan3/core/debug_stream.hpp>
 #include <seqan3/alphabet/all.hpp>
@@ -15,7 +13,7 @@ int main(int argc, char** argv) {
     auto file   = std::filesystem::path{argv[2]};
 
     // demonstrating reading a fasta file
-    if (action == "read" and (file.extension() == ".fasta" or file.extension() == ".gz")) {
+    if (action == "read" and io2::seq_io::validExtension(file)) {
         auto reader = io2::seq_io::reader {
             .input     = file,
             .alphabet  = io2::type<seqan3::dna15>,   // default is dna5
@@ -29,7 +27,7 @@ int main(int argc, char** argv) {
     }
 
     // demonstrating writing a fasta file
-    if (action == "write" and (file.extension() == ".fasta" or file.extension() == ".gz")) {
+    if (action == "write" and io2::seq_io::validExtension(file)) {
         auto writer = io2::seq_io::writer {
             .output = file,
             .alphabet = io2::type<seqan3::dna5>,
