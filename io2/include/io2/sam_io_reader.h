@@ -94,29 +94,10 @@ struct reader {
         record& operator=(record&&) = default;
     };
 
-
-
-    /** Wrapper to allow path and stream inputs
-     */
-    struct Input {
-        seqan::BamFileIn fileIn;
-
-        Input(char const* _path)
-            : fileIn{_path}
-        {
-            seqan::BamHeader header;
-            readHeader(header, fileIn);
-        }
-        Input(std::string const& _path)
-            : Input(_path.c_str())
-        {}
-        Input(std::filesystem::path const& _path)
-            : Input(_path.c_str())
-        {}
-    };
+    using Input = io2::Input<seqan::BamFileIn, seqan::BamAlignmentRecord&>;
 
     // configurable from the outside
-    Input input;
+    std::type_identity<Input>::type input;
     [[no_unique_address]] detail::empty_class<AlphabetS3>  alphabet{};
     [[no_unique_address]] detail::empty_class<QualitiesS3> qualities{};
 
@@ -124,13 +105,13 @@ struct reader {
     // internal variables
     // storage for one record
     struct {
-        seqan::BamAlignmentRecord       seqan2_record;
+        seqan::BamAlignmentRecord            seqan2_record;
         record_view<AlphabetS3, QualitiesS3> return_record;
     } storage;
 
     auto next() -> record_view<AlphabetS3, QualitiesS3> const* {
-        if (atEnd(input.fileIn)) return nullptr;
-        readRecord(storage.seqan2_record, input.fileIn);
+        if (input.atEnd) return nullptr;
+        input.readRecord(storage.seqan2_record);
 
 
         auto const& r = storage.seqan2_record; // shorter name

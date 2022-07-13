@@ -3,6 +3,7 @@
 #include "common.h"
 #include "alphabet_seqan223.h"
 #include "iterator.h"
+#include "Input.h"
 
 #include <filesystem>
 #include <optional>
@@ -61,49 +62,10 @@ struct reader {
         record& operator=(record&&) = default;
     };
 
-    /** Wrapper to allow path and stream inputs
-     */
-    struct Input {
-        using File = seqan::SeqFileIn;
-        using Stream = seqan::Iter<std::istream, seqan::StreamIterator<seqan::Input>>;
-
-        std::variant<File, Stream> fileIn;
-
-        // function that avoids std::variant lookup
-        using F = std::function<void(seqan::CharString&, seqan::String<detail::AlphabetAdaptor<AlphabetS3>>&, seqan::String<detail::AlphabetAdaptor<QualitiesS3>>&)>;
-        F readRecord;
-
-        bool atEnd{false};
-
-
-        Input(char const* _path)
-            : fileIn{std::in_place_index<0>, _path}
-        {
-            readRecord = [&](auto&...args) {
-                auto& file = std::get<0>(fileIn);
-                seqan::readRecord(args..., file);
-                atEnd = seqan::atEnd(file);
-            };
-        }
-        Input(std::string const& _path)
-            : Input(_path.c_str())
-        {}
-        Input(std::filesystem::path const& _path)
-            : Input(_path.c_str())
-        {}
-        Input(std::istream& istr)
-            : fileIn{std::in_place_index<1>, istr}
-        {
-            readRecord = [&](auto&...args) {
-                auto& stream = std::get<1>(fileIn);
-                seqan::readRecord(args..., stream, seqan::Fasta{});
-                atEnd = seqan::atEnd(stream);
-            };
-        }
-    };
+    using Input = io2::Input<seqan::SeqFileIn, seqan::CharString&, seqan::String<detail::AlphabetAdaptor<AlphabetS3>>&, seqan::String<detail::AlphabetAdaptor<QualitiesS3>>&>;
 
     // configurable from the outside
-    Input input;
+    std::type_identity<Input>::type input;
     [[no_unique_address]] detail::empty_class<AlphabetS3>  alphabet{};
     [[no_unique_address]] detail::empty_class<QualitiesS3> qualities{};
 
