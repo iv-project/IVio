@@ -36,53 +36,20 @@ struct writer {
     [[no_unique_address]] detail::empty_class<AlphabetS3>  alphabet{};
     [[no_unique_address]] detail::empty_class<QualitiesS3> qualities{};
 
-
-    template <typename T>
-    struct contigous_range {
-        T const* v{};
-        size_t size{};
-
-        contigous_range() = default;
-        contigous_range(contigous_range const&) = default;
-        contigous_range(contigous_range&&) = delete;
-
-        template <typename rng_t>
-            requires range_over<rng_t, T>
-                and std::ranges::contiguous_range<rng_t>
-                and std::ranges::sized_range<rng_t>
-        contigous_range(rng_t const& s)
-            : v{&*s.begin()}
-            , size{s.size()}
-        {}
-
-        friend auto begin(contigous_range& _contigous_range) {
-            return _contigous_range.v;
-        }
-        friend auto end(contigous_range const& _contigous_range) {
-            return _contigous_range.v + _contigous_range.size;
-        }
-        friend auto size(contigous_range const& _contigous_range) {
-            return _contigous_range.size;
-        }
-
-        auto begin() const { return v; }
-        auto end()   const { return v+size; }
-    };
-
     struct record {
-        contigous_range<char>          id;
-        uint16_t                       flag{};
-        std::optional<int32_t>         rID;
-        std::optional<int32_t>         beginPos;
-        uint8_t                        mapQ{};
-        uint16_t                       bin{};
-        contigous_range<seqan3::cigar> cigar;
-        int32_t                        rNextId{};
-        int32_t                        pNext{};
-        int32_t                        tLen{};
-        contigous_range<AlphabetS3>    seq;
-        contigous_range<QualitiesS3>   qual;
-        contigous_range<char>          tags;
+        std::span<char>          id;
+        uint16_t                 flag{};
+        std::optional<int32_t>   rID;
+        std::optional<int32_t>   beginPos;
+        uint8_t                  mapQ{};
+        uint16_t                 bin{};
+        std::span<seqan3::cigar> cigar;
+        int32_t                  rNextId{};
+        int32_t                  pNext{};
+        int32_t                  tLen{};
+        std::span<AlphabetS3>    seq;
+        std::span<QualitiesS3>   qual;
+        std::span<char>          tags;
     };
 
     void write(record _record) {
