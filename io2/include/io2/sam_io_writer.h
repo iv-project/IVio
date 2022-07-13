@@ -54,13 +54,6 @@ struct writer {
 
         writeRecord(output.fileOut, r);
     }
-
-    void emplace_back(range_over<char> auto const& id, range_over<AlphabetS3> auto const& seq) {
-        seqan::BamAlignmentRecord record;
-        record.qName = id;
-        record.seq   = detail::convert_to_seqan2_alphabet(seq);
-        writeRecord(output.fileOut, record);
-    }
 };
 
 }

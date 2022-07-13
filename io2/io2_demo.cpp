@@ -41,8 +41,12 @@ void writeSeqIo(std::filesystem::path file) {
     using namespace seqan3::literals;
     std::vector<seqan3::dna5> seq = "ACCGGTT"_dna5;
 
-    // write a single entry. (Maybe only a version as for writeSamIo should exists)
-    writer.emplace_back(id, seq);
+    // write a single entry.
+    writer.write({
+        .id   = id,
+        .seq  = seq,
+//        .qual = qual,
+   });
 }
 
 void readAndCopySeqIo(std::filesystem::path file) {
@@ -113,14 +117,23 @@ void writeSamIo(std::filesystem::path file) {
     std::vector<seqan3::dna5> seq = "ACCGGTT"_dna5;
 
 
-    // version 1: writting
+    // writting data to file
     writer.write({
-        .id  = id,
-        .seq = seq,
-    });
+        .id       = id,
+//        .flag     = ?,
+//        .rID      = ?,
+//        .beginPos = ?,
+//        .mapQ     = ?,
+//        .bin      = ?,
+//        .cigar    = ?,
+//        .rNextId  = ?,
+//        .pNext    = ?,
+//        .tLen     = ?,
+        .seq      = seq,
+//        .qual     = ?,
+//        .tags     = ?,
 
-    // version 2: writting (this will have very bad overview, with a lot of parameters)
-    writer.emplace_back(id, seq);
+    });
 }
 
 void readAndCopySamIo(std::filesystem::path file) {
