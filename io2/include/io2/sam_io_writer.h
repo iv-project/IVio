@@ -29,9 +29,9 @@ struct writer {
         uint8_t                    mapQ{};
         uint16_t                   bin{};
         typed_range<seqan3::cigar> cigar;
-        int32_t                    rNextId{};
+        std::optional<int32_t>     rNextId{};
         int32_t                    pNext{};
-        int32_t                    tLen{};
+        std::optional<int32_t>     tLen{};
         typed_range<AlphabetS3>    seq;
         typed_range<QualitiesS3>   qual;
         typed_range<char>          tags;
@@ -46,9 +46,9 @@ struct writer {
         r.mapQ     = _record.mapQ;
         r.bin      = _record.bin;
         r.cigar    = detail::convert_to_seqan2_cigar(_record.cigar);
-        r.rNextId  = _record.rNextId;
+        r.rNextId  = _record.rNextId.value_or(seqan::BamAlignmentRecord::INVALID_REFID);
         r.pNext    = _record.pNext;
-        r.tLen     = _record.tLen;
+        r.tLen     = _record.tLen.value_or(seqan::BamAlignmentRecord::INVALID_LEN);
         r.seq      = detail::convert_to_seqan2_alphabet(_record.seq);
         r.qual     = detail::convert_to_seqan2_qualities(_record.qual);
         r.tags     = detail::convert_to_seqan2_string(_record.tags);
