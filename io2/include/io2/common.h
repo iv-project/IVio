@@ -44,7 +44,7 @@ auto convert_to_view(seqan::String<t> const& v) {
     return std::span<t const>(ptr, length(v));
 }
 
-/**\brief Creates a view onto a seqan3::String<char>.
+/**\brief Creates a view onto a seqan::String<char>.
  *
  * \param v Desired string which to create a view for.
  * \return  A string_view that points to v.
@@ -56,7 +56,7 @@ inline auto convert_to_view(seqan::String<char> const& v) {
 }
 
 
-/**\brief Creates a view onto a seqan3::String<AlphabetAdaptor<·>>.
+/**\brief Creates a view onto a seqan::String<AlphabetAdaptor<·>>.
  *
  * \tparam AlphabetS3 A seqan3 alphabet, e.g.: seqan3::dna4.
  * \param v           Desired string which to create a view for.
@@ -71,7 +71,7 @@ auto convert_to_seqan3_view(seqan::String<detail::AlphabetAdaptor<AlphabetS3>> c
     });
 }
 
-/**\brief Creates a view onto a seqan3::String<seqan::CigarElement>.
+/**\brief Creates a view onto a seqan::String<seqan::CigarElement>.
  *
  * \param v Desired string which to create a view for.
  * \return  A view over seqan3::cigar elements that points to v.
@@ -86,6 +86,22 @@ inline auto convert_to_seqan3_view(seqan::String<seqan::CigarElement<>> const& v
         return seqan3::cigar{v.count, letter};
     });
 }
+
+/**\brief Creates a view onto a seqan::CharString
+ *
+ * \tparam AlphabetS3 A seqan3 alphabet, e.g.: seqan3::dna4.
+ * \param v           Desired string which to create a view for.
+ * \return            A view that points to v.
+ *
+ * \noapi
+ */
+template <typename AlphabetS3>
+auto convert_string_to_seqan3_view(seqan::CharString const& v) {
+    return convert_to_view(v) | std::views::transform([](auto const& v) {
+        return seqan3::assign_char_to(v, AlphabetS3{});
+    });
+}
+
 
 /**\brief Creates a seqan2 alphabet string over a seqan3 alphabet range
  *
