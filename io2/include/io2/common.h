@@ -11,7 +11,7 @@
 
 namespace io2::detail {
 
-/** An empty base class for type deduction.
+/**\brief An empty base class for type deduction.
  *
  * It is meant to be used in combination with the attribute
  * [[no_unique_address]].
@@ -29,18 +29,40 @@ struct empty_class {
 };
 
 
-
-template <typename T>
-auto convert_to_view(seqan::String<T> const& v) {
+/**\brief Creates a view onto a seqan3::String<t>.
+ *
+ * \tparam t Type of the string elements.
+ * \param v  Desired string which to create a view for.
+ * \return   A view that points to v.
+ *
+ * \noapi
+ */
+template <typename t>
+auto convert_to_view(seqan::String<t> const& v) {
     auto ptr = &*begin(v, seqan::Standard());
     return std::ranges::subrange{ptr, ptr + length(v)};
 }
 
+/**\brief Creates a view onto a seqan3::String<char>.
+ *
+ * \param v Desired string which to create a view for.
+ * \return  A string_view that points to v.
+ *
+ * \noapi
+ */
 inline auto convert_to_view(seqan::String<char> const& v) {
     return std::string_view{&*begin(v, seqan::Standard()), length(v)};
 }
 
 
+/**\brief Creates a view onto a seqan3::String<AlphabetAdaptor<·>>.
+ *
+ * \tparam AlphabetS3 A seqan3 alphabet, e.g.: seqan3::dna4.
+ * \param v           Desired string which to create a view for.
+ * \return            A view that points to v.
+ *
+ * \noapi
+ */
 template <typename AlphabetS3>
 auto convert_to_seqan3_view(seqan::String<detail::AlphabetAdaptor<AlphabetS3>> const& v) {
     return convert_to_view(v) | std::views::transform([](auto const& v) {
@@ -48,13 +70,13 @@ auto convert_to_seqan3_view(seqan::String<detail::AlphabetAdaptor<AlphabetS3>> c
     });
 }
 
-template <typename AlphabetS3, typename T>
-auto convert_to_seqan3_view(seqan::String<T> const& v) {
-    return convert_to_view(v) | std::views::transform([](auto const& v) {
-        return seqan3::assign_char_to(static_cast<char>(v), AlphabetS3{});
-    });
-}
-
+/**\brief Creates a view onto a seqan3::String<seqan::CigarElement>.
+ *
+ * \param v Desired string which to create a view for.
+ * \return  A view over seqan3::cigar elements that points to v.
+ *
+ * \noapi
+ */
 inline auto convert_to_seqan3_view(seqan::String<seqan::CigarElement<>> const& v) {
     return convert_to_view(v) | std::views::transform([](auto const& v) {
         using namespace seqan3::literals;
@@ -64,6 +86,13 @@ inline auto convert_to_seqan3_view(seqan::String<seqan::CigarElement<>> const& v
     });
 }
 
+/**\brief Creates a seqan2 alphabet string over a seqan3 alphabet range
+ *
+ * \param rng A seqan3 alphabet range.
+ * \return    A seqan::String over AlphabetAdaptor<·> elements.
+ *
+ * \noapi
+ */
 auto convert_to_seqan2_alphabet(std::ranges::range auto rng) {
     using AlphabetS3 = std::decay_t<decltype(*rng.begin())>;
     seqan::String<io2::detail::AlphabetAdaptor<AlphabetS3>> v;
@@ -76,10 +105,24 @@ auto convert_to_seqan2_alphabet(std::ranges::range auto rng) {
     return v;
 }
 
+/**\brief Creates a seqan2 alphabet string over a seqan3 alphabet range
+ *
+ * \param rng A seqan3 alphabet range.
+ * \return    A seqan::String over AlphabetAdaptor<·> elements.
+ *
+ * \noapi
+ */
 auto convert_to_seqan2_qualities(std::ranges::range auto rng) {
     return convert_to_seqan2_alphabet(rng);
 }
 
+/**\brief Creates a seqan2 cigar string over a seqan3 cigar range
+ *
+ * \param rng A seqan3 cigar range.
+ * \return    A seqan::String over AlphabetAdaptor<seqan:CigarElement<>> elements.
+ *
+ * \noapi
+ */
 auto convert_to_seqan2_cigar(std::ranges::range auto rng) {
     seqan::String<seqan::CigarElement<>> v;
     resize(v, size(rng), seqan::Exact());
@@ -92,6 +135,13 @@ auto convert_to_seqan2_cigar(std::ranges::range auto rng) {
     return v;
 }
 
+/**\brief Creates a seqan2 string over any range with elements of type 'char'
+ *
+ * \param rng Any range with values of type 'char'
+ * \return    A seqan::String over 'char'.
+ *
+ * \noapi
+ */
 auto convert_to_seqan2_string(std::ranges::range auto rng) {
     seqan::String<char> v;
     resize(v, size(rng));
