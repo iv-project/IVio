@@ -1,5 +1,6 @@
 #pragma once
 
+#include "common.h"
 #include "alphabet_seqan223.h"
 #include "utils.h"
 
