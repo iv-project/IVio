@@ -14,18 +14,11 @@ void readSeqIo(std::filesystem::path file) {
         .qualities = io2::type<seqan3::phred42>, // default is phred42
     };
 
-    // version 1:
+    // read data and print to the terminal
     for (auto && record : reader) {
         seqan3::debug_stream << record.id << "\n";
         seqan3::debug_stream << record.seq << "\n";
         seqan3::debug_stream << record.qual << "\n";
-    }
-
-    // version 2: // maybe this should not be supported, since sam and vcf won't support it
-    for (auto & [id, seq, qual] : reader) {
-        seqan3::debug_stream << id << "\n";
-        seqan3::debug_stream << seq << "\n";
-        seqan3::debug_stream << qual << "\n";
     }
 }
 
