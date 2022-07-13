@@ -17,7 +17,7 @@ struct any_iter {
     std::function<T(std::any const&)>                     dref;
     std::function<void(std::any&)>                        inc;
     std::function<bool(std::any const&, std::any const&)> equal;
-    std::function<std::any(std::any const&)>              copy;
+    std::function<std::any(std::any const&)>              copy = [](std::any const&) { return std::any{}; };
 
     any_iter() = default;
     any_iter(any_iter const& _other)
@@ -70,10 +70,13 @@ struct any_iter {
     }
 
     auto operator!=(any_iter const& _other) const {
+        if (!equal and !_other.equal) return false;
+        if (equal and !_other.equal) return false;
+        if (!equal and _other.equal) return false;
         return !equal(iter, _other.iter);
     }
     auto operator==(any_iter const& _other) const {
-        return equal(iter, _other.iter);
+        return !(*this != _other);
     }
 };
 
