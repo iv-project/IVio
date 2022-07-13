@@ -14,6 +14,21 @@
 
 namespace io2::sam_io {
 
+enum class format {
+    Sam,
+    Bam,
+};
+
+/**
+ * \noapi
+ */
+void convert_format(format _format, auto&& cb) {
+    switch(_format) {
+    case format::Sam: cb(seqan::Sam()); break;
+    case format::Bam: cb(seqan::Bam()); break;
+    }
+}
+
 /* A single record_view
  *
  * This record represents a single entry in the file.

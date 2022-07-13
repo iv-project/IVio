@@ -79,14 +79,14 @@ void readAndWriteSeqIo(std::filesystem::path file, std::filesystem::path outFile
 void readAndWriteStreamSeqIo() {
     // setup reader
     auto reader = io2::seq_io::reader {
-        .input     = {std::cin, seqan::Fasta()},
+        .input     = {std::cin, io2::seq_io::format::Fasta},
         .alphabet  = io2::type<seqan3::dna15>,   // default is dna5
         .qualities = io2::type<seqan3::phred42>, // default is phred42
     };
 
     // setup writer
     auto writer = io2::seq_io::writer {
-        .output = {std::cout, seqan::Fasta()},
+        .output = {std::cout, io2::seq_io::format::Fasta},
         .alphabet = io2::type<seqan3::dna15>,
     };
 
@@ -232,14 +232,14 @@ void readAndWriteSamIo(std::filesystem::path file, std::filesystem::path outFile
 void readAndWriteStreamSamIo() {
     // setup reader
     auto reader = io2::sam_io::reader {
-        .input     = {std::cin, seqan::Sam()},
+        .input     = {std::cin, io2::sam_io::format::Sam},
         .alphabet  = io2::type<seqan3::dna15>,   // default is dna5
         .qualities = io2::type<seqan3::phred42>, // default is phred42
     };
 
     // setup writer
     auto writer = io2::sam_io::writer {
-        .output    = {std::cout, seqan::Sam()},
+        .output    = {std::cout, io2::sam_io::format::Sam},
         .alphabet  = io2::type<seqan3::dna15>,   // default is dna5
         .qualities = io2::type<seqan3::phred42>, // default is phred42
     };
@@ -271,14 +271,14 @@ void readAndWriteStreamSamIo() {
 void readAndWriteStreamBamIo() {
     // setup reader
     auto reader = io2::sam_io::reader {
-        .input     = {std::cin, seqan::Bam()},
+        .input     = {std::cin, io2::sam_io::format::Bam},
         .alphabet  = io2::type<seqan3::dna15>,   // default is dna5
         .qualities = io2::type<seqan3::phred42>, // default is phred42
     };
 
     // setup writer
     auto writer = io2::sam_io::writer {
-        .output    = {std::cout, seqan::Bam()},
+        .output    = {std::cout, io2::sam_io::format::Bam},
         .alphabet  = io2::type<seqan3::dna15>,   // default is dna5
         .qualities = io2::type<seqan3::phred42>, // default is phred42
     };

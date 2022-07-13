@@ -28,8 +28,9 @@ struct Input {
 
     template <typename format_t>
     Input(std::istream& istr, format_t format) {
-        assign(fileIn.format, format);
-
+        convert_format(format, [&](auto format) {
+            assign(fileIn.format, format);
+        });
         if (!open(fileIn, istr)) {
             throw std::runtime_error("couldn't open istream");
         }

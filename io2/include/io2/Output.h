@@ -25,9 +25,11 @@ struct Output {
 
     template <typename format_t>
     Output(std::ostream& ostr, format_t format) {
-        if (!open(fileOut, ostr, format)) {
-            throw std::runtime_error("couldn't open ostream");
-        }
+        convert_format(format, [&](auto format) {
+            if (!open(fileOut, ostr, format)) {
+                throw std::runtime_error("couldn't open ostream");
+            }
+        });
     }
 
 };

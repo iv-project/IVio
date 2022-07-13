@@ -17,6 +17,25 @@
 
 namespace io2::seq_io {
 
+enum class format {
+    Fasta,
+    Fastq,
+    Genbank,
+    Embl,
+};
+
+/**
+ * \noapi
+ */
+void convert_format(format _format, auto&& cb) {
+    switch(_format) {
+    case format::Fasta:   cb(seqan::Fasta()); break;
+    case format::Fastq:   cb(seqan::Fastq()); break;
+    case format::Genbank: cb(seqan::GenBank()); break;
+    case format::Embl:    cb(seqan::Embl()); break;
+    }
+}
+
 /* A single view onto a record
  *
  * This record represents a single entry in the file.
