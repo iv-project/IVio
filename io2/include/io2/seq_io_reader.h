@@ -22,8 +22,8 @@ namespace io2::seq_io {
  */
 template <typename AlphabetS3, typename QualitiesS3>
 struct record_view {
-    using sequence_view  = decltype(toSeqan3<AlphabetS3>({}));
-    using qualities_view = decltype(toSeqan3<QualitiesS3>({}));
+    using sequence_view  = decltype(detail::convert_to_seqan3_view<AlphabetS3>({}));
+    using qualities_view = decltype(detail::convert_to_seqan3_view<QualitiesS3>({}));
 
     std::string_view id;
     sequence_view    seq;
@@ -123,9 +123,9 @@ struct reader {
         input.readRecord(storage.id, storage.seq, storage.qual);
 
         storage.return_record = record_view<AlphabetS3, QualitiesS3> {
-            .id  = to_view(storage.id),
-            .seq = toSeqan3(storage.seq),
-            .qual = toSeqan3(storage.qual),
+            .id   = detail::convert_to_view(storage.id),
+            .seq  = detail::convert_to_seqan3_view(storage.seq),
+            .qual = detail::convert_to_seqan3_view(storage.qual),
         };
         return &storage.return_record;
     }

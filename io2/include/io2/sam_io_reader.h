@@ -7,22 +7,12 @@
 #include <filesystem>
 #include <optional>
 #include <seqan/bam_io.h>
-#include <seqan3/alphabet/cigar/cigar.hpp>
 #include <seqan3/alphabet/nucleotide/dna5.hpp>
 #include <seqan3/alphabet/quality/phred42.hpp>
 #include <string_view>
 
 
 namespace io2::sam_io {
-
-auto toSeqan3(seqan::String<seqan::CigarElement<>> const& v) {
-    return to_view(v) | std::views::transform([](auto const& v) {
-        using namespace seqan3::literals;
-        seqan3::cigar::operation letter{};
-        letter.assign_char(v.operation);
-        return seqan3::cigar{v.count, letter};
-    });
-}
 
 /* A single record_view
  *
@@ -31,9 +21,9 @@ auto toSeqan3(seqan::String<seqan::CigarElement<>> const& v) {
 template <typename AlphabetS3, typename QualitiesS3>
 struct record_view {
     // views for string types
-    using sequence_view  = decltype(io2::toSeqan3<AlphabetS3>(decltype(seqan::BamAlignmentRecord{}.seq){}));
-    using cigar_view     = decltype(toSeqan3(decltype(seqan::BamAlignmentRecord{}.cigar){}));
-    using qualities_view = decltype(io2::toSeqan3<QualitiesS3>(decltype(seqan::BamAlignmentRecord{}.qual){}));
+    using sequence_view  = decltype(detail::convert_to_seqan3_view<AlphabetS3>(decltype(seqan::BamAlignmentRecord{}.seq){}));
+    using cigar_view     = decltype(detail::convert_to_seqan3_view(decltype(seqan::BamAlignmentRecord{}.cigar){}));
+    using qualities_view = decltype(detail::convert_to_seqan3_view<QualitiesS3>(decltype(seqan::BamAlignmentRecord{}.qual){}));
 
     std::string_view id;
     uint16_t         flag;
@@ -127,8 +117,8 @@ struct reader {
 
     // configurable from the outside
     Input input;
-    [[no_unique_address]] io2::detail::empty_class<AlphabetS3>  alphabet{};
-    [[no_unique_address]] io2::detail::empty_class<QualitiesS3> qualities{};
+    [[no_unique_address]] detail::empty_class<AlphabetS3>  alphabet{};
+    [[no_unique_address]] detail::empty_class<QualitiesS3> qualities{};
 
 
     // internal variables
@@ -145,19 +135,19 @@ struct reader {
 
         auto const& r = storage.seqan2_record; // shorter name
         storage.return_record = record_view<AlphabetS3, QualitiesS3> {
-            .id       = to_view(r.qName),
+            .id       = detail::convert_to_view(r.qName),
             .flag     = static_cast<uint16_t>(r.flag),
             .rID      = r.rID,
             .beginPos = r.beginPos,
             .mapQ     = static_cast<uint8_t>(r.mapQ),
             .bin      = static_cast<uint16_t>(r.bin),
-            .cigar    = toSeqan3(r.cigar),
+            .cigar    = detail::convert_to_seqan3_view(r.cigar),
             .rNextId  = r.rNextId,
             .pNext    = r.pNext,
             .tLen     = r.tLen,
-            .seq      = io2::toSeqan3<AlphabetS3>(r.seq),
-            .qual     = io2::toSeqan3<QualitiesS3>(r.qual),
-            .tags     = to_view(r.tags),
+            .seq      = detail::convert_to_seqan3_view<AlphabetS3>(r.seq),
+            .qual     = detail::convert_to_seqan3_view<QualitiesS3>(r.qual),
+            .tags     = detail::convert_to_view(r.tags),
         };
         return &storage.return_record;
     }
