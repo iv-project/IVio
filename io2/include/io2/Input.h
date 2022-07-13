@@ -10,42 +10,38 @@ namespace io2 {
 
 /** Wrapper to allow path and stream inputs
  */
-template <typename File, typename ...Args>
+template <typename File>
 struct Input {
-    using Stream = seqan::Iter<std::istream, seqan::StreamIterator<seqan::Input>>;
-
-    std::variant<File, Stream> fileIn;
-
-    // function that avoids std::variant lookup
-    using F = std::function<void(Args...)>;
-    F readRecord;
-
-    bool atEnd{false};
-
+    File fileIn;
 
     Input(char const* _path)
-        : fileIn{std::in_place_index<0>, _path}
-    {
-        readRecord = [&](auto&...args) {
-            auto& file = std::get<0>(fileIn);
-            seqan::readRecord(args..., file);
-            atEnd = seqan::atEnd(file);
-        };
-    }
+        : fileIn{_path}
+    {}
+
     Input(std::string const& _path)
         : Input(_path.c_str())
     {}
+
     Input(std::filesystem::path const& _path)
         : Input(_path.c_str())
     {}
-    Input(std::istream& istr)
-        : fileIn{std::in_place_index<1>, istr}
-    {
-        readRecord = [&](auto&...args) {
-            auto& stream = std::get<1>(fileIn);
-            seqan::readRecord(args..., stream, seqan::Fasta{});
-            atEnd = seqan::atEnd(stream);
-        };
+
+    template <typename format_t>
+    Input(std::istream& istr, format_t format) {
+        assign(fileIn.format, format);
+
+        if (!open(fileIn, istr)) {
+            throw std::runtime_error("couldn't open istream");
+        }
+    }
+
+    bool atEnd() {
+        return seqan::atEnd(fileIn);
+    }
+
+    template <typename... Args>
+    void readRecord(Args&... args) {
+        seqan::readRecord(args..., fileIn);
     }
 };
 

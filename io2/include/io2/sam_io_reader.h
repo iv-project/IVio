@@ -94,12 +94,16 @@ struct reader {
         record& operator=(record&&) = default;
     };
 
-    using Input = io2::Input<seqan::BamFileIn, seqan::BamAlignmentRecord&>;
-
     // configurable from the outside
-    std::type_identity<Input>::type input;
+    io2::Input<seqan::BamFileIn> input;
     [[no_unique_address]] detail::empty_class<AlphabetS3>  alphabet{};
     [[no_unique_address]] detail::empty_class<QualitiesS3> qualities{};
+
+    int x = [this]() {
+        seqan::BamHeader header;
+        seqan::readHeader(header, input.fileIn);
+        return 0;
+    }();
 
 
     // internal variables
@@ -110,7 +114,7 @@ struct reader {
     } storage;
 
     auto next() -> record_view<AlphabetS3, QualitiesS3> const* {
-        if (input.atEnd) return nullptr;
+        if (input.atEnd()) return nullptr;
         input.readRecord(storage.seqan2_record);
 
 

@@ -62,10 +62,8 @@ struct reader {
         record& operator=(record&&) = default;
     };
 
-    using Input = io2::Input<seqan::SeqFileIn, seqan::CharString&, seqan::String<detail::AlphabetAdaptor<AlphabetS3>>&, seqan::String<detail::AlphabetAdaptor<QualitiesS3>>&>;
-
     // configurable from the outside
-    std::type_identity<Input>::type input;
+    io2::Input<seqan::SeqFileIn> input;
     [[no_unique_address]] detail::empty_class<AlphabetS3>  alphabet{};
     [[no_unique_address]] detail::empty_class<QualitiesS3> qualities{};
 
@@ -81,7 +79,7 @@ struct reader {
     } storage;
 
     auto next() -> record_view<AlphabetS3, QualitiesS3> const* {
-        if (input.atEnd) return nullptr;
+        if (input.atEnd()) return nullptr;
         input.readRecord(storage.id, storage.seq, storage.qual);
 
         storage.return_record = record_view<AlphabetS3, QualitiesS3> {

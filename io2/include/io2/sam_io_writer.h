@@ -4,6 +4,7 @@
 #include "alphabet_seqan223.h"
 #include "utils.h"
 #include "Output.h"
+#include "typed_range.h"
 
 #include <seqan/bam_io.h>
 #include <seqan3/alphabet/nucleotide/dna5.hpp>
@@ -21,19 +22,19 @@ struct writer {
     [[no_unique_address]] detail::empty_class<QualitiesS3> qualities{};
 
     struct record {
-        std::span<char>          id;
-        uint16_t                 flag{};
-        std::optional<int32_t>   rID;
-        std::optional<int32_t>   beginPos;
-        uint8_t                  mapQ{};
-        uint16_t                 bin{};
-        std::span<seqan3::cigar> cigar;
-        int32_t                  rNextId{};
-        int32_t                  pNext{};
-        int32_t                  tLen{};
-        std::span<AlphabetS3>    seq;
-        std::span<QualitiesS3>   qual;
-        std::span<char>          tags;
+        typed_range<char>          id;
+        uint16_t                   flag{};
+        std::optional<int32_t>     rID;
+        std::optional<int32_t>     beginPos;
+        uint8_t                    mapQ{};
+        uint16_t                   bin{};
+        typed_range<seqan3::cigar> cigar;
+        int32_t                    rNextId{};
+        int32_t                    pNext{};
+        int32_t                    tLen{};
+        typed_range<AlphabetS3>    seq;
+        typed_range<QualitiesS3>   qual;
+        typed_range<char>          tags;
     };
 
     void write(record _record) {
@@ -54,6 +55,26 @@ struct writer {
 
         writeRecord(output.fileOut, r);
     }
+
+    template <typename record_like>
+    void write(record_like const& _record) {
+        write(record {
+            .id       = _record.id,
+            .flag     = _record.flag,
+            .rID      = _record.rID,
+            .beginPos = _record.beginPos,
+            .mapQ     = _record.mapQ,
+            .bin      = _record.bin,
+            .cigar    = _record.cigar,
+            .rNextId  = _record.rNextId,
+            .pNext    = _record.pNext,
+            .tLen     = _record.tLen,
+            .seq      = _record.seq,
+            .qual     = _record.qual,
+            .tags     = _record.tags,
+        });
+    }
+
 };
 
 }

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <filesystem>
+#include <ostream>
 
 namespace io2 {
 
@@ -13,12 +14,22 @@ struct Output {
     Output(char const* _path)
         : fileOut{_path}
     {}
+
     Output(std::string const& _path)
         : Output(_path.c_str())
     {}
+
     Output(std::filesystem::path const& _path)
         : Output(_path.c_str())
     {}
+
+    template <typename format_t>
+    Output(std::ostream& ostr, format_t format) {
+        if (!open(fileOut, ostr, format)) {
+            throw std::runtime_error("couldn't open ostream");
+        }
+    }
+
 };
 
 }

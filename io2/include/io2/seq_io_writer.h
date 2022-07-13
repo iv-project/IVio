@@ -4,6 +4,8 @@
 #include "alphabet_seqan223.h"
 #include "utils.h"
 #include "Output.h"
+#include "seq_io_reader.h"
+#include "typed_range.h"
 
 #include <seqan/seq_io.h>
 #include <seqan3/alphabet/nucleotide/dna5.hpp>
@@ -19,9 +21,9 @@ struct writer {
     [[no_unique_address]] detail::empty_class<AlphabetS3> alphabet{};
 
     struct record {
-        std::span<char>          id;
-        std::span<AlphabetS3>    seq;
-        std::span<QualitiesS3>   qual;
+        typed_range<char>        id;
+        typed_range<AlphabetS3>  seq;
+        typed_range<QualitiesS3> qual;
     };
 
     void write(record _record) {
@@ -30,6 +32,15 @@ struct writer {
         auto qual = detail::convert_to_seqan2_qualities(_record.qual);
 
         writeRecord(output.fileOut, id, seq, qual);
+    }
+
+    template <typename record_like>
+    void write(record_like const& _record) {
+        write(record{
+            .id   = _record.id,
+            .seq  = _record.seq,
+            .qual = _record.qual,
+        });
     }
 };
 

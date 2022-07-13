@@ -4,8 +4,9 @@
 
 #include <ranges>
 #include <seqan/seq_io.h>
-#include <seqan3/alphabet/nucleotide/dna5.hpp>
 #include <seqan3/alphabet/cigar/cigar.hpp>
+#include <seqan3/alphabet/nucleotide/dna5.hpp>
+#include <span>
 #include <string_view>
 
 
@@ -40,7 +41,7 @@ struct empty_class {
 template <typename t>
 auto convert_to_view(seqan::String<t> const& v) {
     auto ptr = &*begin(v, seqan::Standard());
-    return std::ranges::subrange{ptr, ptr + length(v)};
+    return std::span<t const>(ptr, length(v));
 }
 
 /**\brief Creates a view onto a seqan3::String<char>.
@@ -96,7 +97,7 @@ inline auto convert_to_seqan3_view(seqan::String<seqan::CigarElement<>> const& v
 auto convert_to_seqan2_alphabet(std::ranges::range auto rng) {
     using AlphabetS3 = std::decay_t<decltype(*rng.begin())>;
     seqan::String<io2::detail::AlphabetAdaptor<AlphabetS3>> v;
-    resize(v, size(rng), seqan::Exact());
+    resize(v, std::ranges::size(rng), seqan::Exact());
     std::ranges::copy(rng | std::views::transform([](auto c) {
         auto t = io2::detail::AlphabetAdaptor<AlphabetS3>{};
         t.value = c.to_rank();
@@ -125,7 +126,7 @@ auto convert_to_seqan2_qualities(std::ranges::range auto rng) {
  */
 auto convert_to_seqan2_cigar(std::ranges::range auto rng) {
     seqan::String<seqan::CigarElement<>> v;
-    resize(v, size(rng), seqan::Exact());
+    resize(v, std::ranges::size(rng), seqan::Exact());
     std::ranges::copy(rng | std::views::transform([](auto c) {
         auto t = seqan::CigarElement{};
         t.operation = get<1>(c).to_char();
@@ -144,7 +145,7 @@ auto convert_to_seqan2_cigar(std::ranges::range auto rng) {
  */
 auto convert_to_seqan2_string(std::ranges::range auto rng) {
     seqan::String<char> v;
-    resize(v, size(rng));
+    resize(v, std::ranges::size(rng));
     std::ranges::copy(rng, begin(v));
     return v;
 }

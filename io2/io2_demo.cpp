@@ -49,6 +49,61 @@ void writeSeqIo(std::filesystem::path file) {
    });
 }
 
+void readAndWriteSeqIo(std::filesystem::path file, std::filesystem::path outFile) {
+    // setup reader
+    auto reader = io2::seq_io::reader {
+        .input     = file,
+        .alphabet  = io2::type<seqan3::dna15>,   // default is dna5
+        .qualities = io2::type<seqan3::phred42>, // default is phred42
+    };
+
+    // setup writer
+    auto writer = io2::seq_io::writer {
+        .output = outFile,
+        .alphabet = io2::type<seqan3::dna15>,
+    };
+
+    // reads entries and reduces the alphabet to 'A' and 'C'
+    for (auto && r : reader) {
+        writer.write({
+            .id   = r.id,
+            .seq  = r.seq | std::views::transform([](auto c) {
+                // Only allows 'A' and 'C'
+                return seqan3::assign_rank_to(c.to_rank() % 2, c);
+            }),
+            .qual = r.qual,
+        });
+    }
+}
+
+void readAndWriteStreamSeqIo() {
+    // setup reader
+    auto reader = io2::seq_io::reader {
+        .input     = {std::cin, seqan::Fasta()},
+        .alphabet  = io2::type<seqan3::dna15>,   // default is dna5
+        .qualities = io2::type<seqan3::phred42>, // default is phred42
+    };
+
+    // setup writer
+    auto writer = io2::seq_io::writer {
+        .output = {std::cout, seqan::Fasta()},
+        .alphabet = io2::type<seqan3::dna15>,
+    };
+
+    // reads entries and reduces the alphabet to 'A' and 'C'
+    for (auto && r : reader) {
+        writer.write({
+            .id   = r.id,
+            .seq  = r.seq | std::views::transform([](auto c) {
+                // Only allows 'A' and 'C'
+                return seqan3::assign_rank_to(c.to_rank() % 2, c);
+            }),
+            .qual = r.qual,
+        });
+    }
+}
+
+
 void readAndCopySeqIo(std::filesystem::path file) {
     // setup reader
     auto reader = io2::seq_io::reader {
@@ -132,9 +187,128 @@ void writeSamIo(std::filesystem::path file) {
         .seq      = seq,
 //        .qual     = ?,
 //        .tags     = ?,
-
     });
 }
+
+void readAndWriteSamIo(std::filesystem::path file, std::filesystem::path outFile) {
+    // setup reader
+    auto reader = io2::sam_io::reader {
+        .input     = file,
+        .alphabet  = io2::type<seqan3::dna15>,   // default is dna5
+        .qualities = io2::type<seqan3::phred42>, // default is phred42
+    };
+
+    // setup writer
+    auto writer = io2::sam_io::writer {
+        .output    = outFile,
+        .alphabet  = io2::type<seqan3::dna15>,   // default is dna5
+        .qualities = io2::type<seqan3::phred42>, // default is phred42
+    };
+
+
+    // copy records
+    for (auto && r : reader) {
+        writer.write({
+            .id       = r.id,
+            .flag     = r.flag,
+            .rID      = r.rID,
+            .beginPos = r.beginPos,
+            .mapQ     = r.mapQ,
+            .bin      = r.bin,
+            .cigar    = r.cigar,
+            .rNextId  = r.rNextId,
+            .pNext    = r.pNext,
+            .tLen     = r.tLen,
+            .seq      = r.seq,
+            .qual     = r.qual | std::views::transform([](auto q) {
+                // decrease quality by half
+                return seqan3::assign_rank_to(q.to_rank() / 2, q);
+            }),
+            .tags     = r.tags,
+        });
+    }
+}
+
+void readAndWriteStreamSamIo() {
+    // setup reader
+    auto reader = io2::sam_io::reader {
+        .input     = {std::cin, seqan::Sam()},
+        .alphabet  = io2::type<seqan3::dna15>,   // default is dna5
+        .qualities = io2::type<seqan3::phred42>, // default is phred42
+    };
+
+    // setup writer
+    auto writer = io2::sam_io::writer {
+        .output    = {std::cout, seqan::Sam()},
+        .alphabet  = io2::type<seqan3::dna15>,   // default is dna5
+        .qualities = io2::type<seqan3::phred42>, // default is phred42
+    };
+
+
+    // copy records
+    for (auto && r : reader) {
+        writer.write({
+            .id       = r.id,
+            .flag     = r.flag,
+            .rID      = r.rID,
+            .beginPos = r.beginPos,
+            .mapQ     = r.mapQ,
+            .bin      = r.bin,
+            .cigar    = r.cigar,
+            .rNextId  = r.rNextId,
+            .pNext    = r.pNext,
+            .tLen     = r.tLen,
+            .seq      = r.seq,
+            .qual     = r.qual | std::views::transform([](auto q) {
+                // decrease quality by half
+                return seqan3::assign_rank_to(q.to_rank() / 2, q);
+            }),
+            .tags     = r.tags,
+        });
+    }
+}
+
+void readAndWriteStreamBamIo() {
+    // setup reader
+    auto reader = io2::sam_io::reader {
+        .input     = {std::cin, seqan::Bam()},
+        .alphabet  = io2::type<seqan3::dna15>,   // default is dna5
+        .qualities = io2::type<seqan3::phred42>, // default is phred42
+    };
+
+    // setup writer
+    auto writer = io2::sam_io::writer {
+        .output    = {std::cout, seqan::Bam()},
+        .alphabet  = io2::type<seqan3::dna15>,   // default is dna5
+        .qualities = io2::type<seqan3::phred42>, // default is phred42
+    };
+
+
+    // copy records
+    for (auto && r : reader) {
+        writer.write({
+            .id       = r.id,
+            .flag     = r.flag,
+            .rID      = r.rID,
+            .beginPos = r.beginPos,
+            .mapQ     = r.mapQ,
+            .bin      = r.bin,
+            .cigar    = r.cigar,
+            .rNextId  = r.rNextId,
+            .pNext    = r.pNext,
+            .tLen     = r.tLen,
+            .seq      = r.seq,
+            .qual     = r.qual | std::views::transform([](auto q) {
+                // decrease quality by half
+                return seqan3::assign_rank_to(q.to_rank() / 2, q);
+            }),
+            .tags     = r.tags,
+        });
+    }
+}
+
+
+
 
 void readAndCopySamIo(std::filesystem::path file) {
     // setup reader
@@ -177,7 +351,7 @@ void readCompleteFileSamIo(std::filesystem::path file) {
 int main(int argc, char** argv) {
     // call ./io2 read|write <file>
 
-    if (argc != 3) return -1;
+    if (argc < 2) return -1;
 
     auto action = std::string{argv[1]};
     auto file   = std::filesystem::path{argv[2]};
@@ -186,6 +360,11 @@ int main(int argc, char** argv) {
         readSeqIo(file);
     } else if (action == "write" and io2::seq_io::validExtension(file)) {
         writeSeqIo(file);
+    } else if (action == "read_and_write" and io2::seq_io::validExtension(file) and argc == 4) {
+        auto outFile = std::filesystem::path{argv[3]};
+        readAndWriteSeqIo(file, outFile);
+    } else if (action == "read_and_write" and file == "seq" and argc == 3) {
+        readAndWriteStreamSeqIo();
     } else if (action == "read_and_copy" and io2::seq_io::validExtension(file)) {
         readAndCopySeqIo(file);
     } else if (action == "read_complete_file" and io2::seq_io::validExtension(file)) {
@@ -194,6 +373,13 @@ int main(int argc, char** argv) {
         readSamIo(file);
     } else if (action == "write" and io2::sam_io::validExtension(file)) {
         writeSamIo(file);
+    } else if (action == "read_and_write" and io2::sam_io::validExtension(file) and argc == 4) {
+        auto outFile = std::filesystem::path{argv[3]};
+        readAndWriteSamIo(file, outFile);
+    } else if (action == "read_and_write_stream" and file == "sam" and argc == 3) {
+        readAndWriteStreamSamIo();
+    } else if (action == "read_and_write_stream" and file == "bam" and argc == 3) {
+        readAndWriteStreamBamIo();
     } else if (action == "read_and_copy" and io2::sam_io::validExtension(file)) {
         readAndCopySamIo(file);
     } else if (action == "read_complete_file" and io2::sam_io::validExtension(file)) {
