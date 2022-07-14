@@ -350,8 +350,10 @@ void readVcfIo(std::filesystem::path file) {
 
     // read records
     for (auto && record : reader) {
-        seqan3::debug_stream << record.id << "\n";
-        seqan3::debug_stream << record.ref << "\n";
+        seqan3::debug_stream << record.rID << "\t";
+        seqan3::debug_stream << record.beginPos << "\t";
+        seqan3::debug_stream << record.id << "\t";
+        seqan3::debug_stream << record.ref << "\t";
         seqan3::debug_stream << record.alt << "\n";
     }
 }
@@ -385,52 +387,46 @@ void writeVcfIo(std::filesystem::path file) {
 }
 
 void readAndWriteVcfIo(std::filesystem::path file, std::filesystem::path outFile) {
-//    // setup reader
-//    auto reader = io2::vcf_io::reader {
-//        .input     = file,
-//        .alphabet  = io2::type<seqan3::dna15>,   // default is dna5
-//    };
-//
-//    // setup writer
-//    auto writer = io2::vcf_io::writer {
-//        .output    = outFile,
-//        .alphabet  = io2::type<seqan3::dna15>,   // default is dna5
-//    };
-//
-//
-//    // copy records
-//    for (auto && r : reader) {
-//        writer.write({
-//            .id       = r.id,
-//            .flag     = r.flag,
-//            .rID      = r.rID,
-//            .beginPos = r.beginPos,
-//            .mapQ     = r.mapQ,
-//            .bin      = r.bin,
-//            .cigar    = r.cigar,
-//            .rNextId  = r.rNextId,
-//            .pNext    = r.pNext,
-//            .tLen     = r.tLen,
-//            .seq      = r.seq,
-//            .qual     = r.qual | std::views::transform([](auto q) {
-//                // decrease quality by half
-//                return seqan3::assign_rank_to(q.to_rank() / 2, q);
-//            }),
-//            .tags     = r.tags,
-//        });
-//    }
+    // setup reader
+    auto reader = io2::vcf_io::reader {
+        .input     = file,
+        .alphabet  = io2::type<seqan3::dna15>,   // default is dna5
+    };
+
+    // setup writer
+    auto writer = io2::vcf_io::writer {
+        .output    = outFile,
+        .alphabet  = io2::type<seqan3::dna15>,   // default is dna5
+    };
+
+
+    // copy records
+    for (auto && r : reader) {
+        writer.write({
+            .rID      = r.rID,
+            .beginPos = r.beginPos,
+            .id       = r.id,
+            .ref      = r.ref,
+            .alt      = r.alt,
+            .qual     = r.qual,
+            .filter   = r.filter,
+            .info     = r.info,
+            .format   = r.format,
+//            .genotypeInfos = ?, //!TODO
+        });
+    }
 }
 
 void readAndWriteStreamVcfIo() {
 //    // setup reader
 //    auto reader = io2::vcf_io::reader {
-//        .input     = {std::cin, io2::vcf_io::format::Sam},
+//        .input     = {std::cin, io2::vcf_io::format::Vcf},
 //        .alphabet  = io2::type<seqan3::dna15>,   // default is dna5
 //    };
 //
 //    // setup writer
 //    auto writer = io2::vcf_io::writer {
-//        .output    = {std::cout, io2::vcf_io::format::Sam},
+//        .output    = {std::cout, io2::vcf_io::format::Vcf},
 //        .alphabet  = io2::type<seqan3::dna15>,   // default is dna5
 //    };
 //
@@ -438,22 +434,16 @@ void readAndWriteStreamVcfIo() {
 //    // copy records
 //    for (auto && r : reader) {
 //        writer.write({
-//            .id       = r.id,
-//            .flag     = r.flag,
 //            .rID      = r.rID,
 //            .beginPos = r.beginPos,
-//            .mapQ     = r.mapQ,
-//            .bin      = r.bin,
-//            .cigar    = r.cigar,
-//            .rNextId  = r.rNextId,
-//            .pNext    = r.pNext,
-//            .tLen     = r.tLen,
-//            .seq      = r.seq,
-//            .qual     = r.qual | std::views::transform([](auto q) {
-//                // decrease quality by half
-//                return seqan3::assign_rank_to(q.to_rank() / 2, q);
-//            }),
-//            .tags     = r.tags,
+//            .id       = r.id,
+//            .ref      = r.ref,
+//            .alt      = r.alt,
+//            .qual     = r.qual,
+//            .filter   = r.filter,
+//            .info     = r.info,
+//            .format   = r.format,
+////            .genotypeInfos = ?, //!TODO
 //        });
 //    }
 }

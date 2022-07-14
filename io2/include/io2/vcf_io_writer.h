@@ -19,8 +19,17 @@ struct writer {
     Output<seqan::VcfFileOut> output;
     [[no_unique_address]] detail::empty_class<AlphabetS3>  alphabet{};
 
+
+    int x = [this]() {
+        appendValue(contigNames(context(output.fileOut)), "ABC");
+        appendValue(contigNames(context(output.fileOut)), "ABC");
+        appendValue(contigNames(context(output.fileOut)), "ABC");
+        appendValue(contigNames(context(output.fileOut)), "ABC");
+        return 0;
+    }();
+
     struct record {
-        std::optional<int32_t>   rID;
+        int32_t                  rID{};
         std::optional<int32_t>   beginPos;
         typed_range<char>        id;
         typed_range<AlphabetS3>  ref;
@@ -34,7 +43,7 @@ struct writer {
 
     void write(record _record) {
         seqan::VcfRecord r;
-        r.rID      = _record.rID.value_or(seqan::VcfRecord::INVALID_REFID);
+        r.rID      = _record.rID;
         r.beginPos = _record.beginPos.value_or(seqan::VcfRecord::INVALID_POS);
         r.id       = detail::convert_to_seqan2_string(_record.id);
         r.ref      = detail::convert_to_seqan2_alphabet(_record.ref);
