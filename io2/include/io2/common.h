@@ -25,8 +25,8 @@ namespace io2::detail {
 template <typename t>
 struct empty_class {
     using type = t;
-    empty_class() = default;
-    empty_class(t const &) {}
+    constexpr empty_class() noexcept = default;
+    constexpr empty_class(t const &) noexcept {}
 };
 
 
