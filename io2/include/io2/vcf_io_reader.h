@@ -99,19 +99,66 @@ struct reader {
     io2::Input<seqan::VcfFileIn> input;
     [[no_unique_address]] detail::empty_class<AlphabetS3>  alphabet{};
 
-    int x = [this]() {
-        seqan::VcfHeader header;
-        seqan::readHeader(header, input.fileIn);
-        return 0;
-    }();
-
-
     // internal variables
-    // storage for one record
+    /* storage for one record
+     * \noapi
+     */
     struct {
         seqan::VcfRecord        seqan2_record;
         record_view<AlphabetS3> return_record;
+
+        seqan::VcfHeader        seqan2_header;
+        std::decay_t<decltype(contigNames(context(seqan::VcfFileIn{})))> seqan2_contigNames;
+        std::decay_t<decltype(sampleNames(context(seqan::VcfFileIn{})))> seqan2_sampleNames;
     } storage;
+
+    /* A fake constructor
+     *
+     * We are using this function as a constructor, to keep the designated initializer
+     * syntax intact.
+     *
+     * \noapi
+     */
+    [[no_unique_address]] detail::empty_class<nullptr_t> _fakeConstructor = [this]() {
+        seqan::readHeader(storage.seqan2_header, input.fileIn);
+        storage.seqan2_sampleNames = sampleNames(context(input.fileIn));
+        return nullptr;
+    }();
+
+
+
+
+    /** accessing header information
+     * \experimentalapi
+     */
+    struct {
+        reader& reader_;
+
+        auto samples() -> typed_range<std::string_view> {
+            auto& names = reader_.storage.seqan2_sampleNames;
+
+            return std::ranges::subrange{begin(names), begin(names) + length(names)}
+                | std::views::transform([](seqan::String<char> const& s) {
+                    return detail::convert_to_view(s);
+                });
+        }
+        auto entries() const -> sized_typed_range<std::tuple<std::string_view, std::string_view>> {
+            return {std::ranges::subrange{begin(reader_.storage.seqan2_header), begin(reader_.storage.seqan2_header) + length(reader_.storage.seqan2_header)}
+                | std::views::transform([](seqan::VcfHeaderRecord const& v) {
+                    return std::make_tuple(detail::convert_to_view(v.key),
+                                            detail::convert_to_view(v.value));
+                })};
+        }
+        auto entries(std::string const& _filter) const -> typed_range<std::string_view> {
+            return {std::ranges::subrange{begin(reader_.storage.seqan2_header), begin(reader_.storage.seqan2_header) + length(reader_.storage.seqan2_header)}
+                | std::views::filter([_filter](seqan::VcfHeaderRecord const& v) {
+//                    return true;
+                    return toCString(v.key) == _filter;
+                }) | std::views::transform([](seqan::VcfHeaderRecord const& v) {
+                    return detail::convert_to_view(v.value);
+                })};
+        }
+    } header {*this};
 
     auto next() -> record_view<AlphabetS3> const* {
         if (input.atEnd()) return nullptr;

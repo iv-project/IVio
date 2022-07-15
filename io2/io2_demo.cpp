@@ -348,6 +348,21 @@ void readVcfIo(std::filesystem::path file) {
         .alphabet  = io2::type<seqan3::dna15>,   // default is dna5
     };
 
+    for (auto [key, value] : reader.header.entries()) {
+        seqan3::debug_stream << key << " = " << value << "\n";
+    }
+
+    //   contigs
+    seqan3::debug_stream << "contig:\n";
+    for (auto c : reader.header.entries("contig")) {
+        seqan3::debug_stream << c << "\n";
+    }
+    //   samples
+    for (auto c : reader.header.samples()) {
+        seqan3::debug_stream << c << "\n";
+    }
+
+
     // read records
     for (auto && record : reader) {
         seqan3::debug_stream << record.rID << "\t";
