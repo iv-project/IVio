@@ -38,16 +38,16 @@ struct record_view {
     // views for string types
     using sequence_view  = decltype(detail::convert_string_to_seqan3_view<AlphabetS3>({}));
 
-    int32_t                       rID;
-    int32_t                       beginPos;
-    std::string_view              id;
-    sequence_view                 ref;
-    sequence_view                 alt;
-    float                         qual;
-    std::string_view              filter;
-    std::string_view              info;
-    std::string_view              format;
-    std::vector<std::string_view> genotypeInfos;
+    int32_t                             rID;
+    int32_t                             beginPos;
+    std::string_view                    id;
+    sequence_view                       ref;
+    sequence_view                       alt;
+    float                               qual;
+    std::string_view                    filter;
+    std::string_view                    info;
+    std::string_view                    format;
+    sized_typed_range<std::string_view> genotypeInfos;
 };
 
 /** A reader to read sequence files like fasta, fastq, genbank, embl
@@ -86,7 +86,7 @@ struct reader {
             , filter{v.filter}
             , info{v.info}
             , format{v.format}
-            //!TODO v.genotypeInfos
+            , genotypeInfos{v.genotypeinfos | std::views::transform([](auto s) { return std::string{s}; }) | seqan3::ranges::to<std::vector>()}
         {}
         record() = default;
         record(record const&) = default;
@@ -152,7 +152,6 @@ struct reader {
         auto entries(std::string const& _filter) const -> typed_range<std::string_view> {
             return {std::ranges::subrange{begin(reader_.storage.seqan2_header), begin(reader_.storage.seqan2_header) + length(reader_.storage.seqan2_header)}
                 | std::views::filter([_filter](seqan::VcfHeaderRecord const& v) {
-//                    return true;
                     return toCString(v.key) == _filter;
                 }) | std::views::transform([](seqan::VcfHeaderRecord const& v) {
                     return detail::convert_to_view(v.value);
@@ -175,8 +174,8 @@ struct reader {
             .qual     = r.qual,
             .filter   = detail::convert_to_view(r.filter),
             .info     = detail::convert_to_view(r.info),
-            .format     = detail::convert_to_view(r.format),
-            //!TODO genotypeInfos
+            .format   = detail::convert_to_view(r.format),
+            .genotypeInfos = {r.genotypeInfos | std::views::transform([](auto& s) { return detail::convert_to_view(s); })},
         };
         return &storage.return_record;
     }

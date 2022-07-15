@@ -349,19 +349,18 @@ void readVcfIo(std::filesystem::path file) {
     };
 
     for (auto [key, value] : reader.header.entries()) {
-        seqan3::debug_stream << key << " = " << value << "\n";
+        seqan3::debug_stream << "header: " << key << " = " << value << "\n";
     }
 
     //   contigs
     seqan3::debug_stream << "contig:\n";
     for (auto c : reader.header.entries("contig")) {
-        seqan3::debug_stream << c << "\n";
+        seqan3::debug_stream << "contigs:" << c << "\n";
     }
     //   samples
     for (auto c : reader.header.samples()) {
-        seqan3::debug_stream << c << "\n";
+        seqan3::debug_stream << "samples:" << c << "\n";
     }
-
 
     // read records
     for (auto && record : reader) {
@@ -369,7 +368,11 @@ void readVcfIo(std::filesystem::path file) {
         seqan3::debug_stream << record.beginPos << "\t";
         seqan3::debug_stream << record.id << "\t";
         seqan3::debug_stream << record.ref << "\t";
-        seqan3::debug_stream << record.alt << "\n";
+        seqan3::debug_stream << record.alt << "\t";
+        for (auto info : record.genotypeInfos) {
+            seqan3::debug_stream << "  - " << info << "\t";
+        }
+        seqan3::debug_stream << "\n";
     }
 }
 
