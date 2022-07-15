@@ -110,15 +110,27 @@ auto convert_string_to_seqan3_view(seqan::CharString const& v) {
  *
  * \noapi
  */
-auto convert_to_seqan2_alphabet(std::ranges::range auto rng) {
+template <std::ranges::range rng_t>
+auto convert_to_seqan2_alphabet(rng_t&& rng) {
     using AlphabetS3 = std::decay_t<decltype(*rng.begin())>;
     seqan::String<io2::detail::AlphabetAdaptor<AlphabetS3>> v;
-    resize(v, std::ranges::size(rng), seqan::Exact());
-    std::ranges::copy(rng | std::views::transform([](auto c) {
-        auto t = io2::detail::AlphabetAdaptor<AlphabetS3>{};
-        t.value = c.to_rank();
-        return t;
-    }), begin(v));
+
+    auto view = rng | std::views::transform([](auto c) {
+            auto t = io2::detail::AlphabetAdaptor<AlphabetS3>{};
+            t.value = c.to_rank();
+            return t;
+        });
+
+    if constexpr (requires() {
+        { std::ranges::size(rng) } -> std::same_as<size_t>;
+    }) {
+        resize(v, std::ranges::size(rng), seqan::Exact());
+        std::ranges::copy(view, begin(v));
+    } else {
+        for (auto c : view) {
+            appendValue(v, c);
+        }
+    }
     return v;
 }
 
@@ -129,8 +141,9 @@ auto convert_to_seqan2_alphabet(std::ranges::range auto rng) {
  *
  * \noapi
  */
-auto convert_to_seqan2_qualities(std::ranges::range auto rng) {
-    return convert_to_seqan2_alphabet(rng);
+template <std::ranges::range rng_t>
+auto convert_to_seqan2_qualities(rng_t&& rng) {
+    return convert_to_seqan2_alphabet(std::forward<rng_t>(rng));
 }
 
 /**\brief Creates a seqan2 cigar string over a seqan3 cigar range
@@ -140,15 +153,26 @@ auto convert_to_seqan2_qualities(std::ranges::range auto rng) {
  *
  * \noapi
  */
-auto convert_to_seqan2_cigar(std::ranges::range auto rng) {
+template <std::ranges::range rng_t>
+auto convert_to_seqan2_cigar(rng_t&& rng) {
     seqan::String<seqan::CigarElement<>> v;
-    resize(v, std::ranges::size(rng), seqan::Exact());
-    std::ranges::copy(rng | std::views::transform([](auto c) {
+    auto view = rng | std::views::transform([](auto c) {
         auto t = seqan::CigarElement{};
         t.operation = get<1>(c).to_char();
         t.count     = get<0>(c);
         return t;
-    }), begin(v));
+    });
+
+    if constexpr (requires() {
+        { std::ranges::size(rng) } -> std::same_as<size_t>;
+    }) {
+        resize(v, std::ranges::size(rng), seqan::Exact());
+        std::ranges::copy(view, begin(v));
+    } else {
+        for (auto c : view) {
+            appendValue(v, c);
+        }
+    }
     return v;
 }
 
@@ -159,10 +183,19 @@ auto convert_to_seqan2_cigar(std::ranges::range auto rng) {
  *
  * \noapi
  */
-auto convert_to_seqan2_string(std::ranges::range auto rng) {
+template <std::ranges::range rng_t>
+auto convert_to_seqan2_string(rng_t&& rng) {
     seqan::String<char> v;
-    resize(v, std::ranges::size(rng));
-    std::ranges::copy(rng, begin(v));
+    if constexpr (requires() {
+        { std::ranges::size(rng) } -> std::same_as<size_t>;
+    }) {
+        resize(v, std::ranges::size(rng));
+        std::ranges::copy(rng, begin(v));
+    } else {
+        for (auto c : rng) {
+            appendValue(v, c);
+        }
+    }
     return v;
 }
 

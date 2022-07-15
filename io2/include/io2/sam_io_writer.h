@@ -22,19 +22,19 @@ struct writer {
     [[no_unique_address]] detail::empty_class<QualitiesS3> qualities{};
 
     struct record {
-        typed_range<char>          id;
-        uint16_t                   flag{};
-        std::optional<int32_t>     rID;
-        std::optional<int32_t>     beginPos;
-        uint8_t                    mapQ{};
-        uint16_t                   bin{};
-        typed_range<seqan3::cigar> cigar;
-        std::optional<int32_t>     rNextId{};
-        int32_t                    pNext{};
-        std::optional<int32_t>     tLen{};
-        typed_range<AlphabetS3>    seq;
-        typed_range<QualitiesS3>   qual;
-        typed_range<char>          tags;
+        sized_typed_range<char>          id;
+        uint16_t                         flag{};
+        std::optional<int32_t>           rID;
+        std::optional<int32_t>           beginPos;
+        uint8_t                          mapQ{};
+        uint16_t                         bin{};
+        sized_typed_range<seqan3::cigar> cigar;
+        std::optional<int32_t>           rNextId{};
+        int32_t                          pNext{};
+        std::optional<int32_t>           tLen{};
+        sized_typed_range<AlphabetS3>    seq;
+        sized_typed_range<QualitiesS3>   qual;
+        sized_typed_range<char>          tags;
     };
 
     void write(record _record) {
