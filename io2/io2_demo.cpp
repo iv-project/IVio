@@ -385,6 +385,7 @@ void writeVcfIo(std::filesystem::path file) {
 
     // generating some data
     std::string id="blub";
+    std::vector<std::string> genotypeInfos{std::string{"0/1:68,0,85"}};
     using namespace seqan3::literals;
     std::vector<seqan3::dna5> ref = "ACCGGTT"_dna5;
 
@@ -400,7 +401,7 @@ void writeVcfIo(std::filesystem::path file) {
 //        .filter   = ?,
 //        .info     = ?,
 //        .format   = ?,
-//        .genotypeInfos = ?, //!TODO
+        .genotypeInfos = genotypeInfos,
     });
 }
 
