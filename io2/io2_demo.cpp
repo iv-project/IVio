@@ -451,11 +451,15 @@ void readAndWriteStreamVcfIo() {
 //        .input     = {std::cin, io2::vcf_io::format::Vcf},
 //        .alphabet  = io2::type<seqan3::dna15>,   // default is dna5
 //    };
-//
+
 //    // setup writer
 //    auto writer = io2::vcf_io::writer {
 //        .output    = {std::cout, io2::vcf_io::format::Vcf},
 //        .alphabet  = io2::type<seqan3::dna15>,   // default is dna5
+//        .header = {
+//            .fields      = reader.header.entries(),
+//            .sampleNames = reader.header.samples(),
+//        },
 //    };
 //
 //
@@ -471,7 +475,7 @@ void readAndWriteStreamVcfIo() {
 //            .filter   = r.filter,
 //            .info     = r.info,
 //            .format   = r.format,
-////            .genotypeInfos = ?, //!TODO
+//            .genotypeInfos = r.genotypeInfos,
 //        });
 //    }
 }
@@ -479,37 +483,34 @@ void readAndWriteStreamVcfIo() {
 void readAndWriteStreamBcfIo() {
 //    // setup reader
 //    auto reader = io2::vcf_io::reader {
-//        .input     = {std::cin, io2::vcf_io::format::Bam},
+//        .input     = {std::cin, io2::vcf_io::format::Bcf},
 //        .alphabet  = io2::type<seqan3::dna15>,   // default is dna5
-//        .qualities = io2::type<seqan3::phred42>, // default is phred42
 //    };
-//
+
 //    // setup writer
 //    auto writer = io2::vcf_io::writer {
-//        .output    = {std::cout, io2::vcf_io::format::Bam},
+//        .output    = {std::cout, io2::vcf_io::format::Bcf},
 //        .alphabet  = io2::type<seqan3::dna15>,   // default is dna5
+//        .header = {
+//            .fields      = reader.header.entries(),
+//            .sampleNames = reader.header.samples(),
+//        },
 //    };
 //
 //
 //    // copy records
 //    for (auto && r : reader) {
 //        writer.write({
-//            .id       = r.id,
-//            .flag     = r.flag,
 //            .rID      = r.rID,
 //            .beginPos = r.beginPos,
-//            .mapQ     = r.mapQ,
-//            .bin      = r.bin,
-//            .cigar    = r.cigar,
-//            .rNextId  = r.rNextId,
-//            .pNext    = r.pNext,
-//            .tLen     = r.tLen,
-//            .seq      = r.seq,
-//            .qual     = r.qual | std::views::transform([](auto q) {
-//                // decrease quality by half
-//                return seqan3::assign_rank_to(q.to_rank() / 2, q);
-//            }),
-//            .tags     = r.tags,
+//            .id       = r.id,
+//            .ref      = r.ref,
+//            .alt      = r.alt,
+//            .qual     = r.qual,
+//            .filter   = r.filter,
+//            .info     = r.info,
+//            .format   = r.format,
+//            .genotypeInfos = r.genotypeInfos,
 //        });
 //    }
 }
@@ -518,38 +519,42 @@ void readAndWriteStreamBcfIo() {
 
 
 void readAndCopyVcfIo(std::filesystem::path file) {
-//    // setup reader
-//    auto reader = io2::vcf_io::reader {
-//        .input     = file,
-//        .alphabet  = io2::type<seqan3::dna15>,   // default is dna5
-//    };
-//
-//    // list with all results
-//    auto results = std::vector<decltype(reader)::record>{};
-//
-//    for (auto && record : reader) {
-//        results.emplace_back(record);
-//    }
+    // setup reader
+    auto reader = io2::vcf_io::reader {
+        .input     = file,
+        .alphabet  = io2::type<seqan3::dna15>,   // default is dna5
+    };
+
+    // list with all results
+    auto results = std::vector<decltype(reader)::record>{};
+
+    for (auto && record : reader) {
+        results.emplace_back(record);
+    }
 }
 
 void readCompleteFileVcfIo(std::filesystem::path file) {
-//    // single line to read complete file
-//    auto results = io2::vcf_io::reader {
-//        .input     = file,
-//        .alphabet  = io2::type<seqan3::dna15>,
-//    } | seqan3::ranges::to<std::vector>();
-//
-//    // or short version
-//    // auto results = io2::vcf_io::reader<seqan3::dna15>{file}
-//    //   | seqan3::ranges::to<std::vector>();
-//
-//    for (auto const& r : results) {
-//        seqan3::debug_stream << r.id << "\n";
-//        seqan3::debug_stream << r.seq << "\n";
-//        seqan3::debug_stream << r.cigar << "\n";
-//        seqan3::debug_stream << r.qual << "\n";
-//        seqan3::debug_stream << r.tags << "\n";
-//    }
+    // single line to read complete file
+    auto results = io2::vcf_io::reader {
+        .input     = file,
+        .alphabet  = io2::type<seqan3::dna15>,
+    } | seqan3::ranges::to<std::vector>();
+
+    // or short version
+    // auto results = io2::vcf_io::reader<seqan3::dna15>{file}
+    //   | seqan3::ranges::to<std::vector>();
+
+    for (auto && record : results) {
+        seqan3::debug_stream << record.rID << "\t";
+        seqan3::debug_stream << record.beginPos << "\t";
+        seqan3::debug_stream << record.id << "\t";
+        seqan3::debug_stream << record.ref << "\t";
+        seqan3::debug_stream << record.alt << "\t";
+        for (auto info : record.genotypeInfos) {
+            seqan3::debug_stream << "  - " << info << "\t";
+        }
+        seqan3::debug_stream << "\n";
+    }
 }
 
 

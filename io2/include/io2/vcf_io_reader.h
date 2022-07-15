@@ -86,8 +86,9 @@ struct reader {
             , filter{v.filter}
             , info{v.info}
             , format{v.format}
-            , genotypeInfos{v.genotypeinfos | std::views::transform([](auto s) { return std::string{s}; }) | seqan3::ranges::to<std::vector>()}
+            , genotypeInfos{v.genotypeInfos | seqan3::ranges::to<std::vector<std::string>>()}
         {}
+
         record() = default;
         record(record const&) = default;
         record(record&&) = default;
