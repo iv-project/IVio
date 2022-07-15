@@ -381,6 +381,8 @@ void writeVcfIo(std::filesystem::path file) {
     auto writer = io2::vcf_io::writer {
         .output     = file,
 //        .alphabet  = io2::type<seqan3::dna15>,   // default is dna5
+        .header = {{"fileformat", "VCFv4.2"},
+                   {"contig", "<ID=2,length=10>"}},
     };
 
     // generating some data
@@ -392,7 +394,7 @@ void writeVcfIo(std::filesystem::path file) {
 
     // writting data to file
     writer.write({
-//        .rID      = ?,
+        .rID      = 0,
 //        .beginPos = ?,
         .id       = id,
         .ref      = ref,

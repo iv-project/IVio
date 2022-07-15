@@ -9,23 +9,49 @@
 #include <seqan/bam_io.h>
 #include <seqan3/alphabet/nucleotide/dna5.hpp>
 #include <span>
+#include <unordered_map>
 
 namespace io2::vcf_io {
 
 template <typename AlphabetS3 = seqan3::dna5>
 struct writer {
 
+    struct Header {
+        sized_typed_range<std::tuple<std::string_view, std::string_view>> data;
+
+        Header(std::initializer_list<std::tuple<std::string_view, std::string_view>> l)
+            : data{l}
+        {}
+    };
+
     // configurable from the outside
     Output<seqan::VcfFileOut> output;
     [[no_unique_address]] detail::empty_class<AlphabetS3>  alphabet{};
+    Header header;
+//    typed_range<std::tuple<std::string_view, std::string_view>> header;
 
 
-    int x = [this]() {
-        appendValue(contigNames(context(output.fileOut)), "ABC");
-        appendValue(contigNames(context(output.fileOut)), "ABC");
-        appendValue(contigNames(context(output.fileOut)), "ABC");
-        appendValue(contigNames(context(output.fileOut)), "ABC");
-        return 0;
+    /* A fake constructor
+     *
+     * We are using this function as a constructor, to keep the designated initializer
+     * syntax intact.
+     *
+     * \noapi
+     */
+    [[no_unique_address]] detail::empty_class<nullptr_t> _fakeConstructor = [this]() {
+        seqan::VcfHeader h;
+        for (auto [key, value] : header.data) {
+             seqan::VcfHeaderRecord r;
+             r.key   = detail::convert_to_seqan2_string(key);
+             r.value = detail::convert_to_seqan2_string(value);
+             appendValue(h, r);
+
+            if (key == "contig") {
+                appendValue(contigNames(context(output.fileOut)), r.value);
+            }
+        }
+        writeHeader(output.fileOut, h);
+        return nullptr;
     }();
 
     struct record {
