@@ -134,7 +134,7 @@ struct reader {
     struct {
         reader& reader_;
 
-        auto samples() -> typed_range<std::string_view> {
+        auto samples() -> sized_typed_range<std::string_view> {
             auto& names = reader_.storage.seqan2_sampleNames;
 
             return std::ranges::subrange{begin(names), begin(names) + length(names)}

@@ -381,8 +381,11 @@ void writeVcfIo(std::filesystem::path file) {
     auto writer = io2::vcf_io::writer {
         .output     = file,
 //        .alphabet  = io2::type<seqan3::dna15>,   // default is dna5
-        .header = {{"fileformat", "VCFv4.2"},
-                   {"contig", "<ID=2,length=10>"}},
+        .header = {
+            .fields      = {{"fileformat", "VCFv4.2"},
+                            {"contig", "<ID=2,length=10>"}},
+            .sampleNames = {"my_readings.fasta"},
+        },
     };
 
     // generating some data
@@ -418,6 +421,10 @@ void readAndWriteVcfIo(std::filesystem::path file, std::filesystem::path outFile
     auto writer = io2::vcf_io::writer {
         .output    = outFile,
         .alphabet  = io2::type<seqan3::dna15>,   // default is dna5
+        .header = {
+            .fields      = reader.header.entries(),
+            .sampleNames = reader.header.samples(),
+        },
     };
 
 
@@ -433,7 +440,7 @@ void readAndWriteVcfIo(std::filesystem::path file, std::filesystem::path outFile
             .filter   = r.filter,
             .info     = r.info,
             .format   = r.format,
-//            .genotypeInfos = ?, //!TODO
+            .genotypeInfos = r.genotypeInfos,
         });
     }
 }

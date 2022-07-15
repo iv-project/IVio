@@ -16,19 +16,35 @@ namespace io2::vcf_io {
 template <typename AlphabetS3 = seqan3::dna5>
 struct writer {
 
-    struct Header {
-        sized_typed_range<std::tuple<std::string_view, std::string_view>> data;
+    struct HeaderFields {
+        typed_range<std::tuple<std::string_view, std::string_view>> data;
 
-        Header(std::initializer_list<std::tuple<std::string_view, std::string_view>> l)
+        HeaderFields(std::initializer_list<std::tuple<std::string_view, std::string_view>> l)
             : data{l}
         {}
+        HeaderFields(typed_range<std::tuple<std::string_view, std::string_view>> _rng)
+            : data{std::move(_rng)}
+        {}
     };
+    struct SampleNames {
+        typed_range<std::string_view> data;
+
+        SampleNames(std::initializer_list<std::string_view> l)
+            : data{l}
+        {}
+        SampleNames(typed_range<std::string_view> _rng)
+            : data{std::move(_rng)}
+        {}
+    };
+
 
     // configurable from the outside
     Output<seqan::VcfFileOut> output;
     [[no_unique_address]] detail::empty_class<AlphabetS3>  alphabet{};
-    Header header;
-//    typed_range<std::tuple<std::string_view, std::string_view>> header;
+    struct {
+        HeaderFields fields;
+        SampleNames  sampleNames;
+    } header;
 
 
     /* A fake constructor
@@ -40,7 +56,7 @@ struct writer {
      */
     [[no_unique_address]] detail::empty_class<nullptr_t> _fakeConstructor = [this]() {
         seqan::VcfHeader h;
-        for (auto [key, value] : header.data) {
+        for (auto const& [key, value] : header.fields.data) {
              seqan::VcfHeaderRecord r;
              r.key   = detail::convert_to_seqan2_string(key);
              r.value = detail::convert_to_seqan2_string(value);
@@ -49,6 +65,9 @@ struct writer {
             if (key == "contig") {
                 appendValue(contigNames(context(output.fileOut)), r.value);
             }
+        }
+        for (auto const& value : header.sampleNames.data) {
+            appendValue(sampleNames(context(output.fileOut)), detail::convert_to_seqan2_string(value));
         }
         writeHeader(output.fileOut, h);
         return nullptr;
