@@ -117,7 +117,6 @@ auto convert_string_to_seqan3_view(seqan::CharString const& v) {
     });
 }
 
-
 /**\brief Creates a seqan2 alphabet string over a seqan3 alphabet range
  *
  * \param rng A seqan3 alphabet range.
@@ -148,6 +147,38 @@ auto convert_to_seqan2_alphabet(rng_t&& rng) {
     }
     return v;
 }
+
+/**\brief Creates a seqan2 alphabet string over a seqan3 alphabet range
+ *
+ * \param rng A seqan3 alphabet range.
+ * \return    A seqan::String over seqan::Iupac.
+ *
+ * \noapi
+ */
+template <std::ranges::range rng_t>
+auto convert_to_seqan2_iupac_alphabet(rng_t&& rng) {
+    using AlphabetS3 = std::decay_t<decltype(*rng.begin())>;
+    seqan::String<seqan::Iupac> v;
+
+    auto view = rng | std::views::transform([](auto c) {
+            auto t = seqan::Iupac{};
+            t = c.to_char();
+            return t;
+        });
+
+    if constexpr (requires() {
+        { std::ranges::size(rng) } -> std::same_as<size_t>;
+    }) {
+        resize(v, std::ranges::size(rng), seqan::Exact());
+        std::ranges::copy(view, begin(v));
+    } else {
+        for (auto c : view) {
+            appendValue(v, c);
+        }
+    }
+    return v;
+}
+
 
 /**\brief Creates a seqan2 alphabet string over a seqan3 alphabet range
  *

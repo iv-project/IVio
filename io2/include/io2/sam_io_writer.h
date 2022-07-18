@@ -82,7 +82,7 @@ struct writer {
         r.rNextId  = _record.rNextId.value_or(seqan::BamAlignmentRecord::INVALID_REFID);
         r.pNext    = _record.pNext;
         r.tLen     = _record.tLen.value_or(seqan::BamAlignmentRecord::INVALID_LEN);
-        r.seq      = detail::convert_to_seqan2_alphabet(_record.seq);
+        r.seq      = detail::convert_to_seqan2_iupac_alphabet(_record.seq);
         r.qual     = detail::convert_to_seqan2_qualities(_record.qual);
         r.tags     = detail::convert_to_seqan2_string(_record.tags);
 
