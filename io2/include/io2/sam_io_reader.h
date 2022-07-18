@@ -36,9 +36,9 @@ void convert_format(format _format, auto&& cb) {
 template <typename AlphabetS3, typename QualitiesS3>
 struct record_view {
     // views for string types
-    using sequence_view  = decltype(detail::convert_to_seqan3_view<AlphabetS3>(decltype(seqan::BamAlignmentRecord{}.seq){}));
+    using sequence_view  = decltype(detail::convert_iupac_to_seqan3_view<AlphabetS3>(decltype(seqan::BamAlignmentRecord{}.seq){}));
     using cigar_view     = decltype(detail::convert_to_seqan3_view(decltype(seqan::BamAlignmentRecord{}.cigar){}));
-    using qualities_view = decltype(detail::convert_to_seqan3_view<QualitiesS3>(decltype(seqan::BamAlignmentRecord{}.qual){}));
+    using qualities_view = decltype(detail::convert_string_to_seqan3_view<QualitiesS3>(decltype(seqan::BamAlignmentRecord{}.qual){}));
 
     std::string_view id;
     uint16_t         flag;
@@ -145,8 +145,8 @@ struct reader {
             .rNextId  = r.rNextId,
             .pNext    = r.pNext,
             .tLen     = r.tLen,
-            .seq      = detail::convert_to_seqan3_view<AlphabetS3>(r.seq),
-            .qual     = detail::convert_to_seqan3_view<QualitiesS3>(r.qual),
+            .seq      = detail::convert_iupac_to_seqan3_view<AlphabetS3>(r.seq),
+            .qual     = detail::convert_string_to_seqan3_view<QualitiesS3>(r.qual),
             .tags     = detail::convert_to_view(r.tags),
         };
         return &storage.return_record;

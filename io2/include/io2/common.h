@@ -87,6 +87,21 @@ inline auto convert_to_seqan3_view(seqan::String<seqan::CigarElement<>> const& v
     });
 }
 
+/**\brief Creates a view onto a seqan::IupacString
+ *
+ * \param v Desired string which to create a view for.
+ * \return  A view over AlpahbetS3 elements that points to v.
+ *
+ * \noapi
+ */
+template <typename AlphabetS3>
+inline auto convert_iupac_to_seqan3_view(seqan::IupacString const& v) {
+    return convert_to_view(v) | std::views::transform([](auto const& v) {
+        return seqan3::assign_char_to(static_cast<char>(v), AlphabetS3{});
+    });
+}
+
+
 /**\brief Creates a view onto a seqan::CharString
  *
  * \tparam AlphabetS3 A seqan3 alphabet, e.g.: seqan3::dna4.
