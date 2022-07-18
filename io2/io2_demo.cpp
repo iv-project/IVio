@@ -142,7 +142,7 @@ void readSamIo(std::filesystem::path file) {
         .qualities = io2::type<seqan3::phred42>, // default is phred42
     };
 
-    for (auto const& [name, length] : reader.header.entries()) {
+    for (auto const& [name, length] : reader.header.contigs()) {
         seqan3::debug_stream << name << " " << length << "\n";
     }
 

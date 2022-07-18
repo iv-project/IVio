@@ -147,8 +147,7 @@ struct reader {
     struct {
         reader& reader_;
 
-        auto entries() const -> typed_range<std::tuple<std::string_view, size_t>> {
-
+        auto contigs() const -> typed_range<std::tuple<std::string_view, size_t>> {
             auto& names = reader_.storage.seqan2_contigNames;
 
             return std::views::iota(0ul, length(names))
