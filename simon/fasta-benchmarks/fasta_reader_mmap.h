@@ -1,6 +1,5 @@
 #pragma once
 
-//#include "fasta_reader_iter.h"
 #include "fasta_reader_view.h"
 
 template <typename Reader>

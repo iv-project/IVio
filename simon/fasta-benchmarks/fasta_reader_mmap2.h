@@ -4,7 +4,8 @@
 
 
 struct mmap_queue {
-    size_t filesize = 1'024ul*1'024ul*1'024ul*1'024ul;
+    // this mmap_queue only sufficient for 1 Exbytes of data
+    size_t filesize = 1'024ul*1'024ul*1'024ul*1'024ul*1'024ul*1'024ul;
     char* buffer {[&]() {
         auto ptr = (char*)mmap(nullptr, filesize, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE | MAP_NORESERVE, -1, 0);
         return ptr;
