@@ -207,6 +207,9 @@ void readAndWriteSamIo(std::filesystem::path file, std::filesystem::path outFile
         .output    = outFile,
         .alphabet  = io2::type<seqan3::dna15>,   // default is dna5
         .qualities = io2::type<seqan3::phred42>, // default is phred42
+        .header = {
+            .contigs = reader.header.contigs(),
+        },
     };
 
 
@@ -246,6 +249,9 @@ void readAndWriteStreamSamIo() {
         .output    = {std::cout, io2::sam_io::format::Sam},
         .alphabet  = io2::type<seqan3::dna15>,   // default is dna5
         .qualities = io2::type<seqan3::phred42>, // default is phred42
+        .header = {
+            .contigs = reader.header.contigs(),
+        },
     };
 
 
