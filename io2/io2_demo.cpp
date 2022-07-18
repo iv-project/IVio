@@ -142,6 +142,11 @@ void readSamIo(std::filesystem::path file) {
         .qualities = io2::type<seqan3::phred42>, // default is phred42
     };
 
+    for (auto const& [name, length] : reader.header.entries()) {
+        seqan3::debug_stream << name << " " << length << "\n";
+    }
+
+
     // read records
     for (auto && record : reader) {
         seqan3::debug_stream << record.id << "\n";
@@ -158,6 +163,11 @@ void writeSamIo(std::filesystem::path file) {
         .output     = file,
 //        .alphabet  = io2::type<seqan3::dna15>,   // default is dna5
 //        .qualities = io2::type<seqan3::phred42>, // default is phred42
+        .header = {
+            .contigs = {{"chr1", 1339},
+                        {"chr2", 1201},
+                       }
+        }
     };
 
     // generating some data

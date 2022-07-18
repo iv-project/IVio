@@ -41,6 +41,7 @@ struct writer {
     // configurable from the outside
     Output<seqan::VcfFileOut> output;
     [[no_unique_address]] detail::empty_class<AlphabetS3>  alphabet{};
+
     struct {
         HeaderFields fields;
         SampleNames  sampleNames;
