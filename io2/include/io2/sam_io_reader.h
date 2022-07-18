@@ -114,19 +114,51 @@ struct reader {
     [[no_unique_address]] detail::empty_class<AlphabetS3>  alphabet{};
     [[no_unique_address]] detail::empty_class<QualitiesS3> qualities{};
 
-    int x = [this]() {
-        seqan::BamHeader header;
-        seqan::readHeader(header, input.fileIn);
-        return 0;
-    }();
-
-
     // internal variables
     // storage for one record
     struct {
         seqan::BamAlignmentRecord            seqan2_record;
         record_view<AlphabetS3, QualitiesS3> return_record;
+
+        seqan::BamHeader                     seqan2_header;
+        std::decay_t<decltype(contigNames(context(seqan::BamFileIn{})))>   seqan2_contigNames;
+        std::decay_t<decltype(contigLengths(context(seqan::BamFileIn{})))> seqan2_contigLengths;
     } storage;
+
+    /* A fake constructor
+     *
+     * We are using this function as a constructor, to keep the designated initializer
+     * syntax intact.
+     *
+     * \noapi
+     */
+    [[no_unique_address]] detail::empty_class<nullptr_t> _fakeConstructor = [this]() {
+//        seqan::BamHeader header;
+//        seqan::readHeader(header, input.fileIn);
+        seqan::readHeader(storage.seqan2_header, input.fileIn);
+        storage.seqan2_contigNames   = contigNames(context(input.fileIn));
+        storage.seqan2_contigLengths = contigLengths(context(input.fileIn));
+        return nullptr;
+    }();
+
+    /** accessing header information
+     * \experimentalapi
+     */
+    struct {
+        reader& reader_;
+
+        auto entries() const -> typed_range<std::tuple<std::string_view, size_t>> {
+
+            auto& names = reader_.storage.seqan2_contigNames;
+
+            return std::views::iota(0ul, length(names))
+                | std::views::transform([this](size_t i) -> std::tuple<std::string_view, size_t> {
+                    return {detail::convert_to_view(reader_.storage.seqan2_contigNames[i]),
+                            reader_.storage.seqan2_contigLengths[i]};
+                });
+        };
+    } header {*this};
+
 
     auto next() -> record_view<AlphabetS3, QualitiesS3> const* {
         if (input.atEnd()) return nullptr;
