@@ -109,7 +109,6 @@ struct reader {
         record_view<AlphabetS3> return_record;
 
         seqan::VcfHeader        seqan2_header;
-        std::decay_t<decltype(contigNames(context(seqan::VcfFileIn{})))> seqan2_contigNames;
         std::decay_t<decltype(sampleNames(context(seqan::VcfFileIn{})))> seqan2_sampleNames;
     } storage;
 
