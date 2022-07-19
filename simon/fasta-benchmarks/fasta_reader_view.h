@@ -3,7 +3,7 @@
 #include <functional>
 
 inline constexpr auto seq_cleanuped_view = std::views::transform([](char c) {
-            return ccmap[c];
+            return ccmap[reinterpret_cast<uint8_t&>(c)];
         }) | std::views::filter([](char c) {
             if (c == (char)0xfe) {
                 throw "invalid variable";
