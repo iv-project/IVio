@@ -102,6 +102,13 @@ public:
         }
     }
 
+    auto read(size_t ct) -> std::tuple<char const*, size_t> {
+        while (buf.size() < ct) {
+            if (!readMore()) break;
+        }
+        return {buf.data(), buf.size()};
+    }
+
     size_t dropUntil(size_t i) {
         buf.erase(begin(buf), begin(buf)+i);
         return 0;

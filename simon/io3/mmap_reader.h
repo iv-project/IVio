@@ -53,6 +53,10 @@ public:
         return filesize;
     }
 
+    auto read(size_t ct) -> std::tuple<char const*, size_t> {
+        return {buffer, filesize};
+    }
+
     size_t dropUntil(size_t i) {
         assert(i <= filesize);
         if (i < 1'024ul * 1'024ul) return i;

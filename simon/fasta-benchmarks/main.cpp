@@ -88,7 +88,6 @@ void benchmark_io3(Reader&& reader) {
     std::cout << "total: " << a << "\n";
 }
 
-
 void benchmarkDirect(std::filesystem::path path) {
     auto reader = mmap_file_reader(path.c_str());
 
@@ -180,6 +179,9 @@ int main(int argc, char** argv) {
         benchmark_io3(io3::fasta_reader{io3::zlib_file_reader(file.c_str())});
     } else if (method == "io3_mmap" and ext == ".gz") {
         benchmark_io3(io3::fasta_reader{io3::zlib_mmap_reader(file.c_str())});
+    } else if (method == "io3_stream" and ext == ".gz") {
+        auto ifs = std::ifstream{file.c_str()};
+        benchmark_io3(io3::fasta_reader{io3::zlib_stream_reader(ifs)});
     } else if (method == "io3_mmap2" and ext == ".gz") {
         benchmark_io3(io3::fasta_reader{io3::zlib_mmap2_reader(file.c_str())});
     } else if (method == "cont" and ext == ".fa") {
