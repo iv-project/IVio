@@ -2,12 +2,8 @@
 
 #include "concepts.h"
 
-#include <cstring>
-#include <cstdint>
-#include <unistd.h>
-#include <array>
-#include <string>
 #include <istream>
+#include <ranges>
 
 namespace io3 {
 
@@ -34,5 +30,4 @@ public:
 };
 
 static_assert(reader_c<stream_reader>);
-
 }

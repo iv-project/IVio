@@ -5,8 +5,6 @@
 #include "file_reader.h"
 #include "vcf_reader.h"
 
-#include <functional>
-
 namespace io3 {
 
 template <typename Reader>

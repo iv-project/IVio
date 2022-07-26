@@ -2,17 +2,6 @@
 
 #include "file_reader.h"
 
-#include <array>
-#include <cstdint>
-#include <cstring>
-#include <fcntl.h>
-#include <ranges>
-#include <string>
-#include <sys/mman.h>
-#include <sys/stat.h>
-#include <tuple>
-#include <unistd.h>
-
 namespace io3 {
 
 template <typename Reader, size_t minV = 4096>
@@ -87,5 +76,4 @@ public:
 };
 
 static_assert(reader_and_dropper_c<buffered_reader<file_reader>>);
-
 }

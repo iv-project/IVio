@@ -48,14 +48,7 @@ struct mmap_queue {
 
 
 struct zlib_mmap2_reader : protected mmap_reader {
-    z_stream stream {
-        .next_in = Z_NULL,
-        .avail_in = 0,
-        .total_out = 0,
-        .zalloc = Z_NULL,
-        .zfree = Z_NULL,
-        .opaque = Z_NULL,
-    };
+    z_stream stream {};
 
     mmap_queue queue;
 

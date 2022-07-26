@@ -5,8 +5,8 @@
 #include "mmap_reader.h"
 #include "stream_reader.h"
 
-#include <zlib.h>
 #include <ranges>
+#include <zlib.h>
 
 namespace io3 {
 
@@ -170,5 +170,4 @@ using bgzf_stream_reader = bgzf_reader_impl<buffered_reader<stream_reader>>;
 static_assert(reader_c<bgzf_file_reader>);
 static_assert(reader_c<bgzf_mmap_reader>);
 static_assert(reader_c<bgzf_stream_reader>);
-
 }

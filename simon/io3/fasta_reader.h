@@ -1,7 +1,6 @@
 #pragma once
 
 #include "buffered_reader.h"
-
 #include <functional>
 
 namespace io3 {
@@ -23,7 +22,7 @@ struct fasta_reader_view_iter {
         nextItem = next();
         return *this;
     }
-    auto operator!=(std::nullptr_t _end) const {
+    auto operator!=(std::nullptr_t) const {
         return nextItem.has_value();
     }
 };
@@ -79,5 +78,4 @@ template <reader_and_dropper_c Reader>
 fasta_reader(Reader&& reader) -> fasta_reader<Reader>;
 
 static_assert(record_reader_c<fasta_reader<io3::buffered_reader<io3::file_reader>>>);
-
 }

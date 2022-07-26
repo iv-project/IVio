@@ -48,13 +48,13 @@ public:
         assert(lastUsed <= filesize);
         auto ptr = (char const*)memchr(buffer + lastUsed, c, filesize - lastUsed);
         if (ptr != nullptr) {
-            assert(ptr - buffer < filesize);
+            assert(static_cast<size_t>(ptr - buffer) < filesize);
             return ptr - buffer;
         }
         return filesize;
     }
 
-    auto read(size_t ct) -> std::tuple<char const*, size_t> {
+    auto read(size_t) -> std::tuple<char const*, size_t> {
         return {buffer, filesize};
     }
 
@@ -92,5 +92,4 @@ public:
 };
 
 static_assert(reader_and_dropper_c<mmap_reader>);
-
 }

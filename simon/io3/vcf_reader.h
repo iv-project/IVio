@@ -1,6 +1,7 @@
 #pragma once
 
 #include "buffered_reader.h"
+#include "file_reader.h"
 
 #include <charconv>
 #include <functional>
@@ -31,7 +32,7 @@ struct vcf_reader_view_iter {
         nextItem = next();
         return *this;
     }
-    auto operator!=(std::nullptr_t _end) const {
+    auto operator!=(std::nullptr_t) const {
         return nextItem.has_value();
     }
 };
@@ -143,5 +144,5 @@ vcf_reader(Reader&& reader) -> vcf_reader<io3::buffered_reader<Reader>>;
 template <reader_and_dropper_c Reader>
 vcf_reader(Reader&& reader) -> vcf_reader<Reader>;
 
-
+static_assert(record_reader_c<vcf_reader<io3::buffered_reader<io3::file_reader>>>);
 }
