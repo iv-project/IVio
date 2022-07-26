@@ -8,4 +8,5 @@
 
 #include "fasta_reader.h"
 #include "vcf_reader.h"
-
+#include "bcf_reader.h"
+#include "bgzf_reader.h"
