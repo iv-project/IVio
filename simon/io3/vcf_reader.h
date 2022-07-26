@@ -10,10 +10,11 @@ namespace io3 {
 
 struct vcf_reader_view_record_view {
     std::string_view chrom;
-    int              pos;
+    int32_t          pos;
     std::string_view id;
     std::string_view ref;
     std::string_view alt;
+    float            qual;
     std::string_view filter;
     std::string_view info;
     std::string_view format;
@@ -87,10 +88,21 @@ struct vcf_reader {
             auto start = 1;
             auto end = reader.readUntil('\n', start);
             tableHeader = reader.string_view(start, end);
-            lastUsed = end;
-            if (!reader.eof(lastUsed)) lastUsed += 1;
+            reader.dropUntil(end);
+            if (!reader.eof(end)) reader.dropUntil(1);
         }
     }
+    template <typename T>
+    static auto convertTo(Reader& reader, size_t _start, size_t _end) {
+        auto view = reader.string_view(_start, _end);
+        T value;
+        auto result = std::from_chars(begin(view), end(view), value);
+        if (result.ec == std::errc::invalid_argument) {
+            throw "can't convert to int";
+        }
+        return value;
+    }
+
 
     auto next() -> std::optional<record_view> {
         if (reader.eof(lastUsed)) return std::nullopt;
@@ -104,7 +116,9 @@ struct vcf_reader {
         if (reader.eof(startRef)) return std::nullopt;
         auto startAlt    = reader.readUntil('\t', startRef+1);
         if (reader.eof(startAlt)) return std::nullopt;
-        auto startFilter = reader.readUntil('\t', startAlt+1);
+        auto startQual   = reader.readUntil('\t', startAlt+1);
+        if (reader.eof(startQual)) return std::nullopt;
+        auto startFilter = reader.readUntil('\t', startQual+1);
         if (reader.eof(startFilter)) return std::nullopt;
         auto startInfo = reader.readUntil('\t', startFilter+1);
         if (reader.eof(startInfo)) return std::nullopt;
@@ -117,23 +131,17 @@ struct vcf_reader {
         lastUsed = endSamples;
         if (!reader.eof(lastUsed)) lastUsed += 1;
 
-
-        auto pos_view = reader.string_view(startPos+1,     startId);
-        int i;
-        auto result = std::from_chars(begin(pos_view), end(pos_view), i);
-        if (result.ec == std::errc::invalid_argument) {
-            throw "can't convert to int";
-        }
         return record_view {
-            . chrom   = reader.string_view(startChrom,     startPos),
-            . pos     = i,
-            . id      = reader.string_view(startId+1,      startRef),
-            . ref     = reader.string_view(startRef+1,     startAlt),
-            . alt     = reader.string_view(startAlt+1,     startFilter),
-            . filter  = reader.string_view(startFilter+1,  startInfo),
-            . info    = reader.string_view(startInfo+1,    startFormat),
-            . format  = reader.string_view(startFormat+1,  startSamples),
-            . samples = reader.string_view(startSamples+1, endSamples),
+            .chrom   = reader.string_view(startChrom,     startPos),
+            .pos     = convertTo<int32_t>(reader, startPos+1,  startId),
+            .id      = reader.string_view(startId+1,      startRef),
+            .ref     = reader.string_view(startRef+1,     startAlt),
+            .alt     = reader.string_view(startAlt+1,     startQual),
+            .qual    = convertTo<float>(reader,   startQual+1, startFilter),
+            .filter  = reader.string_view(startFilter+1,  startInfo),
+            .info    = reader.string_view(startInfo+1,    startFormat),
+            .format  = reader.string_view(startFormat+1,  startSamples),
+            .samples = reader.string_view(startSamples+1, endSamples),
         };
     }
 };
