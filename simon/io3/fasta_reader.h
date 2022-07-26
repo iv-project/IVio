@@ -32,6 +32,7 @@ struct fasta_reader_view_iter {
 template <typename Reader>
 struct fasta_reader {
     Reader reader;
+    size_t lastUsed{};
 
     using record_view = fasta_reader_view_record_view;
     using iter        = fasta_reader_view_iter;
@@ -45,8 +46,6 @@ struct fasta_reader {
     fasta_reader(fasta_reader&& _other) noexcept = default;
     ~fasta_reader() = default;
 
-    size_t lastUsed{};
-
     friend auto begin(fasta_reader& reader) {
         return iter{[&reader]() { return reader.next(); }};
     }
@@ -57,9 +56,9 @@ struct fasta_reader {
     auto next() -> std::optional<record_view> {
         auto startId = reader.readUntil('>', lastUsed);
         if (reader.eof(startId)) return std::nullopt;
-        startId = reader.dropUntil(startId+1);
+        reader.dropUntil(startId+1);
 
-        auto endId = reader.readUntil('\n', startId);
+        auto endId = reader.readUntil('\n', 0);
         if (reader.eof(endId)) return std::nullopt;
 
         auto startSeq = endId+1;
@@ -67,7 +66,7 @@ struct fasta_reader {
         lastUsed = endSeq;
 
         return record_view {
-            .id  = reader.string_view(startId, endId),
+            .id  = reader.string_view(0,        endId),
             .seq = reader.string_view(startSeq, endSeq),
         };
     }
@@ -79,5 +78,6 @@ fasta_reader(Reader&& reader) -> fasta_reader<io3::buffered_reader<Reader>>;
 template <reader_and_dropper_c Reader>
 fasta_reader(Reader&& reader) -> fasta_reader<Reader>;
 
+static_assert(record_reader_c<fasta_reader<io3::buffered_reader<io3::file_reader>>>);
 
 }

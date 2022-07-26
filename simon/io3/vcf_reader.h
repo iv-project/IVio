@@ -40,7 +40,7 @@ struct vcf_reader_view_iter {
 template <typename Reader>
 struct vcf_reader {
     Reader reader;
-    size_t inPos{};
+    size_t lastUsed{};
 
     using record_view = vcf_reader_view_record_view;
     using iter        = vcf_reader_view_iter;
@@ -68,32 +68,33 @@ struct vcf_reader {
     std::string tableHeader;
 
     bool readHeaderLine() {
-        auto [buffer, size] = reader.read(inPos + 2);
-        if (size >= inPos + 2 and buffer[inPos + 0] == '#' and buffer[inPos + 1] == '#') {
-            auto start = inPos + 2;
+        auto [buffer, size] = reader.read(2);
+        if (size >= 2 and buffer[0] == '#' and buffer[1] == '#') {
+            auto start = 2;
             auto end = reader.readUntil('\n', start);
             header.emplace_back(reader.string_view(start, end));
             if (reader.eof(end)) return false;
-            inPos = reader.dropUntil(end+1);
+            reader.dropUntil(end+1);
             return true;
         }
         return false;
     }
     void readHeader() {
         while (readHeaderLine()) {}
-        auto [buffer, size] = reader.read(inPos+1);
-        if (size >= inPos+1 and buffer[inPos + 0] == '#') {
-            auto start = inPos + 1;
+        auto [buffer, size] = reader.read(1);
+        if (size >= 1 and buffer[0] == '#') {
+            auto start = 1;
             auto end = reader.readUntil('\n', start);
             tableHeader = reader.string_view(start, end);
-            inPos = end;
-            if (!reader.eof(inPos)) inPos += 1;
+            lastUsed = end;
+            if (!reader.eof(lastUsed)) lastUsed += 1;
         }
     }
 
     auto next() -> std::optional<record_view> {
-        if (reader.eof(inPos)) return std::nullopt;
-        auto startChrom  = reader.dropUntil(inPos);
+        if (reader.eof(lastUsed)) return std::nullopt;
+        reader.dropUntil(lastUsed);
+        size_t startChrom = 0;
         auto startPos    = reader.readUntil('\t', startChrom+1);
         if (reader.eof(startPos)) return std::nullopt;
         auto startId     = reader.readUntil('\t', startPos+1);
@@ -112,8 +113,8 @@ struct vcf_reader {
         if (reader.eof(startFormat)) return std::nullopt;
         auto endSamples = reader.readUntil('\n', startSamples+1);
 
-        inPos = endSamples;
-        if (!reader.eof(inPos)) inPos += 1;
+        lastUsed = endSamples;
+        if (!reader.eof(lastUsed)) lastUsed += 1;
 
 
         auto pos_view = reader.string_view(startPos+1,     startId);

@@ -12,6 +12,7 @@ class mmap_reader : public file_reader {
 protected:
     size_t filesize;
     char const* buffer;
+    size_t inPos{};
 
 public:
     mmap_reader(char const* fname)
@@ -57,9 +58,13 @@ public:
         return {buffer, filesize};
     }
 
-    size_t dropUntil(size_t i) {
+    void dropUntil(size_t i) {
         assert(i <= filesize);
-        if (i < 1'024ul * 1'024ul) return i;
+        i = i + inPos;
+        if (i < 1'024ul * 1'024ul) {
+            inPos = i;
+            return;
+        }
 
         auto mask = std::numeric_limits<size_t>::max() - 4095;
         auto diff = (i & mask);
@@ -67,7 +72,7 @@ public:
         munmap((void*)buffer, diff);
         buffer = buffer + diff;
         filesize -= diff;
-        return i - diff;
+        inPos = i - diff;
     }
 
     bool eof(size_t i) const {
@@ -85,5 +90,7 @@ public:
         return filesize;
     }
 };
+
+static_assert(reader_and_dropper_c<mmap_reader>);
 
 }

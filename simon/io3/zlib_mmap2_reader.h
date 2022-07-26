@@ -14,11 +14,13 @@ struct mmap_queue {
         auto ptr = (char*)mmap(nullptr, filesize, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE | MAP_NORESERVE, -1, 0);
         return ptr;
     }()};
+    size_t inPos{};
 
     mmap_queue() = default;
     mmap_queue(mmap_queue&& _other) noexcept
         : filesize{_other.filesize}
         , buffer  {_other.buffer}
+        , inPos   {_other.inPos}
     {
         _other.buffer = nullptr;
     }
@@ -29,16 +31,19 @@ struct mmap_queue {
     }
 
 
-    auto dropUntil(size_t i) -> size_t {
-        if (i < 1'024ul * 1'024ul) return i;
+    void dropUntil(size_t i) {
+        i = i + inPos;
+        if (i < 1'024ul * 1'024ul) {
+            inPos = i;
+            return;
+        }
         auto mask = std::numeric_limits<size_t>::max() - 4095;
         auto diff = i & mask;
         munmap((void*)buffer, diff);
         buffer = buffer + diff;
         filesize -= diff;
-        return i - diff;
+        inPos = i - diff;
     }
-
 };
 
 
@@ -122,10 +127,9 @@ struct zlib_mmap2_reader : protected mmap_reader {
         }
     }
 
-    size_t dropUntil(size_t i) {
-        auto diff = i - queue.dropUntil(i);
-        filesize -= diff;
-        return i - diff;
+    void dropUntil(size_t i) {
+        queue.dropUntil(i);
+        filesize = filesize - i;
     }
 
     bool eof(size_t i) const {
@@ -137,4 +141,5 @@ struct zlib_mmap2_reader : protected mmap_reader {
     }
 };
 
+static_assert(reader_and_dropper_c<zlib_mmap2_reader>);
 }

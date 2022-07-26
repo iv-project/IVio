@@ -21,4 +21,9 @@ concept reader_and_dropper_c = requires(T t) {
     { t.string_view(size_t{}, size_t{}) } -> std::same_as<std::string_view>;
 };
 
+template <typename T>
+concept record_reader_c = requires(T t) {
+    { t.next() };
+};
+
 }
