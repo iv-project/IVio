@@ -1,7 +1,8 @@
 #pragma once
 
-#include "mmap_reader.h"
+#include "buffered_reader.h"
 #include "file_reader.h"
+#include "mmap_reader.h"
 #include "stream_reader.h"
 
 #include <zlib.h>

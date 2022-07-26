@@ -1,6 +1,7 @@
 #pragma once
 
 #include "bgzf_reader.h"
+#include "buffered_reader.h"
 
 #include <functional>
 

@@ -1,7 +1,8 @@
 #pragma once
 
-#include "mmap_reader.h"
+#include "buffered_reader.h"
 #include "file_reader.h"
+#include "mmap_reader.h"
 #include "stream_reader.h"
 
 #include <zlib.h>
@@ -129,7 +130,6 @@ struct Context {
 template <typename Reader>
 struct bgzf_reader_impl {
     Reader file;
-    size_t inPos{};
 
     Context ctx;
 
@@ -140,25 +140,24 @@ struct bgzf_reader_impl {
 
     bgzf_reader_impl(bgzf_reader_impl&& _other)
         : file{std::move(_other.file)}
-        , inPos{_other.inPos}
     {}
 
     ~bgzf_reader_impl() = default;
 
     size_t read(std::ranges::sized_range auto&& range) {
         while(true) {
-            auto [ptr, avail_in] = file.read(18 + inPos);
+            auto [ptr, avail_in] = file.read(18);
             if (avail_in == 0) return 0;
             if (avail_in < 18) throw "failed reading (1)";
 
-            size_t compressedLen = bgzfUnpack<uint16_t>(ptr + 16 + inPos) + 1u;
-            auto [ptr2, avail_in2] = file.read(compressedLen + inPos);
-            if (avail_in2 < compressedLen + inPos) throw "failed reading (2)";
+            size_t compressedLen = bgzfUnpack<uint16_t>(ptr + 16) + 1u;
+            auto [ptr2, avail_in2] = file.read(compressedLen);
+            if (avail_in2 < compressedLen) throw "failed reading (2)";
 
             assert(range.size() >= (1<<16));
 
-            size_t size = ctx.decompressBlock({ptr2+18 + inPos, compressedLen-18}, {range.data(), range.size()});
-            inPos = file.dropUntil(compressedLen + inPos);
+            size_t size = ctx.decompressBlock({ptr2+18, compressedLen-18}, {range.data(), range.size()});
+            file.dropUntil(compressedLen);
             return size;
         }
     }

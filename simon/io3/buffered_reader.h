@@ -1,6 +1,6 @@
 #pragma once
 
-#include "concepts.h"
+#include "file_reader.h"
 
 #include <array>
 #include <cstdint>
@@ -18,6 +18,7 @@ namespace io3 {
 template <typename Reader, size_t minV = 4096>
 class buffered_reader : public Reader {
     std::vector<char> buf = []() { auto vec = std::vector<char>{}; vec.reserve(minV); return vec; }();
+    int inPos{};
 
 public:
     using Reader::Reader;
@@ -48,38 +49,43 @@ private:
 public:
     size_t readUntil(char c, size_t lastUsed) {
         while (true) {
-            auto ptr = (char const*)memchr(buf.data() + lastUsed, c, buf.size() - lastUsed);
+            auto ptr = (char const*)memchr(buf.data() + lastUsed + inPos, c, buf.size() - lastUsed - inPos);
             if (ptr != nullptr) {
-                lastUsed = ptr - buf.data();
-                return lastUsed;
-    }
+                return ptr - buf.data() - inPos;
+            }
             if (!readMore()) {
-                return buf.size();
+                return buf.size() - inPos;
             }
         }
     }
 
     auto read(size_t ct) -> std::tuple<char const*, size_t> {
-        while (buf.size() < ct) {
+        while (buf.size()+inPos < ct) {
             if (!readMore()) break;
         }
-        return {buf.data(), buf.size()};
+        return {buf.data()+inPos, buf.size()+inPos};
     }
 
-    size_t dropUntil(size_t i) {
-        if (i < minV) return i;
+    void dropUntil(size_t i) {
+        i = i + inPos;
+        if (i< minV) {
+            inPos = i;
+            return;
+        }
         std::copy(begin(buf)+i, end(buf), begin(buf));
         buf.resize(buf.size()-i);
-        return 0;
+        inPos = 0;
     }
 
     bool eof(size_t i) const {
-        return i == buf.size();
+        return i+inPos == buf.size();
     }
 
     auto string_view(size_t start, size_t end) -> std::string_view {
         return std::string_view{buf.data()+start, buf.data()+end};
     }
 };
+
+static_assert(reader_and_dropper_c<buffered_reader<file_reader>>);
 
 }

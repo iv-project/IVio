@@ -1,5 +1,7 @@
 #pragma once
 
+#include "buffered_reader.h"
+
 #include <functional>
 
 namespace io3 {
