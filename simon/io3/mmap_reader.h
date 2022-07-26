@@ -32,6 +32,7 @@ public:
         : file_reader{std::move(_other)}
         , filesize{_other.filesize}
         , buffer{_other.buffer}
+        , inPos{_other.inPos}
     {
         assert(buffer);
         _other.buffer = nullptr;
@@ -46,16 +47,16 @@ public:
 
     size_t readUntil(char c, size_t lastUsed) {
         assert(lastUsed <= filesize);
-        auto ptr = (char const*)memchr(buffer + lastUsed, c, filesize - lastUsed);
+        auto ptr = (char const*)memchr(buffer + lastUsed + inPos, c, filesize - lastUsed - inPos);
         if (ptr != nullptr) {
-            assert(static_cast<size_t>(ptr - buffer) < filesize);
-            return ptr - buffer;
+            assert(static_cast<size_t>(ptr - buffer) - inPos < filesize);
+            return (ptr - buffer) - inPos;
         }
         return filesize;
     }
 
     auto read(size_t) -> std::tuple<char const*, size_t> {
-        return {buffer, filesize};
+        return {buffer+inPos, filesize};
     }
 
     void dropUntil(size_t i) {
@@ -68,7 +69,7 @@ public:
 
         auto mask = std::numeric_limits<size_t>::max() - 4095;
         auto diff = (i & mask);
-        assert(diff < filesize);
+        assert(diff-inPos < filesize);
         munmap((void*)buffer, diff);
         buffer = buffer + diff;
         filesize -= diff;
