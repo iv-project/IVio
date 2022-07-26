@@ -71,7 +71,7 @@ public:
     }
 
     auto string_view(size_t start, size_t end) -> std::string_view {
-        return std::string_view{buf.data()+start, buf.data()+end};
+        return std::string_view{buf.data()+start+inPos, buf.data()+end+inPos};
     }
 };
 
