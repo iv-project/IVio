@@ -49,15 +49,15 @@ public:
     }
 
     auto read(size_t ct) -> std::tuple<char const*, size_t> {
-        while (buf.size()+inPos < ct) {
+        while (buf.size()-inPos < ct) {
             if (!readMore()) break;
         }
-        return {buf.data()+inPos, buf.size()+inPos};
+        return {buf.data()+inPos, buf.size()-inPos};
     }
 
     void dropUntil(size_t i) {
         i = i + inPos;
-        if (i< minV) {
+        if (i < minV) {
             inPos = i;
             return;
         }

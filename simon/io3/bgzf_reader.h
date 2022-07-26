@@ -10,42 +10,26 @@
 
 namespace io3 {
 
-/*!\brief Convert the byte encoding of integer values to little-endian byte order.
- * \ingroup utility
- * \tparam type The type of the value to convert; must model std::integral.
+/*!\brief Convert a little_endian_to_host byte order
  * \param  in   The input value to convert.
  * \returns the converted value in little-endian byte-order.
  *
  * \details
- *
- * This function swaps the bytes if the host system uses big endian. In this case only 1, 2, 4, or 8 byte big
- * integral types are allowed as input. On host systems with little endian this function is a no-op and returns the
- * unchanged input value. Other systems with mixed endianness are not supported.
+ * This function swaps the bytes from little_endian to host byte order.
  */
-template <std::integral type>
-constexpr type to_little_endian(type const in) noexcept
-{
-    if constexpr (std::endian::native == std::endian::little) {
+auto little_endian_to_host(std::integral auto const in) noexcept {
+    if constexpr (sizeof(in) == 1) {
         return in;
-    }
-    else if constexpr (std::endian::native == std::endian::big) {
-        static_assert(sizeof(type) <= 8,
-                      "Can only convert the byte encoding for integral numbers with a size of up to 8 bytes.");
-        static_assert(std::has_single_bit(sizeof(type)),
-                      "Can only convert the byte encoding for integral numbers whose byte size is a power of two.");
-
-        if constexpr (sizeof(type) == 2)
-            return htole16(in);
-        else if constexpr (sizeof(type) == 4)
-            return htole32(in);
-        else if constexpr (sizeof(type) == 8)
-            return htole64(in);
-        else
-            return in; // single byte.
-    }
-    else {
-        static_assert(std::endian::native == std::endian::little || std::endian::native == std::endian::big,
-                      "Expected a little-endian or big-endian platform.");
+    } else if constexpr (sizeof(in) == 2) {
+        return le16toh(in);
+    } else if constexpr (sizeof(in) == 4) {
+        return le32toh(in);
+    } else if constexpr (sizeof(in) == 8) {
+        return le64toh(in);
+    } else {
+        [flag=false]() {
+            static_assert(flag, "Conversion only for 1, 2, 4 and 8 byte types possible");
+        }();
     }
 }
 
@@ -64,7 +48,7 @@ template <typename T>
 inline auto bgzfUnpack(char const* buffer) -> T {
     T v;
     std::uninitialized_copy(buffer, buffer + sizeof(v), reinterpret_cast<char*>(&v));
-    return to_little_endian(v);
+    return little_endian_to_host(v);
 }
 
 struct Context {
