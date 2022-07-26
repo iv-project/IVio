@@ -10,12 +10,9 @@
 
 namespace io3 {
 
-/*!\brief Convert a little_endian_to_host byte order
+/*!\brief Convert a little_endian_to_host byte-order
  * \param  in   The input value to convert.
- * \returns the converted value in little-endian byte-order.
- *
- * \details
- * This function swaps the bytes from little_endian to host byte order.
+ * \returns the converted value in host byte-order.
  */
 auto little_endian_to_host(std::integral auto const in) noexcept {
     if constexpr (sizeof(in) == 1) {
@@ -51,33 +48,48 @@ inline auto bgzfUnpack(char const* buffer) -> T {
     return little_endian_to_host(v);
 }
 
-struct Context {
-    z_stream strm{};
-    int      compression_level{Z_DEFAULT_COMPRESSION};
-    uint8_t  headerPos{};
+struct ZlibContext {
     inline static constexpr size_t BlockHeaderLength = magic_bgzf_header.size();
     inline static constexpr size_t BlockFooterLength = 8;
 
-    void decompressInit() {
-        strm.zalloc = nullptr;
-        strm.zfree  = nullptr;
+    z_stream strm{};
+
+    ZlibContext() {
         constexpr auto GzipWindowBits = -15; // no zlib header
         auto status = inflateInit2(&strm, GzipWindowBits);
         if (status != Z_OK) {
-            throw "inflation failed";
+            throw "BGZF inflateInit2() failed";
+        }
+    }
+
+    ~ZlibContext() noexcept {
+        auto status = inflateEnd(&strm);
+        if (status != Z_OK) {
+            #pragma GCC diagnostic push
+            #pragma GCC diagnostic ignored "-Wterminate"
+            throw "BGZF inflateEnd() failed";
+            #pragma GCC diagnostic pop
+        }
+
+    }
+
+    void reset() {
+        auto status = inflateReset(&strm);
+        if (status != Z_OK) {
+            throw "BGZF inflateReset() failed";
         }
     }
 
     size_t decompressBlock(std::span<char const> in, std::span<char> out) {
-        // 1. CHECK HEADER
+        reset();
 
-        if (in.size() < BlockFooterLength)
+        if (in.size() < BlockFooterLength) {
             throw "BGZF block too short. " + std::to_string(in.size());
+        }
 
-//        if (!detail::bgzf_compression::validate_header(std::span{srcBegin, srcLength}))
+//        if (!detail::bgzf_compression::validate_header(std::span{srcBegin, srcLength})) {
 //            throw io_error("Invalid BGZF block header.");
-
-        decompressInit();
+//        }
         strm.next_in   = (Bytef *)in.data();
         strm.next_out  = (Bytef *)out.data();
         strm.avail_in  = in.size() - BlockFooterLength;
@@ -85,22 +97,16 @@ struct Context {
 
         auto status = inflate(&strm, Z_FINISH);
         if (status != Z_STREAM_END) {
-            inflateEnd(&strm);
             throw "Inflation failed. Decompressed BGZF data is too big. " + std::to_string(strm.avail_in) + " " + std::to_string(strm.avail_out);
         }
 
-        status = inflateEnd(&strm);
-        if (status != Z_OK) {
-            throw "BGZF inflateEnd() failed.";
-        }
-        // 3. CHECK FOOTER
-
-        // Check compressed length in buffer, compute CRC and compare with CRC in buffer.
+        // Compute and check checksum
         unsigned crc = crc32(crc32(0, nullptr, 0), (Bytef *)out.data(), out.size() - strm.avail_out);
         unsigned ecrc = bgzfUnpack<uint32_t>(in.data() + in.size() - 8);
         if (ecrc != crc)
             throw "BGZF wrong checksum." + std::to_string(ecrc) + " " + std::to_string(crc);
 
+        // Check uncompressed data length
         auto dlen = bgzfUnpack<uint32_t>(in.data() + in.size() - 4);
         if (dlen != out.size() - strm.avail_out)
             throw "BGZF size mismatch.";
@@ -110,12 +116,10 @@ struct Context {
     }
 };
 
-
 template <typename Reader>
 struct bgzf_reader_impl {
-    Reader file;
-
-    Context ctx;
+    Reader      file;
+    ZlibContext zlibCtx;
 
     template <typename T>
     bgzf_reader_impl(T&& name)
@@ -140,7 +144,7 @@ struct bgzf_reader_impl {
 
             assert(range.size() >= (1<<16));
 
-            size_t size = ctx.decompressBlock({ptr2+18, compressedLen-18}, {range.data(), range.size()});
+            size_t size = zlibCtx.decompressBlock({ptr2+18, compressedLen-18}, {range.data(), range.size()});
             file.dropUntil(compressedLen);
             return size;
         }
