@@ -91,6 +91,11 @@ int main(int argc, char** argv) {
         benchmark_io3(io3::vcf_reader{io3::stream_reader(ifs)});
     } else if (method == "io3_file" and ext == ".bcf") {
          benchmark_io3(io3::bcf_reader{io3::bgzf_file_reader{file.c_str()}});
+    } else if (method == "io3_mmap" and ext == ".bcf") {
+         benchmark_io3(io3::bcf_reader{io3::bgzf_mmap_reader{file.c_str()}});
+    } else if (method == "io3_stream" and ext == ".bcf") {
+        auto ifs = std::ifstream{file.c_str()};
+        benchmark_io3(io3::bcf_reader{io3::bgzf_stream_reader(ifs)});
     } else {
         std::cout << "unknown\n";
     }
