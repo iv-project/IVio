@@ -2,15 +2,16 @@
 
 #include "concepts.h"
 
-#include <cstring>
-#include <cstdint>
-#include <unistd.h>
 #include <array>
+#include <cstdint>
+#include <cstring>
+#include <fcntl.h>
+#include <ranges>
 #include <string>
-
 #include <sys/mman.h>
 #include <sys/stat.h>
-#include <fcntl.h>
+#include <tuple>
+#include <unistd.h>
 
 namespace io3 {
 
@@ -58,9 +59,9 @@ public:
 
 static_assert(reader_c<file_reader>);
 
-template <typename Reader>
+template <typename Reader, size_t minV = 4096>
 class buffered_reader : public Reader {
-    std::vector<char> buf = []() { auto vec = std::vector<char>{}; vec.reserve(4096); return vec; }();
+    std::vector<char> buf = []() { auto vec = std::vector<char>{}; vec.reserve(minV); return vec; }();
 
 public:
     using Reader::Reader;
@@ -76,7 +77,7 @@ public:
 private:
     auto readMore() -> bool {
         size_t lastSize = buf.size();
-        if (buf.capacity() - buf.size() >= 4*1024ul) {
+        if (buf.capacity() - buf.size() >= minV) {
             buf.resize(buf.capacity());
         } else {
             buf.resize(buf.capacity()*2);
@@ -110,7 +111,9 @@ public:
     }
 
     size_t dropUntil(size_t i) {
-        buf.erase(begin(buf), begin(buf)+i);
+        if (i < minV) return i;
+        std::copy(begin(buf)+i, end(buf), begin(buf));
+        buf.resize(buf.size()-i);
         return 0;
     }
 
