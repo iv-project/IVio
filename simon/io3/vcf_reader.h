@@ -5,17 +5,19 @@
 
 #include <charconv>
 #include <functional>
+#include <ranges>
 
 namespace io3 {
 
 struct vcf_reader_view_record_view {
+    using string_view_list = std::span<std::string_view>;
     std::string_view chrom;
     int32_t          pos;
     std::string_view id;
     std::string_view ref;
-    std::string_view alt;
+    string_view_list alt;
     float            qual;
-    std::string_view filter;
+    string_view_list filter;
     std::string_view info;
     std::string_view format;
     std::string_view samples; // needs special view to make it understandable
@@ -103,6 +105,11 @@ struct vcf_reader {
         return value;
     }
 
+    struct {
+        std::vector<std::string_view> alts;
+        std::vector<std::string_view> filters;
+    } storage;
+
 
     auto next() -> std::optional<record_view> {
         if (reader.eof(lastUsed)) return std::nullopt;
@@ -131,14 +138,28 @@ struct vcf_reader {
         lastUsed = endSamples;
         if (!reader.eof(lastUsed)) lastUsed += 1;
 
+
+        storage.alts.clear();
+        for (auto && v : std::views::split(reader.string_view(startAlt+1, startQual), ',')) {
+            storage.alts.emplace_back(v.begin(), v.end());
+        }
+
+        storage.filters.clear();
+        auto filters = reader.string_view(startFilter+1, startInfo);
+        if (filters != ".") {
+            for (auto && v : std::views::split(filters, ';')) {
+                storage.filters.emplace_back(v.begin(), v.end());
+            }
+        }
+
         return record_view {
             .chrom   = reader.string_view(startChrom,     startPos),
             .pos     = convertTo<int32_t>(reader, startPos+1,  startId),
             .id      = reader.string_view(startId+1,      startRef),
             .ref     = reader.string_view(startRef+1,     startAlt),
-            .alt     = reader.string_view(startAlt+1,     startQual),
+            .alt     = storage.alts,
             .qual    = convertTo<float>(reader,   startQual+1, startFilter),
-            .filter  = reader.string_view(startFilter+1,  startInfo),
+            .filter  = storage.filters,
             .info    = reader.string_view(startInfo+1,    startFormat),
             .format  = reader.string_view(startFormat+1,  startSamples),
             .samples = reader.string_view(startSamples+1, endSamples),

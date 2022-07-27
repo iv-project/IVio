@@ -35,8 +35,53 @@ struct bcf_reader {
         return nullptr;
     }
 
-    std::vector<std::string> header;
-    std::string tableHeader;
+    std::string headerBuffer;
+    std::vector<std::string_view> header;
+    std::string_view              tableHeader;
+    std::unordered_map<std::string_view, std::vector<std::string_view>> headerMap;
+
+    std::vector<std::string_view>& contigMap = headerMap["contig"];
+    std::vector<std::string_view>& filterMap = headerMap["FILTER"];
+
+    struct {
+        std::vector<std::string_view> alts;
+    } storage;
+
+
+    auto parseHeaderLine(size_t pos) -> std::tuple<bool, size_t> {
+        if (headerBuffer.size() >= pos + 2 && headerBuffer[pos + 0] == '#' && headerBuffer[pos + 1] == '#') {
+            auto start = pos + 2;
+            auto end   = headerBuffer.find('\n', start);
+            if (end == std::string::npos) end = headerBuffer.size();
+            header.emplace_back(headerBuffer.data()+start, headerBuffer.data()+end);
+            {
+                auto v = header.back();
+                auto p = v.find('=');
+                if (p == std::string::npos) throw "error parsing BCF Header";
+                auto key   = std::string_view{v.data(), v.data()+p};
+                auto value = std::string_view{v.data()+p+1, v.data()+v.size()};
+                headerMap[key].push_back(value);
+            }
+            if (end == headerBuffer.size()) return {false, end};
+            return {true, end+1};
+        }
+        return {false, pos};
+    }
+
+    void parseHeader() {
+        size_t pos{};
+        bool cont;
+        do {
+            std::tie(cont, pos) = parseHeaderLine(pos);
+        } while (cont);
+
+        if (pos < headerBuffer.size() and headerBuffer[pos] == '#') {
+            auto start = pos + 1;
+            auto end = headerBuffer.find('\n', start);
+            if (end == std::string::npos) end = headerBuffer.size();
+            tableHeader = {headerBuffer.data() + start, headerBuffer.data() + end};
+        }
+    }
 
     void readHeader() {
         auto [ptr, size] = reader.read(9);
@@ -44,6 +89,8 @@ struct bcf_reader {
 
         size_t txt_len = io3::bgzfUnpack<uint32_t>(ptr + 5);
         reader.read(9 + txt_len); // read complete header !TODO safe header for future processing
+        headerBuffer = std::string{reader.string_view(9, 9+txt_len)};
+        parseHeader();
         reader.dropUntil(9 + txt_len);
     }
 
@@ -59,6 +106,7 @@ struct bcf_reader {
         auto [ptr2, size2] = reader.read(flen);
         if (size2 < flen) throw "something went wrong reading bcf file (3)";
         if (size2 < 32+4) throw "something went worng reaing bcf file (4)";
+        auto chromId  = io3::bgzfUnpack<int32_t>(ptr2 + 8);
         auto pos      = io3::bgzfUnpack<int32_t>(ptr2 + 12)+1;
         auto rlen     = io3::bgzfUnpack<int32_t>(ptr2 + 16);
 //        auto qual = io3::bgzfUnpack<float>(ptr2 + 20);
@@ -93,15 +141,26 @@ struct bcf_reader {
         auto [id, o2] = readString(32);
         auto [ref, o3] = readString(o2);
 
+        if (contigMap.size() <= chromId) {
+            throw "chromId " + std::to_string(chromId) + " is missing in the header";
+        }
+
+        storage.alts.clear();
+        for (size_t i{1}; i < n_allele; ++i) {
+            auto [alt, o4] = readString(o3);
+            storage.alts.emplace_back(alt);
+            o3 = o4;
+        }
+
         lastUsed = l_shared + l_indiv + 8;
         return record_view {
-            .chrom   = reader.string_view(0, 0),
+            .chrom   = contigMap[chromId],
             .pos     = pos,
             .id      = id,
             .ref     = ref,
-            .alt     = reader.string_view(0, 0),
+            .alt     = storage.alts,
             .qual    = 0.,
-            .filter  = reader.string_view(0, 0),
+//            .filter  = reader.string_view(0, 0),
             .info    = reader.string_view(0, 0),
             .format  = reader.string_view(0, 0),
             .samples = reader.string_view(0, 0),
