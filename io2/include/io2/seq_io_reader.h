@@ -1,18 +1,16 @@
 #pragma once
 
-#include "common.h"
-#include "alphabet_seqan223.h"
-#include "iterator.h"
 #include "Input.h"
+#include "alphabet_seqan223.h"
+#include "common.h"
+#include "iterator.h"
 
 #include <filesystem>
-#include <optional>
 #include <seqan/seq_io.h>
 #include <seqan3/alphabet/nucleotide/dna5.hpp>
 #include <seqan3/alphabet/quality/phred42.hpp>
 #include <seqan3/utility/range/to.hpp>
 #include <string_view>
-#include <variant>
 
 
 namespace io2::seq_io {

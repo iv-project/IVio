@@ -1,14 +1,16 @@
 #pragma once
 
-#include "common.h"
+#include "Input.h"
 #include "alphabet_seqan223.h"
+#include "common.h"
 #include "iterator.h"
+#include "typed_range.h"
 
 #include <filesystem>
 #include <optional>
-#include <seqan/bam_io.h>
 #include <seqan3/alphabet/nucleotide/dna5.hpp>
 #include <seqan3/alphabet/quality/phred42.hpp>
+#include <seqan3/utility/range/all.hpp>
 #include <string_view>
 
 

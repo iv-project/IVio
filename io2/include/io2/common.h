@@ -157,7 +157,6 @@ auto convert_to_seqan2_alphabet(rng_t&& rng) {
  */
 template <std::ranges::range rng_t>
 auto convert_to_seqan2_iupac_alphabet(rng_t&& rng) {
-    using AlphabetS3 = std::decay_t<decltype(*rng.begin())>;
     seqan::String<seqan::Iupac> v;
 
     auto view = rng | std::views::transform([](auto c) {

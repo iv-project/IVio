@@ -1,15 +1,13 @@
 #pragma once
 
-#include "common.h"
-#include "alphabet_seqan223.h"
-#include "utils.h"
 #include "Output.h"
+#include "alphabet_seqan223.h"
+#include "common.h"
 #include "typed_range.h"
+#include "utils.h"
 
-#include <seqan/bam_io.h>
+#include <seqan/vcf_io.h>
 #include <seqan3/alphabet/nucleotide/dna5.hpp>
-#include <span>
-#include <unordered_map>
 
 namespace io2::vcf_io {
 

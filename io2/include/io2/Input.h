@@ -1,10 +1,9 @@
 #pragma once
 
 #include <filesystem>
-#include <seqan/seq_io.h>
 #include <seqan/bam_io.h>
+#include <seqan/seq_io.h>
 #include <seqan/vcf_io.h>
-#include <variant>
 
 namespace io2 {
 

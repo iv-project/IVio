@@ -1,10 +1,10 @@
 #pragma once
 
-#include <seqan/seq_io.h>
 #include <filesystem>
-#include <ranges>
-#include <optional>
 #include <functional>
+#include <optional>
+#include <ranges>
+#include <seqan/seq_io.h>
 #include <seqan3/alphabet/nucleotide/dna5.hpp>
 
 namespace io2::detail {
