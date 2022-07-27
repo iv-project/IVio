@@ -29,7 +29,7 @@ void convert_format(format _format, auto&& cb) {
     }
 }
 
-/* A single record_view
+/**\brief A view onto a single record
  *
  * This record represents a single entry in the file.
  */
@@ -55,59 +55,66 @@ struct record_view {
     std::string_view tags;
 };
 
-/** A reader to read sequence files like fasta, fastq, genbank, embl
+/**\brief A copy of a seq_io record
+ */
+template <typename AlphabetS3, typename QualitiesS3>
+struct record {
+    // views for string types
+    using sequence_t  = std::vector<AlphabetS3>;
+    using cigar_t     = std::vector<seqan3::cigar>;
+    using qualities_t = std::vector<QualitiesS3>;
+
+    std::string   id;
+    uint16_t      flag;
+    int32_t       rID;
+    int32_t       beginPos;
+    uint8_t       mapQ;
+    uint16_t      bin;
+    cigar_t       cigar;
+    int32_t       rNextId;
+    int32_t       pNext;
+    int32_t       tLen;
+    sequence_t    seq;
+    qualities_t   qual;
+    std::string   tags;
+
+
+    record(record_view<AlphabetS3, QualitiesS3> v)
+        : id{v.id}
+        , flag{v.flag}
+        , rID{v.rID}
+        , beginPos{v.beginPos}
+        , mapQ{v.mapQ}
+        , bin{v.bin}
+        , cigar{v.cigar | seqan3::ranges::to<std::vector>()}
+        , rNextId{v.rNextId}
+        , pNext{v.pNext}
+        , tLen{v.tLen}
+        , seq{v.seq | seqan3::ranges::to<std::vector>()}
+        , qual{v.qual | seqan3::ranges::to<std::vector>()}
+        , tags{v.tags}
+    {}
+    record() = default;
+    record(record const&) = default;
+    record(record&&) = default;
+    record& operator=(record const&) = default;
+    record& operator=(record&&) = default;
+};
+
+
+/** A reader to read sam and bam files
  *
  * Usage:
- *    auto reader = io2::seq_io::reader {
- *       .input = _file,                         // accepts string and streams
- *       .alphabet = sgg_io::type<seqan3::dna5>, // default dna5
+ *    auto reader = io2::sam_io::reader {
+ *       .input    = _file,                   // accepts string and streams
+ *       .alphabet = io2::type<seqan3::dna5>, // default dna5
  *   };
  */
 template <typename AlphabetS3 = seqan3::dna5,
           typename QualitiesS3 = seqan3::phred42>
 struct reader {
-    struct record {
-        // views for string types
-        using sequence_t  = std::vector<AlphabetS3>;
-        using cigar_t     = std::vector<seqan3::cigar>;
-        using qualities_t = std::vector<QualitiesS3>;
-
-        std::string   id;
-        uint16_t      flag;
-        int32_t       rID;
-        int32_t       beginPos;
-        uint8_t       mapQ;
-        uint16_t      bin;
-        cigar_t       cigar;
-        int32_t       rNextId;
-        int32_t       pNext;
-        int32_t       tLen;
-        sequence_t    seq;
-        qualities_t   qual;
-        std::string   tags;
-
-
-        record(record_view<AlphabetS3, QualitiesS3> v)
-            : id{v.id}
-            , flag{v.flag}
-            , rID{v.rID}
-            , beginPos{v.beginPos}
-            , mapQ{v.mapQ}
-            , bin{v.bin}
-            , cigar{v.cigar | seqan3::ranges::to<std::vector>()}
-            , rNextId{v.rNextId}
-            , pNext{v.pNext}
-            , tLen{v.tLen}
-            , seq{v.seq | seqan3::ranges::to<std::vector>()}
-            , qual{v.qual | seqan3::ranges::to<std::vector>()}
-            , tags{v.tags}
-        {}
-        record() = default;
-        record(record const&) = default;
-        record(record&&) = default;
-        record& operator=(record const&) = default;
-        record& operator=(record&&) = default;
-    };
+    using record_view = sam_io::record_view<AlphabetS3, QualitiesS3>;
+    using record      = sam_io::record<AlphabetS3, QualitiesS3>;
 
     // configurable from the outside
     io2::Input<seqan::BamFileIn> input;
@@ -117,10 +124,10 @@ struct reader {
     // internal variables
     // storage for one record
     struct {
-        seqan::BamAlignmentRecord            seqan2_record;
-        record_view<AlphabetS3, QualitiesS3> return_record;
+        seqan::BamAlignmentRecord seqan2_record;
+        record_view               return_record;
 
-        seqan::BamHeader                     seqan2_header;
+        seqan::BamHeader          seqan2_header;
         std::decay_t<decltype(contigNames(context(seqan::BamFileIn{})))>   seqan2_contigNames;
         std::decay_t<decltype(contigLengths(context(seqan::BamFileIn{})))> seqan2_contigLengths;
     } storage;
@@ -159,13 +166,13 @@ struct reader {
     } header {*this};
 
 
-    auto next() -> record_view<AlphabetS3, QualitiesS3> const* {
+    auto next() -> record_view const* {
         if (input.atEnd()) return nullptr;
         input.readRecord(storage.seqan2_record);
 
 
         auto const& r = storage.seqan2_record; // shorter name
-        storage.return_record = record_view<AlphabetS3, QualitiesS3> {
+        storage.return_record = record_view {
             .id       = detail::convert_to_view(r.qName),
             .flag     = static_cast<uint16_t>(r.flag),
             .rID      = r.rID,
@@ -183,7 +190,7 @@ struct reader {
         return &storage.return_record;
     }
 
-    using iterator = detail::iterator<reader, record_view<AlphabetS3, QualitiesS3>, record>;
+    using iterator = detail::iterator<reader, record_view, record>;
     auto end() const {
         return iterator{.reader = nullptr};
     }
@@ -195,8 +202,5 @@ struct reader {
         return _reader.end();
     }
 };
-
-template <typename AlphabetS3, typename QualitiesS3>
-using record = reader<AlphabetS3, QualitiesS3>::record;
 
 }
