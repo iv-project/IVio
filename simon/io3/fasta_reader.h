@@ -72,7 +72,7 @@ struct fasta_reader {
 };
 
 template <typename Reader>
-fasta_reader(Reader&& reader) -> fasta_reader<io3::buffered_reader<Reader>>;
+fasta_reader(Reader&& reader) -> fasta_reader<io3::buffered_reader<Reader, 1<<12>>;
 
 template <reader_and_dropper_c Reader>
 fasta_reader(Reader&& reader) -> fasta_reader<Reader>;
