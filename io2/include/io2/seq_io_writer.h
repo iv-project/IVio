@@ -2,7 +2,6 @@
 
 #include "common.h"
 #include "alphabet_seqan223.h"
-#include "utils.h"
 #include "Output.h"
 #include "seq_io_reader.h"
 #include "typed_range.h"
