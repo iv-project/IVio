@@ -11,6 +11,7 @@ namespace io3 {
 
 struct vcf_reader_view_record_view {
     using string_view_list = std::span<std::string_view>;
+
     std::string_view chrom;
     int32_t          pos;
     std::string_view id;
@@ -20,7 +21,7 @@ struct vcf_reader_view_record_view {
     string_view_list filter;
     std::string_view info;
     std::string_view format;
-    std::string_view samples; // needs special view to make it understandable
+    string_view_list samples;
 };
 
 struct vcf_reader_view_iter {
@@ -94,6 +95,7 @@ struct vcf_reader {
             if (!reader.eof(end)) reader.dropUntil(1);
         }
     }
+
     template <typename T>
     static auto convertTo(Reader& reader, size_t _start, size_t _end) {
         auto view = reader.string_view(_start, _end);
@@ -108,6 +110,7 @@ struct vcf_reader {
     struct {
         std::vector<std::string_view> alts;
         std::vector<std::string_view> filters;
+        std::vector<std::string_view> samples;
     } storage;
 
 
@@ -138,7 +141,6 @@ struct vcf_reader {
         lastUsed = endSamples;
         if (!reader.eof(lastUsed)) lastUsed += 1;
 
-
         storage.alts.clear();
         for (auto && v : std::views::split(reader.string_view(startAlt+1, startQual), ',')) {
             storage.alts.emplace_back(v.begin(), v.end());
@@ -152,6 +154,12 @@ struct vcf_reader {
             }
         }
 
+        storage.samples.clear();
+        for (auto && v : std::views::split(reader.string_view(startSamples+1, endSamples), ' ')) {
+            storage.samples.emplace_back(v.begin(), v.end());
+        }
+
+
         return record_view {
             .chrom   = reader.string_view(startChrom,     startPos),
             .pos     = convertTo<int32_t>(reader, startPos+1,  startId),
@@ -162,7 +170,7 @@ struct vcf_reader {
             .filter  = storage.filters,
             .info    = reader.string_view(startInfo+1,    startFormat),
             .format  = reader.string_view(startFormat+1,  startSamples),
-            .samples = reader.string_view(startSamples+1, endSamples),
+            .samples = storage.samples,
         };
     }
 };

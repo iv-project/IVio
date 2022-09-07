@@ -45,6 +45,7 @@ struct bcf_reader {
 
     struct {
         std::vector<std::string_view> alts;
+        std::vector<std::string_view> samples;
     } storage;
 
 
@@ -163,7 +164,7 @@ struct bcf_reader {
 //            .filter  = reader.string_view(0, 0),
             .info    = reader.string_view(0, 0),
             .format  = reader.string_view(0, 0),
-            .samples = reader.string_view(0, 0),
+            .samples = storage.samples,
         };
     }
 };
