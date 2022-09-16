@@ -24,7 +24,7 @@ void io2_bench(std::string const& _file) {
         .input = file
     };
     for (auto && record : fin) {
-        for (auto c : record.qname) {
+        for (auto c : record.id) {
             a += c;
         }
         for (auto c : record.seq) {

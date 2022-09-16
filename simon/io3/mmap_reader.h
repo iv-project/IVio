@@ -78,13 +78,13 @@ public:
 
     bool eof(size_t i) const {
         assert(i <= filesize);
-        return filesize == i;
+        return filesize == i+inPos;
     }
 
     auto string_view(size_t start, size_t end) -> std::string_view {
         assert(start <= filesize);
         assert(end <= filesize);
-        return std::string_view{buffer+start, buffer+end};
+        return std::string_view{buffer+start+inPos, buffer+end+inPos};
     }
 
     auto size() const {
