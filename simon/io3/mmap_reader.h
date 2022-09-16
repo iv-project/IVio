@@ -46,8 +46,9 @@ public:
     }
 
     size_t readUntil(char c, size_t lastUsed) {
+        lastUsed += inPos;
         assert(lastUsed <= filesize);
-        auto ptr = (char const*)memchr(buffer + lastUsed + inPos, c, filesize - lastUsed - inPos);
+        auto ptr = (char const*)memchr(buffer + lastUsed, c, filesize - lastUsed);
         if (ptr != nullptr) {
             assert(static_cast<size_t>(ptr - buffer) - inPos < filesize);
             return (ptr - buffer) - inPos;
@@ -60,8 +61,8 @@ public:
     }
 
     void dropUntil(size_t i) {
+        i += inPos;
         assert(i <= filesize);
-        i = i + inPos;
         if (i < 1'024ul * 1'024ul) {
             inPos = i;
             return;
@@ -77,14 +78,17 @@ public:
     }
 
     bool eof(size_t i) const {
+        i += inPos;
         assert(i <= filesize);
-        return filesize == i+inPos;
+        return filesize == i;
     }
 
     auto string_view(size_t start, size_t end) -> std::string_view {
+        start += inPos;
+        end   += inPos;
         assert(start <= filesize);
         assert(end <= filesize);
-        return std::string_view{buffer+start+inPos, buffer+end+inPos};
+        return std::string_view{buffer+start, buffer+end};
     }
 
     auto size() const {
