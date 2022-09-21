@@ -13,6 +13,9 @@ void readSeqIo(std::filesystem::path file) {
         .input     = file,
         .alphabet  = io2::type<seqan3::dna15>,   // default is dna5
         .qualities = io2::type<seqan3::phred42>, // default is phred42
+        .fasta {
+            .someOption = true,
+        }
     };
 
     // read data and print to the terminal
@@ -71,6 +74,7 @@ void readAndWriteSeqIo(std::filesystem::path file, std::filesystem::path outFile
 }
 
 void readAndWriteStreamSeqIo() {
+#if 0
     // setup reader
     auto reader = io2::seq_io::reader {
         .input     = {std::cin, io2::seq_io::format::Fasta},
@@ -95,6 +99,7 @@ void readAndWriteStreamSeqIo() {
             .qual = r.qual,
         });
     }
+    #endif
 }
 
 
@@ -573,8 +578,6 @@ void readCompleteFileVcfIo(std::filesystem::path file) {
     }
 }
 
-
-
 int main(int argc, char** argv) {
     // call ./io2 read|write <file>
 
@@ -583,7 +586,7 @@ int main(int argc, char** argv) {
     auto action = std::string{argv[1]};
     auto file   = std::filesystem::path{argv[2]};
 
-    if (action == "read" and io2::seq_io::validExtension(file)) {
+    if (action == "read" and io2::seq_io::reader<>::validExt(file)) {
         readSeqIo(file);
     } else if (action == "write" and io2::seq_io::validExtension(file)) {
         writeSeqIo(file);

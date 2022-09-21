@@ -1,38 +1,10 @@
 #pragma once
 
-#include "Input.h"
-#include "alphabet_seqan223.h"
 #include "common.h"
-#include "iterator.h"
-
-#include <filesystem>
-#include <seqan/seq_io.h>
-#include <seqan3/alphabet/nucleotide/dna5.hpp>
-#include <seqan3/alphabet/quality/phred42.hpp>
-#include <seqan3/utility/range/to.hpp>
-#include <string_view>
-
+#include "fasta_reader.h"
+#include "fastq_reader.h"
 
 namespace io2::seq_io {
-
-enum class format {
-    Fasta,
-    Fastq,
-    Genbank,
-    Embl,
-};
-
-/**
- * \noapi
- */
-void convert_format(format _format, auto&& cb) {
-    switch(_format) {
-    case format::Fasta:   cb(seqan::Fasta()); break;
-    case format::Fastq:   cb(seqan::Fastq()); break;
-    case format::Genbank: cb(seqan::GenBank()); break;
-    case format::Embl:    cb(seqan::Embl()); break;
-    }
-}
 
 /**\brief A view onto a single record
  *
@@ -71,14 +43,13 @@ struct record {
     record& operator=(record&&) = default;
 };
 
-
-
 /** A reader to read sequence files like fasta, fastq, genbank, embl
  *
  * Usage:
  *    auto reader = io2::seq_io::reader {
- *       .input    = _file,                   // accepts string and streams
- *       .alphabet = io2::type<seqan3::dna5>, // default dna5
+ *       .input     = _file,                     // accepts string and streams
+ *       .alphabet  = io2::type<seqan3::dna5>,   // default dna5
+ *       .qualities = io2::type<seqan::phred42>, // default phred42
  *   };
  */
 template <typename AlphabetS3 = seqan3::dna5,
@@ -88,32 +59,78 @@ struct reader {
     using record      = seq_io::record<AlphabetS3, QualitiesS3>;
 
     // configurable from the outside
-    io2::Input<seqan::SeqFileIn> input;
+//    io2::Input<seqan::SeqFileIn> input;
+    std::filesystem::path input;
     [[no_unique_address]] detail::empty_class<AlphabetS3>  alphabet{};
     [[no_unique_address]] detail::empty_class<QualitiesS3> qualities{};
+
+
+    fasta_io::reader<AlphabetS3>              fasta;
+    fastq_io::reader<AlphabetS3, QualitiesS3> fastq;
+
+    static auto extensions() -> std::vector<std::string> {
+        static auto list = [&]() {
+            auto l = std::vector<std::string>{};
+            for (auto e : decltype(fasta)::extensions()) l.push_back(e);
+            for (auto e : decltype(fastq)::extensions()) l.push_back(e);
+            return l;
+        }();
+        return list;
+    }
+
+    static bool validExt(std::filesystem::path const& p) {
+        return io2::validExtension(p, extensions());
+    }
 
 
     // internal variables
     // storage for one record
     struct {
-        seqan::CharString id;
-        seqan::String<detail::AlphabetAdaptor<AlphabetS3>> seq;
-        seqan::String<detail::AlphabetAdaptor<QualitiesS3>> qual;
-
         record_view return_record;
     } storage;
 
-    auto next() -> record_view const* {
-        if (input.atEnd()) return nullptr;
-        input.readRecord(storage.id, storage.seq, storage.qual);
 
-        storage.return_record = record_view {
-            .id   = detail::convert_to_view(storage.id),
-            .seq  = detail::convert_to_seqan3_view(storage.seq),
-            .qual = detail::convert_to_seqan3_view(storage.qual),
-        };
-        return &storage.return_record;
-    }
+    std::function<record_view const*()> next;
+    void* ctor = [this]() {
+/*        auto checkExtension = [this](auto& reader) {
+            for (auto e : reader.extensions()) {
+                auto s = input.filename().string();
+                if (s.size() < e.size()) continue;
+                s = s.substr(s.size() - e.size());
+                if (s == e) {
+                    return true;
+                }
+            }
+            return false;
+        };*/
+        if (validExtension(input, decltype(fasta)::extensions())) {
+            fasta.input = input;
+            next = [this]() -> record_view const* {
+                auto r = fasta.next();
+                if (r == nullptr) return nullptr;
+                storage.return_record = record_view {
+                    .id  = r->id,
+                    .seq = r->seq,
+                };
+                return &storage.return_record;
+            };
+        } else if (validExtension(input, decltype(fastq)::extensions())) {
+            fastq.input = input;
+            next = [this]() -> record_view const* {
+                auto r = fastq.next();
+                if (r == nullptr) return nullptr;
+                storage.return_record = record_view {
+                    .id   = r->id,
+                    .seq  = r->seq,
+                    .qual = r->qual,
+                };
+                return &storage.return_record;
+            };
+        } else {
+            throw std::runtime_error("unknown file format");
+        }
+        return nullptr;
+    }();
 
     using iterator = detail::iterator<reader, record_view, record>;
     auto end() const {

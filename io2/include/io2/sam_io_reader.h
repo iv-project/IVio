@@ -145,10 +145,10 @@ struct reader {
      */
     [[no_unique_address]] detail::empty_class<nullptr_t> _fakeConstructor = [this]() {
 //        seqan::BamHeader header;
-//        seqan::readHeader(header, input.fileIn);
-        seqan::readHeader(storage.seqan2_header, input.fileIn);
-        storage.seqan2_contigNames   = contigNames(context(input.fileIn));
-        storage.seqan2_contigLengths = contigLengths(context(input.fileIn));
+//        seqan::readHeader(header, *input.fileIn);
+        seqan::readHeader(storage.seqan2_header, *input.fileIn);
+        storage.seqan2_contigNames   = contigNames(context(*input.fileIn));
+        storage.seqan2_contigLengths = contigLengths(context(*input.fileIn));
         return nullptr;
     }();
 

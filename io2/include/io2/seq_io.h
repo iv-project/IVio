@@ -47,4 +47,4 @@ auto validExtension(std::filesystem::path const& p) {
     return fileExtensions.contains(p);
 }
 
-};
+}

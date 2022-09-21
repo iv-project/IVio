@@ -3,9 +3,7 @@
 #include "alphabet_seqan223.h"
 
 #include <ranges>
-#include <seqan/seq_io.h>
 #include <seqan3/alphabet/cigar/cigar.hpp>
-#include <seqan3/alphabet/nucleotide/dna5.hpp>
 #include <span>
 #include <string_view>
 
@@ -244,10 +242,6 @@ auto convert_to_seqan2_string(rng_t&& rng) {
     return v;
 }
 
-
-
-
-
 }
 
 namespace io2 {
@@ -275,5 +269,18 @@ namespace io2 {
 template <typename t>
 inline constexpr auto type = detail::empty_class<t>{};
 
+
+
+bool validExtension(std::filesystem::path const& _path, std::vector<std::string> const& _list) {
+    for (auto e : _list) {
+        auto s = _path.filename().string();
+        if (s.size() < e.size()) continue;
+        s = s.substr(s.size() - e.size());
+        if (s == e) {
+            return true;
+        }
+    }
+    return false;
+}
 
 }

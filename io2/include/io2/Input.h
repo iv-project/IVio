@@ -1,6 +1,7 @@
 #pragma once
 
 #include <filesystem>
+#include <optional>
 #include <seqan/bam_io.h>
 #include <seqan/seq_io.h>
 #include <seqan/vcf_io.h>
@@ -11,11 +12,13 @@ namespace io2 {
  */
 template <typename File>
 struct Input {
-    File fileIn;
+    std::optional<File> fileIn;
 
-    Input(char const* _path)
-        : fileIn{_path}
-    {}
+    Input() {}
+    Input(char const* _path) {
+        fileIn.emplace(_path);
+
+    }
 
     Input(std::string const& _path)
         : Input(_path.c_str())
@@ -28,20 +31,25 @@ struct Input {
     template <typename format_t>
     Input(std::istream& istr, format_t format) {
         convert_format(format, [&](auto format) {
-            assign(fileIn.format, format);
+            assign(fileIn->format, format);
         });
-        if (!open(fileIn, istr)) {
+        if (!open(*fileIn, istr)) {
             throw std::runtime_error("couldn't open istream");
         }
     }
 
-    bool atEnd() {
-        return seqan::atEnd(fileIn);
+    auto operator=(std::filesystem::path const& _path) -> Input& {
+        fileIn.emplace(_path.c_str());
+        return *this;
+    }
+
+    bool atEnd() const {
+        return seqan::atEnd(*fileIn);
     }
 
     template <typename... Args>
     void readRecord(Args&... args) {
-        seqan::readRecord(args..., fileIn);
+        seqan::readRecord(args..., *fileIn);
     }
 };
 

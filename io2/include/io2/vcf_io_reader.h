@@ -129,8 +129,8 @@ struct reader {
      * \noapi
      */
     [[no_unique_address]] detail::empty_class<nullptr_t> _fakeConstructor = [this]() {
-        seqan::readHeader(storage.seqan2_header, input.fileIn);
-        storage.seqan2_sampleNames = sampleNames(context(input.fileIn));
+        seqan::readHeader(storage.seqan2_header, *input.fileIn);
+        storage.seqan2_sampleNames = sampleNames(context(*input.fileIn));
         return nullptr;
     }();
 

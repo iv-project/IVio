@@ -1,8 +1,8 @@
 #!/usr/bin/bash
 cd "$(dirname "$0")"
 
-FLAGS="-march=native -O3 -DNDEBUG"
-#FLAGS="-O0 -ggdb"
+#FLAGS="-march=native -O3 -DNDEBUG"
+FLAGS="-O0 -ggdb"
 
 g++ -std=c++20 ${FLAGS} -lz -o io2 -fconcepts-diagnostics-depth=10 \
     io2_demo.cpp \
