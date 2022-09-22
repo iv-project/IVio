@@ -115,7 +115,7 @@ struct reader {
                 };
                 return &storage.return_record;
             };
-        } else {
+        } else if (!input.empty()) {
             throw std::runtime_error("unknown file format");
         }
         return nullptr;

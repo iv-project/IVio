@@ -74,18 +74,15 @@ void readAndWriteSeqIo(std::filesystem::path file, std::filesystem::path outFile
 }
 
 void readAndWriteStreamSeqIo() {
-#if 0
-    // setup reader
     auto reader = io2::seq_io::reader {
-        .alphabet  = io2::type<seqan3::dna15>,   // default is dna5
-        .qualities = io2::type<seqan3::phred42>, // default is phred42
-        .fasta     = {
+        .fasta     = io2::fasta_io::reader {
             .input = {std::cin},
+            .alphabet_type  = seqan3::dna15{},   // default is dna5
         }
     };
 
     // setup writer
-    auto writer = io2::seq_io::writer {
+/*    auto writer = io2::seq_io::writer {
         .output   = {std::cout, io2::seq_io::format::Fasta},
         .alphabet = io2::type<seqan3::dna15>,
     };
@@ -100,8 +97,7 @@ void readAndWriteStreamSeqIo() {
             }),
             .qual = r.qual,
         });
-    }
-#endif
+    }*/
 }
 
 
