@@ -61,13 +61,13 @@ struct writer {
              appendValue(h, r);
 
             if (key == "contig") {
-                appendValue(contigNames(context(output.fileOut)), r.value);
+                appendValue(contigNames(context(*output.fileOut)), r.value);
             }
         }
         for (auto const& value : header.sampleNames.data) {
-            appendValue(sampleNames(context(output.fileOut)), detail::convert_to_seqan2_string(value));
+            appendValue(sampleNames(context(*output.fileOut)), detail::convert_to_seqan2_string(value));
         }
-        writeHeader(output.fileOut, h);
+        writeHeader(*output.fileOut, h);
         return nullptr;
     }();
 
@@ -99,7 +99,7 @@ struct writer {
             appendValue(r.genotypeInfos, detail::convert_to_seqan2_string(info));
         }
 
-        writeRecord(output.fileOut, r);
+        writeRecord(*output.fileOut, r);
     }
 
     template <typename record_like>

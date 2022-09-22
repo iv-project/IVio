@@ -30,7 +30,7 @@ void writeSeqIo(std::filesystem::path file) {
     // setup writer
     auto writer = io2::seq_io::writer {
         .output = file,
-        .alphabet = io2::type<seqan3::dna5>,
+        .alphabet_type = seqan3::dna5{},
     };
 
     // generating some data
@@ -57,7 +57,7 @@ void readAndWriteSeqIo(std::filesystem::path file, std::filesystem::path outFile
     // setup writer
     auto writer = io2::seq_io::writer {
         .output = outFile,
-        .alphabet = io2::type<seqan3::dna15>,
+        .alphabet_type = seqan3::dna15{},
     };
 
     // reads entries and reduces the alphabet to 'A' and 'C'
@@ -82,9 +82,11 @@ void readAndWriteStreamSeqIo() {
     };
 
     // setup writer
-/*    auto writer = io2::seq_io::writer {
-        .output   = {std::cout, io2::seq_io::format::Fasta},
-        .alphabet = io2::type<seqan3::dna15>,
+    auto writer = io2::seq_io::writer {
+        .alphabet_type = seqan3::dna15{},
+        .fasta {
+            .output = {std::cout}
+        }
     };
 
     // reads entries and reduces the alphabet to 'A' and 'C'
@@ -97,7 +99,7 @@ void readAndWriteStreamSeqIo() {
             }),
             .qual = r.qual,
         });
-    }*/
+    }
 }
 
 

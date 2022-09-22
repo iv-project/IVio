@@ -1,5 +1,8 @@
 #pragma once
 
+#include "fastq_writer.h"
+#include "fasta_writer.h"
+
 #include "common.h"
 #include "alphabet_seqan223.h"
 #include "Output.h"
@@ -16,8 +19,12 @@ template <typename AlphabetS3 = seqan3::dna5,
           typename QualitiesS3 = seqan3::phred42>
 struct writer {
     // configurable from the outside
-    Output<seqan::SeqFileOut> output;
-    [[no_unique_address]] detail::empty_class<AlphabetS3> alphabet{};
+    std::filesystem::path output{};
+    AlphabetS3 alphabet_type{};
+
+    fasta_io::writer<AlphabetS3, QualitiesS3> fasta{};
+    fastq_io::writer<AlphabetS3, QualitiesS3> fastq{};
+
 
     struct record {
         typed_range<char>        id{};
@@ -26,11 +33,7 @@ struct writer {
     };
 
     void write(record _record) {
-        auto id   = detail::convert_to_seqan2_string(_record.id);
-        auto seq  = detail::convert_to_seqan2_alphabet(_record.seq);
-        auto qual = detail::convert_to_seqan2_qualities(_record.qual);
-
-        writeRecord(output.fileOut, id, seq, qual);
+        writeImpl(_record);
     }
 
     template <typename record_like>
@@ -41,6 +44,25 @@ struct writer {
             .qual = _record.qual,
         });
     }
+
+    std::function<void(record _record)> writeImpl{};
+    void* ctor = [this]() {
+        if (validExtension(output, decltype(fasta)::extensions())) {
+            fasta.output = output;
+            writeImpl = [this](record _record) {
+                fasta.write(_record);
+            };
+        } else if (validExtension(output, decltype(fastq)::extensions())) {
+            fastq.output = output;
+            writeImpl = [this](record _record) {
+                fasta.write(_record);
+            };
+        } else if (!output.empty()) {
+            throw std::runtime_error("unknown file format");
+        }
+        return nullptr;
+    }();
+
 };
 
 }

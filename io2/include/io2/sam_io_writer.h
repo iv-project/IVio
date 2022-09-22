@@ -45,10 +45,10 @@ struct writer {
     [[no_unique_address]] detail::empty_class<nullptr_t> _fakeConstructor = [this]() {
         seqan::BamHeader h;
         for (auto const& [name, len] : header.contigs.data) {
-            appendValue(contigNames(context(output.fileOut)), detail::convert_to_seqan2_string(name));
-            appendValue(contigLengths(context(output.fileOut)), len);
+            appendValue(contigNames(context(*output.fileOut)), detail::convert_to_seqan2_string(name));
+            appendValue(contigLengths(context(*output.fileOut)), len);
         }
-        writeHeader(output.fileOut, h);
+        writeHeader(*output.fileOut, h);
         return nullptr;
     }();
 
@@ -85,7 +85,7 @@ struct writer {
         r.qual     = detail::convert_to_seqan2_qualities(_record.qual);
         r.tags     = detail::convert_to_seqan2_string(_record.tags);
 
-        writeRecord(output.fileOut, r);
+        writeRecord(*output.fileOut, r);
     }
 
     template <typename record_like>
