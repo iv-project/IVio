@@ -32,15 +32,15 @@ struct reader {
 
     // configurable from the outside
 //    io2::Input<seqan::SeqFileIn> input;
-    std::filesystem::path input;
+    std::filesystem::path input{};
     AlphabetS3            alphabet_type{};
     QualitiesS3           qualities_type{};
 
 
-    fasta_io::reader<AlphabetS3>              fasta;
-    fastq_io::reader<AlphabetS3, QualitiesS3> fastq;
-    fastq_io::reader<AlphabetS3, QualitiesS3> embl;
-    fastq_io::reader<AlphabetS3, QualitiesS3> genbank;
+    fasta_io::reader<AlphabetS3>              fasta{};
+    fastq_io::reader<AlphabetS3, QualitiesS3> fastq{};
+    fastq_io::reader<AlphabetS3, QualitiesS3> embl{};
+    fastq_io::reader<AlphabetS3, QualitiesS3> genbank{};
 
     static auto extensions() -> std::vector<std::string> {
         static auto list = [&]() {
@@ -64,10 +64,10 @@ struct reader {
     class {
         friend reader;
         record_view return_record;
-    } storage;
+    } storage{};
 
 
-    std::function<record_view const*()> next;
+    std::function<record_view const*()> next{};
     void* ctor = [this]() {
         if (validExtension(input, decltype(fasta)::extensions())) {
             fasta.input = input;

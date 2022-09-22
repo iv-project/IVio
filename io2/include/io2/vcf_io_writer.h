@@ -73,15 +73,15 @@ struct writer {
 
     struct record {
         int32_t                             rID{};
-        std::optional<int32_t>              beginPos;
-        sized_typed_range<char>             id;
-        sized_typed_range<AlphabetS3>       ref;
-        sized_typed_range<AlphabetS3>       alt;
-        std::optional<float>                qual;
-        sized_typed_range<char>             filter;
-        sized_typed_range<char>             info;
-        sized_typed_range<char>             format;
-        sized_typed_range<std::string_view> genotypeInfos;
+        std::optional<int32_t>              beginPos{};
+        sized_typed_range<char>             id{};
+        sized_typed_range<AlphabetS3>       ref{};
+        sized_typed_range<AlphabetS3>       alt{};
+        std::optional<float>                qual{};
+        sized_typed_range<char>             filter{};
+        sized_typed_range<char>             info{};
+        sized_typed_range<char>             format{};
+        sized_typed_range<std::string_view> genotypeInfos{};
     };
 
     void write(record _record) {

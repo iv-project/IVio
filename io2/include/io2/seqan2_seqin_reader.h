@@ -29,9 +29,9 @@ struct record_view {
     using qualities_view = typed_range<QualitiesS3>;
     using record         = seqan2_seqin_io::record<AlphabetS3, QualitiesS3>;
 
-    std::string_view id;
-    sequence_view    seq;
-    qualities_view   qual;
+    std::string_view id{};
+    sequence_view    seq{};
+    qualities_view   qual{};
 };
 
 /**\brief A copy of a fastq_io record
@@ -42,9 +42,9 @@ struct record {
     using qualities_t = std::vector<QualitiesS3>;
     using record_view = seqan2_seqin_io::record_view<AlphabetS3, QualitiesS3>;
 
-    std::string id;
-    sequence_t  seq;
-    qualities_t qual;
+    std::string id{};
+    sequence_t  seq{};
+    qualities_t qual{};
 
     record(record_view v)
         : id{v.id}

@@ -44,19 +44,19 @@ struct record_view {
     using cigar_view     = decltype(detail::convert_to_seqan3_view(decltype(seqan::BamAlignmentRecord{}.cigar){}));
     using qualities_view = decltype(detail::convert_string_to_seqan3_view<QualitiesS3>(decltype(seqan::BamAlignmentRecord{}.qual){}));
 
-    std::string_view id;
-    uint16_t         flag;
-    int32_t          rID;
-    int32_t          beginPos;
-    uint8_t          mapQ;
-    uint16_t         bin;
-    cigar_view       cigar;
-    int32_t          rNextId;
-    int32_t          pNext;
-    int32_t          tLen;
-    sequence_view    seq;
-    qualities_view   qual;
-    std::string_view tags;
+    std::string_view id{};
+    uint16_t         flag{};
+    int32_t          rID{};
+    int32_t          beginPos{};
+    uint8_t          mapQ{};
+    uint16_t         bin{};
+    cigar_view       cigar{};
+    int32_t          rNextId{};
+    int32_t          pNext{};
+    int32_t          tLen{};
+    sequence_view    seq{};
+    qualities_view   qual{};
+    std::string_view tags{};
 };
 
 /**\brief A copy of a seq_io record
@@ -68,20 +68,19 @@ struct record {
     using cigar_t     = std::vector<seqan3::cigar>;
     using qualities_t = std::vector<QualitiesS3>;
 
-    std::string   id;
-    uint16_t      flag;
-    int32_t       rID;
-    int32_t       beginPos;
-    uint8_t       mapQ;
-    uint16_t      bin;
-    cigar_t       cigar;
-    int32_t       rNextId;
-    int32_t       pNext;
-    int32_t       tLen;
-    sequence_t    seq;
-    qualities_t   qual;
-    std::string   tags;
-
+    std::string   id{};
+    uint16_t      flag{};
+    int32_t       rID{};
+    int32_t       beginPos{};
+    uint8_t       mapQ{};
+    uint16_t      bin{};
+    cigar_t       cigar{};
+    int32_t       rNextId{};
+    int32_t       pNext{};
+    int32_t       tLen{};
+    sequence_t    seq{};
+    qualities_t   qual{};
+    std::string   tags{};
 
     record(record_view<AlphabetS3, QualitiesS3> v)
         : id{v.id}
@@ -127,14 +126,15 @@ struct reader {
 
     // internal variables
     // storage for one record
-    struct {
+    class {
+        friend reader;
         seqan::BamAlignmentRecord seqan2_record;
         record_view               return_record;
 
         seqan::BamHeader          seqan2_header;
         std::decay_t<decltype(contigNames(context(seqan::BamFileIn{})))>   seqan2_contigNames;
         std::decay_t<decltype(contigLengths(context(seqan::BamFileIn{})))> seqan2_contigLengths;
-    } storage;
+    } storage{};
 
     /* A fake constructor
      *

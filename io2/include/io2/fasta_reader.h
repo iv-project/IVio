@@ -63,7 +63,7 @@ struct reader {
     using record      = fasta_io::record<AlphabetS3>;
 
     // configurable from the outside
-    io2::Input<seqan::SeqFileIn, seqan::Fasta{}> input;
+    io2::Input<seqan::SeqFileIn, seqan::Fasta{}> input{};
     AlphabetS3 alphabet_type{};
     bool someOption{};
 
@@ -91,7 +91,7 @@ struct reader {
         seqan::String<detail::AlphabetAdaptor<AlphabetS3>> seq;
 
         record_view return_record;
-    } storage;
+    } storage{};
 
     auto next() -> record_view const* {
         if (input.atEnd()) return nullptr;

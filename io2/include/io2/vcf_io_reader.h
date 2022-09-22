@@ -40,16 +40,16 @@ struct record_view {
     // views for string types
     using sequence_view  = decltype(detail::convert_string_to_seqan3_view<AlphabetS3>({}));
 
-    int32_t                             rID;
-    int32_t                             beginPos;
-    std::string_view                    id;
-    sequence_view                       ref;
-    sequence_view                       alt;
-    float                               qual;
-    std::string_view                    filter;
-    std::string_view                    info;
-    std::string_view                    format;
-    sized_typed_range<std::string_view> genotypeInfos;
+    int32_t                             rID{};
+    int32_t                             beginPos{};
+    std::string_view                    id{};
+    sequence_view                       ref{};
+    sequence_view                       alt{};
+    float                               qual{};
+    std::string_view                    filter{};
+    std::string_view                    info{};
+    std::string_view                    format{};
+    sized_typed_range<std::string_view> genotypeInfos{};
 };
 
 /**\brief A copy of a seq_io record
@@ -59,16 +59,16 @@ struct record {
     // views for string types
     using sequence_t  = std::vector<AlphabetS3>;
 
-    int32_t                  rID;
-    int32_t                  beginPos;
-    std::string              id;
-    sequence_t               ref;
-    sequence_t               alt;
-    float                    qual;
-    std::string              filter;
-    std::string              info;
-    std::string              format;
-    std::vector<std::string> genotypeInfos;
+    int32_t                  rID{};
+    int32_t                  beginPos{};
+    std::string              id{};
+    sequence_t               ref{};
+    sequence_t               alt{};
+    float                    qual{};
+    std::string              filter{};
+    std::string              info{};
+    std::string              format{};
+    std::vector<std::string> genotypeInfos{};
 
 
     record(record_view<AlphabetS3> v)
@@ -119,7 +119,7 @@ struct reader {
 
         seqan::VcfHeader seqan2_header;
         std::decay_t<decltype(sampleNames(context(seqan::VcfFileIn{})))> seqan2_sampleNames;
-    } storage;
+    } storage{};
 
     /* A fake constructor
      *

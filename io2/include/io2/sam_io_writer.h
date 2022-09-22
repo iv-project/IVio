@@ -33,7 +33,7 @@ struct writer {
 
     struct {
         Contigs  contigs;
-    } header;
+    } header{};
 
     /* A fake constructor
      *
@@ -54,19 +54,19 @@ struct writer {
 
 
     struct record {
-        sized_typed_range<char>          id;
+        sized_typed_range<char>          id{};
         uint16_t                         flag{};
-        std::optional<int32_t>           rID;
-        std::optional<int32_t>           beginPos;
+        std::optional<int32_t>           rID{};
+        std::optional<int32_t>           beginPos{};
         uint8_t                          mapQ{};
         uint16_t                         bin{};
-        sized_typed_range<seqan3::cigar> cigar;
+        sized_typed_range<seqan3::cigar> cigar{};
         std::optional<int32_t>           rNextId{};
         int32_t                          pNext{};
         std::optional<int32_t>           tLen{};
-        sized_typed_range<AlphabetS3>    seq;
-        sized_typed_range<QualitiesS3>   qual;
-        sized_typed_range<char>          tags;
+        sized_typed_range<AlphabetS3>    seq{};
+        sized_typed_range<QualitiesS3>   qual{};
+        sized_typed_range<char>          tags{};
     };
 
     void write(record _record) {
