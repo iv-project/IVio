@@ -1,54 +1,19 @@
 #pragma once
 
-#include "common.h"
 #include "fasta_reader.h"
 #include "fastq_reader.h"
-#include "typed_range.h"
+#include "embl_reader.h"
+#include "genbank_reader.h"
+
 
 namespace io2::seq_io {
 
 template <typename AlphabetS3, typename QualitiesS3>
-struct record;
+using record_view = seqan2_seqin_io::record_view<AlphabetS3, QualitiesS3>;
 
-
-/**\brief A view onto a single record
- *
- * This record represents a single entry in the file.
- */
 template <typename AlphabetS3, typename QualitiesS3>
-struct record_view {
-    using sequence_view  = typed_range<AlphabetS3>;
-    using qualities_view = typed_range<QualitiesS3>;
-    using record         = seq_io::record<AlphabetS3, QualitiesS3>;
+using record      = seqan2_seqin_io::record<AlphabetS3, QualitiesS3>;
 
-    std::string_view id;
-    sequence_view    seq;
-    qualities_view   qual;
-};
-
-/**\brief A copy of a seq_io record
- */
-template <typename AlphabetS3, typename QualitiesS3>
-struct record {
-    using sequence_t  = std::vector<AlphabetS3>;
-    using qualities_t = std::vector<QualitiesS3>;
-    using record_view = seq_io::record_view<AlphabetS3, QualitiesS3>;
-
-    std::string id;
-    sequence_t  seq;
-    qualities_t qual;
-
-    record(record_view v)
-        : id{v.id}
-        , seq{v.seq | seqan3::ranges::to<std::vector>()}
-        , qual{v.qual | seqan3::ranges::to<std::vector>()}
-    {}
-    record() = default;
-    record(record const&) = default;
-    record(record&&) = default;
-    record& operator=(record const&) = default;
-    record& operator=(record&&) = default;
-};
 
 /** A reader to read sequence files like fasta, fastq, genbank, embl
  *
@@ -74,12 +39,16 @@ struct reader {
 
     fasta_io::reader<AlphabetS3>              fasta;
     fastq_io::reader<AlphabetS3, QualitiesS3> fastq;
+    fastq_io::reader<AlphabetS3, QualitiesS3> embl;
+    fastq_io::reader<AlphabetS3, QualitiesS3> genbank;
 
     static auto extensions() -> std::vector<std::string> {
         static auto list = [&]() {
             auto l = std::vector<std::string>{};
             for (auto e : decltype(fasta)::extensions()) l.push_back(e);
             for (auto e : decltype(fastq)::extensions()) l.push_back(e);
+            for (auto e : decltype(embl)::extensions()) l.push_back(e);
+            for (auto e : decltype(genbank)::extensions()) l.push_back(e);
             return l;
         }();
         return list;
@@ -99,17 +68,6 @@ struct reader {
 
     std::function<record_view const*()> next;
     void* ctor = [this]() {
-/*        auto checkExtension = [this](auto& reader) {
-            for (auto e : reader.extensions()) {
-                auto s = input.filename().string();
-                if (s.size() < e.size()) continue;
-                s = s.substr(s.size() - e.size());
-                if (s == e) {
-                    return true;
-                }
-            }
-            return false;
-        };*/
         if (validExtension(input, decltype(fasta)::extensions())) {
             fasta.input = input;
             next = [this]() -> record_view const* {
@@ -123,6 +81,30 @@ struct reader {
             };
         } else if (validExtension(input, decltype(fastq)::extensions())) {
             fastq.input = input;
+            next = [this]() -> record_view const* {
+                auto r = fastq.next();
+                if (r == nullptr) return nullptr;
+                storage.return_record = record_view {
+                    .id   = r->id,
+                    .seq  = r->seq,
+                    .qual = r->qual,
+                };
+                return &storage.return_record;
+            };
+        } else if (validExtension(input, decltype(embl)::extensions())) {
+            embl.input = input;
+            next = [this]() -> record_view const* {
+                auto r = fastq.next();
+                if (r == nullptr) return nullptr;
+                storage.return_record = record_view {
+                    .id   = r->id,
+                    .seq  = r->seq,
+                    .qual = r->qual,
+                };
+                return &storage.return_record;
+            };
+        } else if (validExtension(input, decltype(genbank)::extensions())) {
+            genbank.input = input;
             next = [this]() -> record_view const* {
                 auto r = fastq.next();
                 if (r == nullptr) return nullptr;

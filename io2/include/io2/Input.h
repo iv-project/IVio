@@ -10,7 +10,7 @@ namespace io2 {
 
 /** Wrapper to allow path and stream inputs
  */
-template <typename File>
+template <typename File, auto format = nullptr>
 struct Input {
     std::optional<File> fileIn;
 
@@ -29,14 +29,21 @@ struct Input {
     {}
 
     template <typename format_t>
-    Input(std::istream& istr, format_t format) {
-        convert_format(format, [&](auto format) {
-            assign(fileIn->format, format);
+    Input(std::istream& istr, format_t _format) {
+        convert_format(_format, [&](auto _format) {
+            assign(fileIn->format, _format);
         });
         if (!open(*fileIn, istr)) {
             throw std::runtime_error("couldn't open istream");
         }
     }
+    Input(std::istream& istr) {
+        assign(fileIn->format, format);
+        if (!open(*fileIn, istr)) {
+            throw std::runtime_error("couldn't open istream");
+        }
+    }
+
 
     auto operator=(std::filesystem::path const& _path) -> Input& {
         fileIn.emplace(_path.c_str());
