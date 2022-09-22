@@ -7,6 +7,10 @@
 
 namespace io2::seq_io {
 
+template <typename AlphabetS3, typename QualitiesS3>
+struct record;
+
+
 /**\brief A view onto a single record
  *
  * This record represents a single entry in the file.
@@ -15,6 +19,7 @@ template <typename AlphabetS3, typename QualitiesS3>
 struct record_view {
     using sequence_view  = typed_range<AlphabetS3>;
     using qualities_view = typed_range<QualitiesS3>;
+    using record         = seq_io::record<AlphabetS3, QualitiesS3>;
 
     std::string_view id;
     sequence_view    seq;
@@ -27,12 +32,13 @@ template <typename AlphabetS3, typename QualitiesS3>
 struct record {
     using sequence_t  = std::vector<AlphabetS3>;
     using qualities_t = std::vector<QualitiesS3>;
+    using record_view = seq_io::record_view<AlphabetS3, QualitiesS3>;
 
     std::string id;
     sequence_t  seq;
     qualities_t qual;
 
-    record(record_view<AlphabetS3, QualitiesS3> v)
+    record(record_view v)
         : id{v.id}
         , seq{v.seq | seqan3::ranges::to<std::vector>()}
         , qual{v.qual | seqan3::ranges::to<std::vector>()}
@@ -62,8 +68,8 @@ struct reader {
     // configurable from the outside
 //    io2::Input<seqan::SeqFileIn> input;
     std::filesystem::path input;
-    [[no_unique_address]] detail::empty_class<AlphabetS3>  alphabet{};
-    [[no_unique_address]] detail::empty_class<QualitiesS3> qualities{};
+    AlphabetS3            alphabet_type{};
+    QualitiesS3           qualities_type{};
 
 
     fasta_io::reader<AlphabetS3>              fasta;

@@ -10,9 +10,9 @@
 void readSeqIo(std::filesystem::path file) {
     // setup reader
     auto reader = io2::seq_io::reader {
-        .input     = file,
-        .alphabet  = io2::type<seqan3::dna15>,   // default is dna5
-        .qualities = io2::type<seqan3::phred42>, // default is phred42
+        .input          = file,
+        .alphabet_type  = seqan3::dna15{},   // default is dna5
+        .qualities_type = seqan3::phred42{}, // default is phred42
         .fasta {
             .someOption = true,
         }
@@ -50,8 +50,8 @@ void readAndWriteSeqIo(std::filesystem::path file, std::filesystem::path outFile
     // setup reader
     auto reader = io2::seq_io::reader {
         .input     = file,
-        .alphabet  = io2::type<seqan3::dna15>,   // default is dna5
-        .qualities = io2::type<seqan3::phred42>, // default is phred42
+        .alphabet_type  = seqan3::dna15{},   // default is dna5
+        .qualities_type = seqan3::phred42{}, // default is phred42
     };
 
     // setup writer
@@ -77,14 +77,16 @@ void readAndWriteStreamSeqIo() {
 #if 0
     // setup reader
     auto reader = io2::seq_io::reader {
-        .input     = {std::cin, io2::seq_io::format::Fasta},
         .alphabet  = io2::type<seqan3::dna15>,   // default is dna5
         .qualities = io2::type<seqan3::phred42>, // default is phred42
+        .fasta     = {
+            .input = {std::cin},
+        }
     };
 
     // setup writer
     auto writer = io2::seq_io::writer {
-        .output = {std::cout, io2::seq_io::format::Fasta},
+        .output   = {std::cout, io2::seq_io::format::Fasta},
         .alphabet = io2::type<seqan3::dna15>,
     };
 
@@ -99,16 +101,16 @@ void readAndWriteStreamSeqIo() {
             .qual = r.qual,
         });
     }
-    #endif
+#endif
 }
 
 
 void readAndCopySeqIo(std::filesystem::path file) {
     // setup reader
     auto reader = io2::seq_io::reader {
-        .input     = file,
-        .alphabet  = io2::type<seqan3::dna15>,   // default is dna5
-        .qualities = io2::type<seqan3::phred42>, // default is phred42
+        .input          = file,
+        .alphabet_type  = seqan3::dna15{},   // default is dna5
+        .qualities_type = seqan3::phred42{}, // default is phred42
     };
 
     // list with all results
@@ -122,9 +124,9 @@ void readAndCopySeqIo(std::filesystem::path file) {
 void readCompleteFileSeqIo(std::filesystem::path file) {
     // single line to read complete file
     auto results = io2::seq_io::reader {
-        .input     = file,
-        .alphabet  = io2::type<seqan3::dna15>,
-        .qualities = io2::type<seqan3::phred42>,
+        .input          = file,
+        .alphabet_type  = seqan3::dna15{},
+        .qualities_type = seqan3::phred42{},
     } | seqan3::ranges::to<std::vector>();
 
     // or short version
