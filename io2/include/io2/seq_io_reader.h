@@ -3,6 +3,7 @@
 #include "common.h"
 #include "fasta_reader.h"
 #include "fastq_reader.h"
+#include "typed_range.h"
 
 namespace io2::seq_io {
 
@@ -12,8 +13,8 @@ namespace io2::seq_io {
  */
 template <typename AlphabetS3, typename QualitiesS3>
 struct record_view {
-    using sequence_view  = decltype(detail::convert_to_seqan3_view<AlphabetS3>({}));
-    using qualities_view = decltype(detail::convert_to_seqan3_view<QualitiesS3>({}));
+    using sequence_view  = typed_range<AlphabetS3>;
+    using qualities_view = typed_range<QualitiesS3>;
 
     std::string_view id;
     sequence_view    seq;

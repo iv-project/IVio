@@ -20,9 +20,9 @@ struct writer {
     [[no_unique_address]] detail::empty_class<AlphabetS3> alphabet{};
 
     struct record {
-        sized_typed_range<char>        id;
-        sized_typed_range<AlphabetS3>  seq;
-        sized_typed_range<QualitiesS3> qual;
+        typed_range<char>        id;
+        typed_range<AlphabetS3>  seq;
+        typed_range<QualitiesS3> qual;
     };
 
     void write(record _record) {
