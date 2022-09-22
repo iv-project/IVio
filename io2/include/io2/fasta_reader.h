@@ -85,7 +85,8 @@ struct reader {
 
     // internal variables
     // storage for one record
-    struct {
+    class {
+        friend reader;
         seqan::CharString id;
         seqan::String<detail::AlphabetAdaptor<AlphabetS3>> seq;
 

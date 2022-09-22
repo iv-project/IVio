@@ -61,7 +61,8 @@ struct reader {
 
     // internal variables
     // storage for one record
-    struct {
+    class {
+        friend reader;
         record_view return_record;
     } storage;
 
