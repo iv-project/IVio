@@ -50,10 +50,10 @@ public:
         assert(lastUsed <= filesize);
         auto ptr = (char const*)memchr(buffer + lastUsed, c, filesize - lastUsed);
         if (ptr != nullptr) {
-            assert(static_cast<size_t>(ptr - buffer) - inPos < filesize);
+            assert(static_cast<size_t>(ptr - buffer) < filesize);
             return (ptr - buffer) - inPos;
         }
-        return filesize;
+        return filesize - inPos;
     }
 
     auto read(size_t) -> std::tuple<char const*, size_t> {
