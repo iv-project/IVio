@@ -4,12 +4,21 @@ cd "$(dirname "$0")"
 FLAGS="-march=native -O3 -DNDEBUG"
 #FLAGS="-O0 -ggdb -fsanitize=address"
 #FLAGS="-march=native -O3 -DNDEBUG -ggdb"
-
-g++ -std=c++20 ${FLAGS} -lz -o benchmark \
-    main.cpp seqan2.cpp seqan3.cpp io2.cpp bio.cpp \
-    -I ../../io2/include \
+#
+INCLUDES="-I ../../io2/include \
     -I ../ \
     -DSEQAN_HAS_ZLIB  -isystem../../lib/seqan/include \
     -DBIO_HAS_ZLIB -isystem../../lib/b.i.o./include \
-    -DSEQAN3_HAS_ZLIB -isystem../../lib/seqan3/include -isystem../../lib/submodules/sdsl-lite/include
+    -DSEQAN3_HAS_ZLIB -isystem../../lib/seqan3/include -isystem../../lib/submodules/sdsl-lite/include"
+ARGS="-std=c++20 ${FLAGS} ${INCLUDES}"
 
+
+mkdir -p obj/io3
+g++ ${ARGS} -c ../io3/fasta_reader.cpp -o obj/io3/fasta_reader.o
+g++ ${ARGS} -c main.cpp -o obj/main.o
+g++ ${ARGS} -c seqan2.cpp -o obj/seqan2.o
+g++ ${ARGS} -c seqan3.cpp -o obj/seqan3.o
+g++ ${ARGS} -c io2.cpp -o obj/io2.o
+g++ ${ARGS} -c bio.cpp -o obj/bio.o
+
+g++ obj/*.o obj/**/*.o -lz-ng -lz -o benchmark
