@@ -1,14 +1,17 @@
 #!/usr/bin/bash
 cd "$(dirname "$0")"
 
-methods=(direct view cont mmap_view mmap_view2 mmap_cont seqan2 seqan3 io2 io2-copy bio best)
+methods=(seqan2 seqan3 io2 io2-copy bio io3)
+#methods=(direct io3_file io3_mmap io3_stream seqan2 seqan3 io2 io2-copy bio io3-auto-select)
+#methods=(io3_file io3_mmap io3_stream io3_ng_file io3_ng_mmap io3_ng_stream io3)
+
 
 file=$1
 timing=()
 memory=()
 for method in ${methods[@]}; do
     l="$(for i in $(seq 3); do
-        /usr/bin/time -f "run %e %M" ./benchmark ${method} ${file} 2>&1 | grep run
+        /usr/bin/time -f "run %e %M" ./benchmark ${method} ${file} 2>&1 | grep "^run "
     done | cut -b 5- | sort -n | head -n 1)"
     t=$(echo $l | cut -d " " -f 1)
     m=$(echo $l | cut -d " " -f 2)
