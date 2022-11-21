@@ -13,12 +13,12 @@
 namespace io3::fasta {
 struct reader_pimpl {
     using Readers = std::variant<fasta_reader_impl<mmap_reader>,
-                                 fasta_reader_impl<stream_reader>,
-                                 fasta_reader_impl<buffered_reader<zlib_mmap_reader>>
-                                 //fasta_reader_impl<zlib_stream_reader>,
+                                 fasta_reader_impl<buffered_reader<stream_reader>>,
+                                 fasta_reader_impl<buffered_reader<zlib_mmap_reader>>,
+                                 fasta_reader_impl<buffered_reader<zlib_stream_reader>>
                                  >;
     Readers reader;
-    reader_pimpl(std::filesystem::path file)
+    reader_pimpl(std::filesystem::path file, bool)
         : reader {[&]() -> Readers {
             if (file.extension() == ".fa") {
                 return fasta_reader_impl{mmap_reader{file.c_str()}};
@@ -28,15 +28,21 @@ struct reader_pimpl {
             throw std::runtime_error("unknown file extension");
         }()}
     {}
-    reader_pimpl(std::istream& file)
+    reader_pimpl(std::istream& file, bool compressed)
         : reader {[&]() -> Readers {
-            return fasta_reader_impl{stream_reader{file}};
+            if (!compressed) {
+                return fasta_reader_impl{buffered_reader{stream_reader{file}}};
+            } else {
+                return fasta_reader_impl{buffered_reader{zlib_stream_reader{file}}};
+            }
         }()}
     {}
 };
 
 reader::reader(reader_config config)
-    : pimpl{std::visit([](auto& p) { return std::make_unique<reader_pimpl>(p); }, config.input)}
+    : pimpl{std::visit([&](auto& p) {
+        return std::make_unique<reader_pimpl>(p, config.compressed);
+    }, config.input)}
 {}
 reader::~reader() = default;
 

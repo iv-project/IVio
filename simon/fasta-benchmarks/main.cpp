@@ -166,6 +166,12 @@ int main(int argc, char** argv) {
         benchmarkDirect(file);
     } else if (method == "io3") {
         benchmark_io3(io3::fasta::reader{{.input = file}});
+    } else if (method == "io3_stream" and ext == ".fa") {
+        auto ifs = std::ifstream{file.c_str()};
+        benchmark_io3(io3::fasta::reader{{.input = ifs}});
+    } else if (method == "io3_stream" and ext == ".gz") {
+        auto ifs = std::ifstream{file.c_str()};
+        benchmark_io3(io3::fasta::reader{{.input = ifs, .compressed = true}});
     } else if (method == "view" and ext == ".gz") {
         benchmark(fasta_reader_view{zlib_reader(file.c_str())});
     } else if (method == "cont" and ext == ".gz") {

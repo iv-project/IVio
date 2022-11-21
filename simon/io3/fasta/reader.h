@@ -3,6 +3,7 @@
 #include "meta.h"
 
 #include <filesystem>
+#include <functional>
 #include <istream>
 #include <variant>
 
@@ -11,7 +12,11 @@ namespace io3::fasta {
 struct reader_pimpl;
 
 struct reader_config {
-    std::variant<std::filesystem::path, std::istream> input;
+    // Source: file or stream
+    std::variant<std::filesystem::path, std::reference_wrapper<std::istream>> input;
+
+    // This is only relevant if a stream is being used
+    bool compressed{};
 };
 
 struct reader {
