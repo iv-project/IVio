@@ -36,7 +36,7 @@ fasta_reader::fasta_reader(fasta_reader_config config)
 fasta_reader::~fasta_reader() = default;
 
 auto begin(fasta_reader& reader) -> fasta_reader::iter {
-    return fasta_reader::iter{std::visit([](auto& reader) -> std::function<std::optional<fasta_reader_view_record_view>()>{
+    return fasta_reader::iter{std::visit([](auto& reader) -> std::function<std::optional<fasta::record_view>()>{
         return [&reader]() { return reader.next(); };
     }, reader.pimpl->reader)};
 }

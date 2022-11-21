@@ -4,22 +4,21 @@
 #include <optional>
 #include <string_view>
 
-namespace io3 {
+namespace io3::fasta {
 
-struct fasta_reader_view_record_view {
+struct record_view {
     std::string_view id;
     std::string_view seq;
 };
 
-struct fasta_reader_view_iter {
-    using record_view = fasta_reader_view_record_view;
+struct iter {
     std::function<std::optional<record_view>()> next;
     std::optional<record_view> nextItem = next();
 
     auto operator*() const -> record_view {
        return *nextItem;
     }
-    auto operator++() -> fasta_reader_view_iter& {
+    auto operator++() -> iter& {
         nextItem = next();
         return *this;
     }

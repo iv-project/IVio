@@ -11,8 +11,8 @@ struct fasta_reader_impl {
     size_t lastUsed{};
     std::string s;
 
-    using record_view = fasta_reader_view_record_view;
-    using iter        = fasta_reader_view_iter;
+    using record_view = fasta::record_view;
+    using iter        = fasta::iter;
 
     fasta_reader_impl(Reader&& r)
         : reader{std::move(r)}

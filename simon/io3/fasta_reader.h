@@ -13,8 +13,8 @@ struct fasta_reader_config {
 };
 
 struct fasta_reader {
-    using record_view = fasta_reader_view_record_view;
-    using iter        = fasta_reader_view_iter;
+    using record_view = fasta::record_view;
+    using iter        = fasta::iter;
 
 private:
     std::unique_ptr<fasta_reader_pimpl> pimpl;
