@@ -165,7 +165,7 @@ int main(int argc, char** argv) {
     if (method == "direct" and ext == ".fa") {
         benchmarkDirect(file);
     } else if (method == "io3") {
-        benchmark_io3(io3::fasta_reader{{.input = file}});
+        benchmark_io3(io3::fasta::reader{{.input = file}});
     } else if (method == "view" and ext == ".gz") {
         benchmark(fasta_reader_view{zlib_reader(file.c_str())});
     } else if (method == "cont" and ext == ".gz") {

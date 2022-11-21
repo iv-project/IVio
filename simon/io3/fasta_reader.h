@@ -4,27 +4,27 @@
 
 #include <filesystem>
 
-namespace io3 {
+namespace io3::fasta {
 
-struct fasta_reader_pimpl;
+struct reader_pimpl;
 
-struct fasta_reader_config {
+struct reader_config {
     std::filesystem::path input;
 };
 
-struct fasta_reader {
+struct reader {
     using record_view = fasta::record_view;
     using iter        = fasta::iter;
 
 private:
-    std::unique_ptr<fasta_reader_pimpl> pimpl;
+    std::unique_ptr<reader_pimpl> pimpl;
 
 public:
-    fasta_reader(fasta_reader_config config);
-    ~fasta_reader();
+    reader(reader_config config);
+    ~reader();
 
-    friend auto begin(fasta_reader& reader) -> iter;
-    friend auto end(fasta_reader& reader) {
+    friend auto begin(reader& reader) -> iter;
+    friend auto end(reader& reader) {
         return nullptr;
     }
 };

@@ -10,15 +10,15 @@
 
 #include <variant>
 
-namespace io3 {
-struct fasta_reader_pimpl {
+namespace io3::fasta {
+struct reader_pimpl {
     using Readers = std::variant<fasta_reader_impl<mmap_reader>,
                                  //fasta_reader_impl<stream_reader>,
                                  fasta_reader_impl<buffered_reader<zlib_mmap_reader>>
                                  //fasta_reader_impl<zlib_stream_reader>,
                                  >;
     Readers reader;
-    fasta_reader_pimpl(std::filesystem::path file)
+    reader_pimpl(std::filesystem::path file)
         : reader {[&]() -> Readers {
             if (file.extension() == ".fa") {
                 return fasta_reader_impl{mmap_reader{file.c_str()}};
@@ -30,15 +30,15 @@ struct fasta_reader_pimpl {
     {}
 };
 
-fasta_reader::fasta_reader(fasta_reader_config config)
-    : pimpl{std::make_unique<fasta_reader_pimpl>(config.input)}
+reader::reader(reader_config config)
+    : pimpl{std::make_unique<reader_pimpl>(config.input)}
 {}
-fasta_reader::~fasta_reader() = default;
+reader::~reader() = default;
 
-auto begin(fasta_reader& reader) -> fasta_reader::iter {
-    return fasta_reader::iter{std::visit([](auto& reader) -> std::function<std::optional<fasta::record_view>()>{
-        return [&reader]() { return reader.next(); };
-    }, reader.pimpl->reader)};
+auto begin(reader& _reader) -> reader::iter {
+    return reader::iter{std::visit([](auto& _reader) -> std::function<std::optional<fasta::record_view>()>{
+        return [&_reader]() { return _reader.next(); };
+    }, _reader.pimpl->reader)};
 }
 
 }
