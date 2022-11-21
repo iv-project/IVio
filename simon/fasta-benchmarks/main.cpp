@@ -1,3 +1,4 @@
+#include <cassert>
 #include <cstring>
 #include <cstdint>
 #include <unistd.h>
@@ -13,10 +14,11 @@
 
 #include "file_reader.h"
 
+#include "mmap_file_reader.h"
 #include "zlib_reader.h"
 #include "zlib_mmap_reader.h"
 
-#include "io3/io3.h"
+#include "io3/fasta_reader.h"
 
 constexpr static std::array<char, 256> ccmap = []() {
     std::array<char, 256> c;
@@ -43,7 +45,7 @@ constexpr static std::array<char, 256> ccmap = []() {
 #include "fasta_reader_contigous.h"
 #include "fasta_reader_mmap.h"
 #include "fasta_reader_mmap2.h"
-#include "fasta_reader_best.h"
+//#include "fasta_reader_best.h"
 
 #include <ranges>
 #include <iostream>
@@ -162,28 +164,14 @@ int main(int argc, char** argv) {
 
     if (method == "direct" and ext == ".fa") {
         benchmarkDirect(file);
+    } else if (method == "io3") {
+        benchmark_io3(io3::fasta_reader{{.input = file}});
     } else if (method == "view" and ext == ".gz") {
         benchmark(fasta_reader_view{zlib_reader(file.c_str())});
     } else if (method == "cont" and ext == ".gz") {
         benchmark(fasta_reader_contigous{zlib_reader(file.c_str())});
     } else if (method == "view" and ext == ".fa") {
         benchmark(fasta_reader_view{file_reader(file.c_str())});
-    } else if (method == "io3_file" and ext == ".fa") {
-        benchmark_io3(io3::fasta_reader{io3::file_reader(file.c_str())});
-    } else if (method == "io3_mmap" and ext == ".fa") {
-        benchmark_io3(io3::fasta_reader{io3::mmap_reader(file.c_str())});
-    } else if (method == "io3_stream" and ext == ".fa") {
-        auto ifs = std::ifstream{file.c_str()};
-        benchmark_io3(io3::fasta_reader{io3::stream_reader(ifs)});
-    } else if (method == "io3_file" and ext == ".gz") {
-        benchmark_io3(io3::fasta_reader{io3::zlib_file_reader(file.c_str())});
-    } else if (method == "io3_mmap" and ext == ".gz") {
-        benchmark_io3(io3::fasta_reader{io3::zlib_mmap_reader(file.c_str())});
-    } else if (method == "io3_stream" and ext == ".gz") {
-        auto ifs = std::ifstream{file.c_str()};
-        benchmark_io3(io3::fasta_reader{io3::zlib_stream_reader(ifs)});
-    } else if (method == "io3_mmap2" and ext == ".gz") {
-        benchmark_io3(io3::fasta_reader{io3::zlib_mmap2_reader(file.c_str())});
     } else if (method == "cont" and ext == ".fa") {
         benchmark(fasta_reader_contigous{file_reader(file.c_str())});
     } else if (method == "mmap_view" and ext == ".fa") {
@@ -194,8 +182,6 @@ int main(int argc, char** argv) {
         benchmark(fasta_reader_contigous{zlib_mmap_reader(file.c_str())});
     } else if (method == "mmap_view2" and ext == ".gz") {
         benchmark(fasta_reader_mmap2{zlib_mmap_reader(file.c_str())});
-    } else if (method == "best") {
-        benchmark(fasta_reader_best{file});
     } else {
         std::cout << "unknown\n";
     }

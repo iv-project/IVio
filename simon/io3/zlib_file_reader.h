@@ -23,9 +23,8 @@ struct zlib_reader_impl {
         .opaque = Z_NULL,
     };
 
-    template <typename T>
-    zlib_reader_impl(T&& name)
-        : file(std::forward<T>(name))
+    zlib_reader_impl(Reader&& name)
+        : file{std::move(name)}
     {
         if (inflateInit2(&stream, 16 + MAX_WBITS) != Z_OK) {
             throw "error";

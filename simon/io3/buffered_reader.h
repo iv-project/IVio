@@ -4,7 +4,7 @@
 
 namespace io3 {
 
-template <typename Reader, size_t minV = 4096>
+template <typename Reader, size_t minV = 2<<12>
 class buffered_reader : public Reader {
     std::vector<char> buf = []() { auto vec = std::vector<char>{}; vec.reserve(minV); return vec; }();
     int inPos{};
@@ -15,10 +15,7 @@ public:
         : Reader{std::move(_other)}
     {}
     buffered_reader(buffered_reader const&) = delete;
-    buffered_reader(buffered_reader&& _other)
-        : Reader{std::move(_other)}
-        , buf{std::move(_other.buf)}
-    {}
+    buffered_reader(buffered_reader&& _other) = default;
 
 private:
     auto readMore() -> bool {
