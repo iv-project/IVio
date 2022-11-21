@@ -1,7 +1,8 @@
 #pragma once
 
-#include "buffered_reader.h"
-#include "fasta_reader_meta.h"
+#include "meta.h"
+
+#include "../buffered_reader.h"
 
 namespace io3 {
 

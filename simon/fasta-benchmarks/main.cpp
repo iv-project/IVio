@@ -18,7 +18,7 @@
 #include "zlib_reader.h"
 #include "zlib_mmap_reader.h"
 
-#include "io3/fasta_reader.h"
+#include "io3/fasta/reader.h"
 
 constexpr static std::array<char, 256> ccmap = []() {
     std::array<char, 256> c;

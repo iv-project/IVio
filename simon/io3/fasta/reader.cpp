@@ -1,19 +1,19 @@
-#include "fasta_reader.h"
+#include "reader.h"
 
-#include "fasta_reader_impl.h"
-#include "file_reader.h"
-#include "mmap_reader.h"
-#include "stream_reader.h"
-#include "zlib_file_reader.h"
-#include "zlib_mmap2_reader.h"
-#include "zlib_ng_file_reader.h"
+#include "reader_impl.h"
+#include "../file_reader.h"
+#include "../mmap_reader.h"
+#include "../stream_reader.h"
+#include "../zlib_file_reader.h"
+#include "../zlib_mmap2_reader.h"
+#include "../zlib_ng_file_reader.h"
 
 #include <variant>
 
 namespace io3::fasta {
 struct reader_pimpl {
     using Readers = std::variant<fasta_reader_impl<mmap_reader>,
-                                 //fasta_reader_impl<stream_reader>,
+                                 fasta_reader_impl<stream_reader>,
                                  fasta_reader_impl<buffered_reader<zlib_mmap_reader>>
                                  //fasta_reader_impl<zlib_stream_reader>,
                                  >;
@@ -28,10 +28,15 @@ struct reader_pimpl {
             throw std::runtime_error("unknown file extension");
         }()}
     {}
+    reader_pimpl(std::istream& file)
+        : reader {[&]() -> Readers {
+            return fasta_reader_impl{stream_reader{file}};
+        }()}
+    {}
 };
 
 reader::reader(reader_config config)
-    : pimpl{std::make_unique<reader_pimpl>(config.input)}
+    : pimpl{std::visit([](auto& p) { return std::make_unique<reader_pimpl>(p); }, config.input)}
 {}
 reader::~reader() = default;
 

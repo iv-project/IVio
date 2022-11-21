@@ -1,15 +1,17 @@
 #pragma once
 
-#include "fasta_reader_meta.h"
+#include "meta.h"
 
 #include <filesystem>
+#include <istream>
+#include <variant>
 
 namespace io3::fasta {
 
 struct reader_pimpl;
 
 struct reader_config {
-    std::filesystem::path input;
+    std::variant<std::filesystem::path, std::istream> input;
 };
 
 struct reader {
