@@ -19,6 +19,7 @@
 #include "zlib_mmap_reader.h"
 
 #include "io3/fasta/reader.h"
+#include "io3/fasta/writer.h"
 
 constexpr static std::array<char, 256> ccmap = []() {
     std::array<char, 256> c;
@@ -89,6 +90,14 @@ void benchmark_io3(Reader&& reader) {
     }
     std::cout << "total: " << a << "\n";
 }
+
+template <typename Reader, typename Writer>
+void benchmark_io3(Reader&& reader, Writer&& writer) {
+    for (auto && record : reader) {
+        writer.write(record);
+    }
+}
+
 
 void benchmarkDirect(std::filesystem::path path) {
     auto reader = mmap_file_reader(path.c_str());
@@ -172,6 +181,10 @@ int main(int argc, char** argv) {
     } else if (method == "io3_stream" and ext == ".gz") {
         auto ifs = std::ifstream{file.c_str()};
         benchmark_io3(io3::fasta::reader{{.input = ifs, .compressed = true}});
+    } else if (method == "io3_read_write") {
+        auto reader = io3::fasta::reader{{.input = file}};
+        auto writer = io3::fasta::writer{{.output = file + ".out.fa"}};
+        benchmark_io3(reader, writer);
     } else if (method == "view" and ext == ".gz") {
         benchmark(fasta_reader_view{zlib_reader(file.c_str())});
     } else if (method == "cont" and ext == ".gz") {

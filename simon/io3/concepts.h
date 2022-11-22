@@ -2,8 +2,9 @@
 
 #include <cstddef>
 #include <cstdint>
-#include <utility>
+#include <span>
 #include <string_view>
+#include <utility>
 #include <vector>
 
 namespace io3 {
@@ -38,6 +39,13 @@ concept reader_and_dropper_c = requires(T t) {
 template <typename T>
 concept record_reader_c = requires(T t) {
     { t.next() };
+};
+
+
+template <typename T>
+concept writer_c = requires(T t) {
+    { t.write(std::declval<std::span<char>>()) };
+//    { t.write(std::declval<char const*>()) };
 };
 
 }

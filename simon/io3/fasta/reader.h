@@ -5,11 +5,10 @@
 #include <filesystem>
 #include <functional>
 #include <istream>
+#include <memory>
 #include <variant>
 
 namespace io3::fasta {
-
-struct reader_pimpl;
 
 struct reader_config {
     // Source: file or stream
@@ -19,6 +18,7 @@ struct reader_config {
     bool compressed{};
 };
 
+struct reader_pimpl;
 struct reader {
     using record_view = fasta::record_view;
     using iter        = fasta::iter;

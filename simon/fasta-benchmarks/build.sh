@@ -15,6 +15,7 @@ ARGS="-std=c++20 ${FLAGS} ${INCLUDES}"
 
 mkdir -p obj/io3/fasta
 g++ ${ARGS} -c ../io3/fasta/reader.cpp -o obj/io3/fasta/reader.o
+g++ ${ARGS} -c ../io3/fasta/writer.cpp -o obj/io3/fasta/writer.o
 g++ ${ARGS} -c main.cpp -o obj/main.o
 g++ ${ARGS} -c seqan2.cpp -o obj/seqan2.o
 g++ ${ARGS} -c seqan3.cpp -o obj/seqan3.o

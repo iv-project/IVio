@@ -8,8 +8,6 @@
 #include "../zlib_mmap2_reader.h"
 #include "../zlib_ng_file_reader.h"
 
-#include <variant>
-
 namespace io3::fasta {
 struct reader_pimpl {
     using Readers = std::variant<fasta_reader_impl<mmap_reader>,
