@@ -116,7 +116,7 @@ struct ZlibContext {
     }
 };
 
-template <typename Reader>
+template <reader_and_dropper_c Reader>
 struct bgzf_reader_impl {
     Reader      file;
     ZlibContext zlibCtx;

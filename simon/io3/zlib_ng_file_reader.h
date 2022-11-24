@@ -10,7 +10,7 @@
 
 namespace io3 {
 
-template <typename Reader>
+template <reader_and_dropper_c Reader>
 struct zlib_ng_reader_impl {
     Reader file;
 

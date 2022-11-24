@@ -40,14 +40,14 @@ public:
 
     ~file_reader() {
         if (fd == -1) return;
-        close(fd);
+        ::close(fd);
     }
 
     auto operator=(file_reader const&) -> file_reader& = delete;
     auto operator=(file_reader&&) -> file_reader& = delete;
 
-    size_t read(std::ranges::sized_range auto&& range) const {
-        auto bytes_read = ::read(fd, &*std::begin(range), std::ranges::size(range));
+    size_t read(std::span<char> range) const {
+        auto bytes_read = ::read(fd, range.data(), range.size());
         if (bytes_read == -1) {
             auto s = std::string{"read failed "} + strerror(errno);
             throw s;

@@ -7,7 +7,7 @@
 
 namespace io3 {
 
-template <typename Reader>
+template <reader_and_dropper_c Reader>
 struct bcf_reader {
     Reader reader;
     size_t lastUsed{};

@@ -1,10 +1,14 @@
 #pragma once
 
+#include "concepts.h"
 #include "file_reader.h"
+
+#include <ranges>
+#include <vector>
 
 namespace io3 {
 
-template <typename Reader, size_t minV = 2<<12>
+template <reader_c Reader, size_t minV = 2<<12>
 class buffered_reader : public Reader {
     std::vector<char> buf = []() { auto vec = std::vector<char>{}; vec.reserve(minV); return vec; }();
     int inPos{};
@@ -26,7 +30,7 @@ private:
             buf.resize(buf.capacity()*2);
         }
 
-        auto bytes_read = Reader::read(std::ranges::subrange{buf.data() + lastSize, &*buf.end()});
+        auto bytes_read = Reader::read(std::span{buf.data() + lastSize, buf.size()-lastSize});
         buf.resize(lastSize + bytes_read);
 
         return bytes_read != 0;

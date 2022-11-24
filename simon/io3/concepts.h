@@ -14,12 +14,12 @@ namespace io3 {
  */
 template <typename T>
 concept reader_c = requires(T t) {
-    { t.read(std::declval<std::vector<int>&>()) } -> std::same_as<size_t>;
+    { t.read(std::span<char>{}) } -> std::same_as<size_t>;
 };
 
 
 /* \brief a Reader that supports the functions:
- * - readUntil: reads from a point until a certain character is found or eof
+ * - readUntil: reads from a given point until a certain character is found or eof
  * - dropUntil: allows the internal buffer to drop all memory until a certain point
  * - eof: check if a value is at the end of the file
  * - string_view: returns a view to a buffer range as returned by readUntil
