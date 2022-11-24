@@ -39,12 +39,9 @@ struct fasta_reader_impl {
         if (reader.eof(endId)) return std::nullopt;
 
         auto startSeq = endId+1;
-        auto endSeq = reader.readUntil('>', startSeq);
-        lastUsed = endSeq;
 
         // convert into dense string representation
         s.clear();
-        s.reserve(endSeq-startSeq);
         {
             auto s2 = startSeq;
             do {
@@ -52,8 +49,10 @@ struct fasta_reader_impl {
                 s2 = reader.readUntil('\n', s1);
                 s += reader.string_view(s1, s2);
                 s2 += 1;
-            } while(s2 < endSeq);
+            } while (!reader.eof(s2) and reader.string_view(s2, s2+1)[0] != '>');
+            lastUsed = s2;
         }
+
 
         return record_view {
             .id  = reader.string_view(0,        endId),
