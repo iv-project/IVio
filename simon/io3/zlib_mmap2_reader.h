@@ -110,9 +110,9 @@ struct zlib_mmap2_reader : protected mmap_reader {
 
     size_t readUntil(char c, size_t lastUsed) {
         while (true) {
-            auto ptr = (char const*)memchr(queue.buffer + lastUsed, c, filesize - lastUsed);
-            if (ptr != nullptr) {
-                return ptr - queue.buffer;
+            auto pos = std::string_view{queue.buffer, filesize}.find(c, lastUsed);
+            if (pos != std::string_view::npos) {
+                return pos;
             }
             if (!readMore()) {
                 return filesize;

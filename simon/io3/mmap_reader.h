@@ -48,10 +48,9 @@ public:
     size_t readUntil(char c, size_t lastUsed) {
         lastUsed += inPos;
         assert(lastUsed <= filesize);
-        auto ptr = (char const*)memchr(buffer + lastUsed, c, filesize - lastUsed);
-        if (ptr != nullptr) {
-            assert(static_cast<size_t>(ptr - buffer) < filesize);
-            return (ptr - buffer) - inPos;
+        auto pos = std::string_view{buffer, filesize}.find(c, lastUsed);
+        if (pos != std::string_view::npos) {
+            return pos - inPos;
         }
         return filesize - inPos;
     }

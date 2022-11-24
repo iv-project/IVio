@@ -35,10 +35,11 @@ private:
 public:
     size_t readUntil(char c, size_t lastUsed) {
         while (true) {
-            auto ptr = (char const*)memchr(buf.data() + lastUsed + inPos, c, buf.size() - lastUsed - inPos);
-            if (ptr != nullptr) {
-                return ptr - buf.data() - inPos;
+            auto pos = std::string_view{buf.data(), buf.size()}.find(c, lastUsed + inPos);
+            if (pos != std::string_view::npos) {
+                return pos - inPos;
             }
+
             if (!readMore()) {
                 return buf.size() - inPos;
             }
