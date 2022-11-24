@@ -185,6 +185,19 @@ int main(int argc, char** argv) {
         auto reader = io3::fasta::reader{{.input = file}};
         auto writer = io3::fasta::writer{{.output = file + ".out.fa"}};
         benchmark_io3(reader, writer);
+    } else if (method == "io3_read_write_stream" and ext == ".fa") {
+        auto ifs = std::ifstream{file.c_str()};
+        auto ofs = std::ofstream{file + ".out.fa"};
+        auto reader = io3::fasta::reader{{.input = ifs, .compressed = false}};
+        auto writer = io3::fasta::writer{{.output = ofs, .compressed = false}};
+        benchmark_io3(reader, writer);
+    } else if (method == "io3_read_write_stream" and ext == ".gz") {
+        auto ifs = std::ifstream{file.c_str()};
+        auto ofs = std::ofstream{file + ".out.fa.gz"};
+        auto reader = io3::fasta::reader{{.input = ifs, .compressed = true}};
+        auto writer = io3::fasta::writer{{.output = ofs, .compressed = true}};
+        benchmark_io3(reader, writer);
+
     } else if (method == "view" and ext == ".gz") {
         benchmark(fasta_reader_view{zlib_reader(file.c_str())});
     } else if (method == "cont" and ext == ".gz") {
