@@ -135,7 +135,7 @@ struct vcf_reader {
         auto startFormat = reader.readUntil('\t', startInfo+1);
         if (reader.eof(startFormat)) return std::nullopt;
         auto startSamples = reader.readUntil('\t', startFormat+1);
-        if (reader.eof(startFormat)) return std::nullopt;
+        if (reader.eof(startSamples)) return std::nullopt;
         auto endSamples = reader.readUntil('\n', startSamples+1);
 
         lastUsed = endSamples;
