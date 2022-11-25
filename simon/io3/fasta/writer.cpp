@@ -12,7 +12,8 @@ namespace io3::fasta {
 struct writer_pimpl {
     using Writers = std::variant<file_writer,
                                  buffered_writer<zlib_file_writer>,
-                                 stream_writer
+                                 stream_writer,
+                                 buffered_writer<zlib_stream_writer>
                                  /*fasta_reader_impl<buffered_reader<stream_reader>>,
                                  fasta_reader_impl<buffered_reader<zlib_mmap_reader>>,
                                  fasta_reader_impl<buffered_reader<zlib_stream_reader>>*/
@@ -32,6 +33,8 @@ struct writer_pimpl {
             } else if (auto ptr = std::get_if<std::reference_wrapper<std::ostream>>(&config.output)) {
                 if (!config.compressed) {
                     return stream_writer{*ptr};
+                } else {
+                    return buffered_writer{zlib_stream_writer{stream_writer{*ptr}}};
                 }
             }
 

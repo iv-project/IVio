@@ -62,13 +62,10 @@ struct zlib_writer_impl {
 };
 
 using zlib_file_writer   = zlib_writer_impl<file_writer>;
-//using zlib_file_writer   = zlib_writer_impl<buffered_writer<file_writer>>;
-//using zlib_mmap_writer   = zlib_writer_impl<mmap_writer>;
-//using zlib_stream_writer = zlib_writer_impl<buffered_writer<stream_writer>>;
+using zlib_stream_writer = zlib_writer_impl<stream_writer>;
 
 static_assert(writer_c<zlib_file_writer>);
-//static_assert(writer_c<zlib_mmap_writer>);
-//static_assert(writer_c<zlib_stream_writer>);
+static_assert(writer_c<zlib_stream_writer>);
 
 
 }
