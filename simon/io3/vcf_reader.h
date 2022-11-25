@@ -97,8 +97,7 @@ struct vcf_reader {
     }
 
     template <typename T>
-    static auto convertTo(Reader& reader, size_t _start, size_t _end) {
-        auto view = reader.string_view(_start, _end);
+    static auto convertTo(Reader& reader, std::string_view view) {
         T value;
         auto result = std::from_chars(begin(view), end(view), value);
         if (result.ec == std::errc::invalid_argument) {
@@ -113,41 +112,39 @@ struct vcf_reader {
         std::vector<std::string_view> samples;
     } storage;
 
+    template <size_t ct, char sep>
+    auto readLine() -> std::optional<std::array<std::string_view, ct>> {
+        auto res = std::array<std::string_view, ct>{};
+        size_t start{};
+        for (size_t i{}; i < ct-1; ++i) {
+            auto end = reader.readUntil(sep, start);
+            if (reader.eof(end)) return std::nullopt;
+            res[i] = reader.string_view(start, end);
+            start = end+1;
+        }
+        auto end = reader.readUntil('\n', start);
+        if (reader.eof(end)) return std::nullopt;
+        res.back() = reader.string_view(start, end);
+        lastUsed = end;
+        if (!reader.eof(lastUsed)) lastUsed += 1;
+        return res;
+    }
 
     auto next() -> std::optional<record_view> {
         if (reader.eof(lastUsed)) return std::nullopt;
         reader.dropUntil(lastUsed);
-        size_t startChrom = 0;
-        auto startPos    = reader.readUntil('\t', startChrom+1);
-        if (reader.eof(startPos)) return std::nullopt;
-        auto startId     = reader.readUntil('\t', startPos+1);
-        if (reader.eof(startId)) return std::nullopt;
-        auto startRef    = reader.readUntil('\t', startId+1);
-        if (reader.eof(startRef)) return std::nullopt;
-        auto startAlt    = reader.readUntil('\t', startRef+1);
-        if (reader.eof(startAlt)) return std::nullopt;
-        auto startQual   = reader.readUntil('\t', startAlt+1);
-        if (reader.eof(startQual)) return std::nullopt;
-        auto startFilter = reader.readUntil('\t', startQual+1);
-        if (reader.eof(startFilter)) return std::nullopt;
-        auto startInfo = reader.readUntil('\t', startFilter+1);
-        if (reader.eof(startInfo)) return std::nullopt;
-        auto startFormat = reader.readUntil('\t', startInfo+1);
-        if (reader.eof(startFormat)) return std::nullopt;
-        auto startSamples = reader.readUntil('\t', startFormat+1);
-        if (reader.eof(startSamples)) return std::nullopt;
-        auto endSamples = reader.readUntil('\n', startSamples+1);
 
-        lastUsed = endSamples;
-        if (!reader.eof(lastUsed)) lastUsed += 1;
+        auto res = readLine<10, '\t'>();
+        if (!res) return std::nullopt;
+
+        auto [chrom, pos, id, ref, alt, qual, filters, info, format, samples] = *res;
 
         storage.alts.clear();
-        for (auto && v : std::views::split(reader.string_view(startAlt+1, startQual), ',')) {
+        for (auto && v : std::views::split(alt, ',')) {
             storage.alts.emplace_back(v.begin(), v.end());
         }
 
         storage.filters.clear();
-        auto filters = reader.string_view(startFilter+1, startInfo);
         if (filters != ".") {
             for (auto && v : std::views::split(filters, ';')) {
                 storage.filters.emplace_back(v.begin(), v.end());
@@ -155,21 +152,21 @@ struct vcf_reader {
         }
 
         storage.samples.clear();
-        for (auto && v : std::views::split(reader.string_view(startSamples+1, endSamples), ' ')) {
+        for (auto && v : std::views::split(samples, ' ')) {
             storage.samples.emplace_back(v.begin(), v.end());
         }
 
 
         return record_view {
-            .chrom   = reader.string_view(startChrom,     startPos),
-            .pos     = convertTo<int32_t>(reader, startPos+1,  startId),
-            .id      = reader.string_view(startId+1,      startRef),
-            .ref     = reader.string_view(startRef+1,     startAlt),
+            .chrom   = chrom,
+            .pos     = convertTo<int32_t>(reader, pos),
+            .id      = id,
+            .ref     = ref,
             .alt     = storage.alts,
-            .qual    = convertTo<float>(reader,   startQual+1, startFilter),
+            .qual    = convertTo<float>(reader, qual),
             .filter  = storage.filters,
-            .info    = reader.string_view(startInfo+1,    startFormat),
-            .format  = reader.string_view(startFormat+1,  startSamples),
+            .info    = info,
+            .format  = format,
             .samples = storage.samples,
         };
     }
