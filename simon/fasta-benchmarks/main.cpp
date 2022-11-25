@@ -183,7 +183,7 @@ int main(int argc, char** argv) {
         benchmark_io3(io3::fasta::reader{{.input = ifs, .compressed = true}});
     } else if (method == "io3_read_write") {
         auto reader = io3::fasta::reader{{.input = file}};
-        auto writer = io3::fasta::writer{{.output = file + ".out.fa"}};
+        auto writer = io3::fasta::writer{{.output = file + ".out" + ext}};
         benchmark_io3(reader, writer);
     } else if (method == "io3_read_write_stream" and ext == ".fa") {
         auto ifs = std::ifstream{file.c_str()};

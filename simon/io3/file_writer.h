@@ -24,7 +24,7 @@ public:
     auto operator=(file_writer const&) -> file_writer& = delete;
     auto operator=(file_writer&&) -> file_writer& = delete;
 
-    void write(std::span<char> buffer) {
+    void write(std::span<char> buffer, bool finish) {
         ofs.write(buffer.data(), buffer.size());
     }
 };
