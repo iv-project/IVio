@@ -62,6 +62,14 @@ void benchmark_io3(Reader&& reader) {
     std::cout << "total: " << ct << " " << sum << " " << l << "\n";
 }
 
+template <typename Reader, typename Writer>
+void benchmark_io3(Reader& reader, Writer& writer) {
+    for (auto && view : reader) {
+        writer.write(view);
+    }
+}
+
+
 void seqan2_bench(std::string const& file);
 void bio_bench(std::string const& file);
 
@@ -89,6 +97,10 @@ int main(int argc, char** argv) {
     } else if (method == "io3_stream" and ext == ".vcf") {
         auto ifs = std::ifstream{file.c_str()};
         benchmark_io3(io3::vcf_reader{io3::stream_reader(ifs)});
+    } else if (method == "io3_copy" and ext == ".vcf") {
+        auto reader = io3::vcf_reader{io3::file_reader(file.c_str())};
+        auto writer = io3::vcf::writer{{.output = file + ".out.vcf"}};
+        benchmark_io3(reader, writer);
     } else if (method == "io3_file" and ext == ".bcf") {
          benchmark_io3(io3::bcf_reader{io3::bgzf_file_reader{file.c_str()}});
     } else if (method == "io3_mmap" and ext == ".bcf") {

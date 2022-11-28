@@ -9,5 +9,6 @@
 
 #include "fasta/reader.h"
 #include "vcf_reader.h"
+#include "vcf_writer.h"
 #include "bcf_reader.h"
 #include "bgzf_reader.h"
