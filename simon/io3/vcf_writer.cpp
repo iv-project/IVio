@@ -49,41 +49,59 @@ void writer::write(record_view record) {
     assert(pimpl);
 
     auto const& [chrom, pos, id, ref, alt, qual, filters, info, format, samples] = record;
-    auto ss = std::stringstream{};
-    ss << chrom    << '\t'
-       << pos      << '\t'
-       << id       << '\t'
-       << ref      << '\t';
+    auto ss = std::string{};
+    ss += chrom; ss += '\t';
+    ss += std::to_string(pos); ss += '\t';
+    ss += id; ss += '\t';
+    ss += ref; ss += '\t';
+
     if (!alt.empty()) {
-        ss << alt[0];
+        ss += alt[0];
         for (size_t i{1}; i < alt.size(); ++i) {
-            ss << ',' << alt[i];
+            ss += ',';
+            ss += alt[i];
         }
     }
-    ss << '\t'
-       << qual     << '\t';
+    ss += '\t';
+
+    auto oldSize = ss.size();
+    ss.resize(oldSize + 256); // can only convert floats that fit into 256characters
+    auto [ptr, ec] = std::to_chars(ss.data() + oldSize, ss.data() + ss.size(), qual);
+    if (ec == std::errc()) {
+        ss.resize(ptr - ss.data());
+    } else {
+        // Something didn't work, fall back to slow std::stringstream implementation
+        ss.resize(oldSize);
+        auto str = std::stringstream{};
+        str << qual;
+        ss += str.str();
+    }
+    ss += '\t';
+
+
     if (!filters.empty()) {
-        ss << filters[0];
+        ss += filters[0];
         for (size_t i{1}; i < filters.size(); ++i) {
-            ss << ';' << filters[i];
+            ss += ';'; ss += filters[i];
         }
     } else {
-        ss << '.';
+        ss += '.';
     }
-    ss << '\t'
-       << info     << '\t'
-       << format   << '\t';
+    ss += '\t';
+    ss += info; ss += '\t';
+    ss += format; ss += '\t';
 
     if (!samples.empty()) {
-        ss << samples[0];
+        ss += samples[0];
         for (size_t i{1}; i < samples.size(); ++i) {
-            ss << ' ' << samples[i];
+            ss += ' '; ss += samples[i];
         }
     }
-    ss << '\n';
+    ss += '\n';
+
+
     std::visit([&](auto& writer) {
-        auto str = ss.str();
-        writer.write(str, true);
+       writer.write(ss, true);
     }, pimpl->writer);
 }
 
