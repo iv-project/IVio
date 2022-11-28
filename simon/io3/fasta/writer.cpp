@@ -14,9 +14,6 @@ struct writer_pimpl {
                                  buffered_writer<zlib_file_writer>,
                                  stream_writer,
                                  buffered_writer<zlib_stream_writer>
-                                 /*fasta_reader_impl<buffered_reader<stream_reader>>,
-                                 fasta_reader_impl<buffered_reader<zlib_mmap_reader>>,
-                                 fasta_reader_impl<buffered_reader<zlib_stream_reader>>*/
                                  >;
 
     writer_config config;
