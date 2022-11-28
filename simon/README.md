@@ -12,322 +12,63 @@ From this we can derive a few ideas:
 - names for options, everything that is named is much easier to use and remember
 
 
+Old Ideas for IO2 can be found [here](IO2.md)
 
 
+## IO3
+Additional Ideas of io3 vesus the io2 are:
+ - as plain as possible, no alphabets at all
+ - emphasise on string_view, guaranteeing every contigous memory.
+ - giving up header only, for fast include/compilation
 
-## Fasta - Input:
 
-### sketch how code could look like:
+### Fasta - Input/Output:
+sketch how code could look like:
 ```
-auto in = sequence_file_input {
-    .input = "myfile.fasta",
-    .alphabet = seqan3::dna5{},              // default `seqan3::dna15{}`
-    .quality_alphabet = seqan3::phread42{},  // default `seqan3::pthread42{}` (is any think else even use full?)
-    .format_embl = {
-        .complete_header = true,
-    }
+/* Iterating over the reader gives us a io3::fasta::record_view
+ * struct record_view {
+ *     std::string_view id;
+ *     std::string_view seq;
+ * };
+ */
+
+auto in = io3::fasta::reader {
+    .input = "myfile.fasta", // could also be a std::istream
 };
-
-for (auto [id, seq, qual] : in) {
-    // id,seq,qual are views
-}
-
-# or
-
-for (auto&& record : in) {
-    //record.id()
-    //record.sequence()
-    //record.qualities()
-}
-```
-
-### Removal from seqan3
-*Template arguments*
-- lets remove `selected_field_ids` there is no benefit
-- also valid_formats is replaced by moving it as a aggregated initialize option
-*Type Tratis*
-- `sequence_legal_alphabet`: not required, just use `.alphabet = seqan3::dna15{}` and than convert your view like `record.sequence() | views::convert_to<seqan3::dna5>`
-  Advantages: less suprises.
-- `sequence_container` shouldn't be defined by the user anyways. It should fullfill std::ranges::range concept, but user shouldn't define the container, if the want a certain container, just call `record.sequence() | seqan3::views::to<std::vector>()`
-- `id_alphabet` we don't have any other real option than using `char`
-- `id_container` also shouldn't be up to the user
-- `quality_container` same as the other two containers
-
-*Runtime options*
-- `truncate_ids` - this has no value, just use something like `record.id() | std::views::take_until(' ')`
-- `fasta_ignore_blanks_before_id` - this is not part of the fasta standard (should always be false), and if wanted just use something like `record.id() | std::views::skip(' ')`
-
-## Fasta - Output:
-### sketch how code could look like:
-```
-auto out = seqan3::sequence_file_output {
-    .output = "somefile.fastq",
-    .format.fasta {
-        .letters_per_line = 100, // by default 80
-    },
-    .format_fastq {
-        .double_id = false, // don't know what this is or means
-    },
-    .format_embl {
-        .complete_header = false, // by default false
-    },
-    .format_genbank {
-        .complete_header = false, // by default false
-    }
-};
-
-for (...) {
-    // all three variables have to be some std::ranges::range objects
-    out.write(id, sequence, qual);
+for (auto const& record : in) {
+    record.id;
+    record,seq;
 }
 ```
-
-
-
-### Removal from seqan3
-*Template arguments*
-- lets remove `selected_field_ids` there is no benefit
-- also valid_formats is replaced by moving it as a aggregated initialize option
-*Type Tratis*
-- not a std::ranges::range: it should not be iterated over this object...
-*Runtime options*
-- `fasta_legacy_id_marker`: lets not support outdated stuff
-- `fasta_blank_before_id`: not part of the specification
-- `add_carriage_return`: this is for windows, but don't have the reverse (also not sure if this actually works as expected, since iostream in text mode will add `\r` automatically
-
-
-
-
-## Some comparisions to current seqan3 and hannes io
-### ex1.cpp
 ```
-// Standard example
-===================
-
-// current implementation:
-seqan3::sequence_file_input in{"x.fasta"};
-
-for (auto && rec : in)
-    seqan3::debug_stream << rec.sequence();
-
-// -------------------------------------------------------------------------------------------------------------------------
-
-// Hannes implementation:
-seqan3::seq_io::reader in{"x.fasta"};
-
-for (auto && rec : in)
-    seqan3::debug_stream << rec.sequence();
-
-// -------------------------------------------------------------------------------------------------------------------------
-
-// sgg io
-io2::seq_io::reader in{.input = "x.fasta"}; // io2::seq_io::reader{"x.fasta"} would also work
-for (auto && rec : in)
-    seqan3::debug_stream << rec.sequence();
-```
-
-### ex2.cpp
-```
-// structured binding example
-========================
-
-// current implementation:
-seqan3::sequence_file_input in{"x.fasta"};
-
-for (auto & [ i, s, q ] : in)
-    seqan3::debug_stream << "ID:  " << i << '\n';
-
-// -------------------------------------------------------------------------------------------------------------------------
-
-// Hannes implementation:
-seqan3::seq_io::reader reader{"example.fasta"};
-
-for (auto & [ i, s, q ] : reader)
-    seqan3::debug_stream << "ID:  " << i << '\n';
-
-// -------------------------------------------------------------------------------------------------------------------------
-
-// sgg io
-auto in = io2::seq_io::reader{.input = "x.fasta"};
-for (auto & [i, s, q] : in)
-    seqan3::debug_stream << "ID: " << i << '\n';
-```
-
-### ex3.cpp
-```
-// Simple options example
-=========================
-
-// current implementation:
-seqan3::sequence_file_input in{"x.fasta"};
-in.options.truncate_ids = true; // must (should?) be done before the first record is read
-
-// -------------------------------------------------------------------------------------------------------------------------
-
-// Hannes implementation:
-seqan3::seq_io::reader reader{"example.fasta", seqan3::seq_io::reader_options{.truncate_ids = true }};
-
-// -------------------------------------------------------------------------------------------------------------------------
-
-// sgg io
-// truncate_ids wont exists anymore, using complete_header example instead
-auto in = io2::seq_io::reader{
-    .input = "x.fasta",
-    .format_embl = {
-        .complete_header = true,
-    }
+/* For writting we also need to pass a io3::fasta::record_view or anything that is convertible to one. For convinience a io3::fasta::record is provided:
+ *  struct record {
+ *     std::string id;
+ *     std::string seq;
+ *  };
+ */
+auto out = io3::fasta::writer {
+    .output = "myfile.out.fasta", // could also be a std::ostream
 };
-// or compact
-// `seqan3::sgg_io::reader reader{"x.fasta", .format_embl{.complete_header = true}}`
+out.write(record{.id = "someid", .seq = "ACGTACGTACGT"});
 ```
-### ex4.cpp
 ```
-// Select different types
-=========================
-
-// current implementation:
-struct my_traits : seqan3::sequence_file_input_default_traits_dna
+/* Reading a a file and replacing all 'A' with 'N's
+ */
 {
-    using sequence_alphabet = char; // instead of dna5
-
-    template <typename alph>
-    using sequence_container = std::basic_string<alph>; // must be defined as a template! String_view is not possible
+auto in = io3::fasta::reader {
+    .input = "myfile.fasta", // could also be a std::istream
 };
-
-seqan3::sequence_file_input<my_traits> fin{"x.fasta"};
-
-// -------------------------------------------------------------------------------------------------------------------------
-
-// Hannes implementation:
-seqan3::seq_io::reader reader{"example.fasta",
-                              seqan3::seq_io::reader_options{
-                                    .field_types = seqan3::ttag<std::string_view, std::string, std::string>};
-
-// -------------------------------------------------------------------------------------------------------------------------
-
-
-// sgg io
-auto in = sgg_io::seq_io::reader {
-    .input = "x.fasta",
-    .alphabet = char{},
+auto out = io3::fasta::writer {
+    .output = "myfile.out.fasta", // could also be a std::ostream
 };
+for (auto const& view : in) {
+    auto record = io3::fasta::record{view};
+    for (auto& c: record.seq) {
+        if (c == 'A') c = 'N';
+    }
+    out.write(record);
+}
 ```
 
-### ex5.cpp
-```
-// Select different fields (fasta)
-=========================
-
-// current implementation:
-seqan3::sequence_file_input fin{"x.fasta", seqan3::fields<seqan3::field::id, seqan3::field::qual>()};
-
-// -------------------------------------------------------------------------------------------------------------------------
-
-// Hannes implementation:
-seqan3::seq_io::reader reader{"example.fasta",
-                              seqan3::seq_io::reader_options{
-                                    .field_ids   = bio::vtag<seqan3::field::id, seqan3::field::qual>,
-                                    .field_types = seqan3::ttag<std::string_view, std::vector<seqan3::phred62>>}; // types have to be also given
-
-// -------------------------------------------------------------------------------------------------------------------------
-
-// sgg io
-// not needed, since there is no benefit in skipping these fields, just makes the api bloated
-```
-
-
-### ex6.cpp
-```
-// Select different fields (sam)
-=========================
-
-// current implementation:
-
-using aligned_sequence_type = std::vector<seqan3::gapped<seqan3::dna5>>;
-using alignment_type = std::pair<aligned_sequence_type, aligned_sequence_type>;
-
-using types = seqan3::type_list<std::vector<seqan3::dna5>, std::string, alignment_type>;
-using fields = seqan3::fields<seqan3::field::seq, seqan3::field::id, seqan3::field::alignment>;
-
-seqan3::sam_file_output fout{filename};
-using sam_record_type = seqan3::sam_record<types, fields>;
-
-// -------------------------------------------------------------------------------------------------------------------------
-
-// Hannes implementation:
-// I don't know
-
-// io2 some suggestions
-
-// Idea 1
-auto in = io2::sam_io::reader {
-    .input = "x.sam",
-    .fields = std::tuple<std::tuple<seqan3::field::id,  char>,
-                         std::tuple<seqan3::field::seq, seqan3::dna5>,
-                         std::tuple<seqan3::field::alignment, std::pair<seqan3::gapped<seqan3::dna5>, seqan3::gapped<seqan3::dna5>>>>{}
-};
-
-// Idea 1b: Idea 1 but with extra using namespaces to make reading easier
-using namespace seqan3;
-using namespace seqan3::field;
-auto in = io2::sam_io::reader {
-    .input = "x.sam",
-    .fields = std::tuple<std::tuple<id,  char>,
-                         std::tuple<seq, dna5>,
-                         std::tuple<alignment, std::pair<gapped<dna5>, gapped<dna5>>>>{}
-
-};
-
-// Idea 2 with compacter fields
-using namespace seqan3;
-using namespace seqan3::field;
-auto in = io2::sam_io::reader {
-    .input = "x.sam",
-    .fields = std::tuple<id<char>,
-                         seq<dna5>,
-                         alignment<gapped<dna5>, gapped<dna5>>>{},
-
-};
-
-// Idea 3 with designated initializer, con: user can't reshuffle order of fields, pro: user can't reshuffle order of fields
-
-using namespace seqan3;
-using namespace seqan3::field;
-auto in = io2::sam_io::reader {
-    .input = "x.sam",
-    .fields = Fields {
-        .id = char{},
-        .seq = dna5{},
-        .alignment = alignment<gapped<dna5>, gapped<dna5>>{},
-    },
-};
-
-// Idea 4 this is combinable with a lot of the other parameters, by using a special variable called `type` and combining it with [[no_unique_address]] we can avoid any memory usage by this structure
-
-using namespace seqan3;
-using namespace seqan3::field;
-auto in = io2::sam_io::reader {
-    .input = "x.sam",
-    .fields = Fields {
-        .id = io2::type<char>,
-        .seq = io2::type<dna5>,
-        .alignment = io2::type<alignment<gapped<dna5>, gapped<dna5>>>,
-    },
-};
-
-// Idea 4b, give type names the name `_t`
-
-using namespace seqan3;
-using namespace seqan3::field;
-auto in = io2::sam_io::reader {
-    .input = "x.sam",
-    .fields = Fields {
-        .id_t = io2::type<char>,
-        .seq_t = io2::type<dna5>,
-        .alignment_t = io2::type<alignment<gapped<dna5>, gapped<dna5>>>,
-    },
-};
-
-
-
-```
+###
