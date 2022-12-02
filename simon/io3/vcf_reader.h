@@ -5,6 +5,7 @@
 
 #include <charconv>
 #include <functional>
+#include <optional>
 #include <ranges>
 
 namespace io3 {
@@ -12,16 +13,16 @@ namespace io3 {
 struct vcf_reader_view_record_view {
     using string_view_list = std::span<std::string_view>;
 
-    std::string_view chrom;
-    int32_t          pos;
-    std::string_view id;
-    std::string_view ref;
-    string_view_list alt;
-    float            qual;
-    string_view_list filter;
-    std::string_view info;
-    std::string_view format;
-    string_view_list samples;
+    std::string_view     chrom;
+    int32_t              pos;
+    std::string_view     id;
+    std::string_view     ref;
+    string_view_list     alt;
+    std::optional<float> qual;
+    string_view_list     filter;
+    std::string_view     info;
+    std::string_view     format;
+    string_view_list     samples;
 };
 
 struct vcf_reader_view_iter {

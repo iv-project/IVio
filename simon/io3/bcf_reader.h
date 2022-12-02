@@ -110,7 +110,7 @@ struct bcf_reader {
         auto chromId  = io3::bgzfUnpack<int32_t>(ptr2 + 8);
         auto pos      = io3::bgzfUnpack<int32_t>(ptr2 + 12)+1;
         auto rlen     = io3::bgzfUnpack<int32_t>(ptr2 + 16);
-//        auto qual = io3::bgzfUnpack<float>(ptr2 + 20);
+        auto qual     = io3::bgzfUnpack<float>(ptr2 + 20);
         auto n_info   = io3::bgzfUnpack<int16_t>(ptr2 + 24);
         auto n_allele = io3::bgzfUnpack<int16_t>(ptr2 + 26);
         auto n_sample = io3::bgzfUnpack<int32_t>(ptr2 + 28) & 0x00ffffff;
@@ -154,13 +154,15 @@ struct bcf_reader {
         }
 
         lastUsed = l_shared + l_indiv + 8;
+
+
         return record_view {
             .chrom   = contigMap[chromId],
             .pos     = pos,
             .id      = id,
             .ref     = ref,
             .alt     = storage.alts,
-            .qual    = 0.,
+            .qual    = (qual != 0b0111'1111'1000'0000'0000'0000'0001)?std::optional<float>{qual}:std::optional<float>{std::nullopt},
 //            .filter  = reader.string_view(0, 0),
             .info    = reader.string_view(0, 0),
             .format  = reader.string_view(0, 0),

@@ -45,7 +45,11 @@ template <typename T>
 inline auto bgzfUnpack(char const* buffer) -> T {
     T v;
     std::uninitialized_copy(buffer, buffer + sizeof(v), reinterpret_cast<char*>(&v));
-    return little_endian_to_host(v);
+    if constexpr (std::integral<T>) {
+        return little_endian_to_host(v);
+    } else {
+        return v;
+    }
 }
 
 struct ZlibContext {
