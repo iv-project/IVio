@@ -106,11 +106,15 @@ struct bcf_reader {
         auto flen = l_shared + l_indiv + 8;
         auto [ptr2, size2] = reader.read(flen);
         if (size2 < flen) throw "something went wrong reading bcf file (3)";
-        if (size2 < 32+4) throw "something went worng reaing bcf file (4)";
+        if (size2 < 32+3) throw "something went worng reading bcf file (4)";
         auto chromId  = io3::bgzfUnpack<int32_t>(ptr2 + 8);
         auto pos      = io3::bgzfUnpack<int32_t>(ptr2 + 12)+1;
         auto rlen     = io3::bgzfUnpack<int32_t>(ptr2 + 16);
-        auto qual     = io3::bgzfUnpack<float>(ptr2 + 20);
+        auto qual     = [&]() -> std::optional<float> {
+            auto q     = io3::bgzfUnpack<float>(ptr2 + 20);
+            if (q == 0b0111'1111'1000'0000'0000'0000'0001) return std::nullopt;
+            return q;
+        }();
         auto n_info   = io3::bgzfUnpack<int16_t>(ptr2 + 24);
         auto n_allele = io3::bgzfUnpack<int16_t>(ptr2 + 26);
         auto n_sample = io3::bgzfUnpack<int32_t>(ptr2 + 28) & 0x00ffffff;
@@ -162,7 +166,7 @@ struct bcf_reader {
             .id      = id,
             .ref     = ref,
             .alt     = storage.alts,
-            .qual    = (qual != 0b0111'1111'1000'0000'0000'0000'0001)?std::optional<float>{qual}:std::optional<float>{std::nullopt},
+            .qual    = qual,
 //            .filter  = reader.string_view(0, 0),
             .info    = reader.string_view(0, 0),
             .format  = reader.string_view(0, 0),

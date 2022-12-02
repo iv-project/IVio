@@ -34,7 +34,6 @@ struct writer_pimpl {
 writer::writer(writer_config config)
     : pimpl{std::make_unique<writer_pimpl>(config)}
 {
-    assert(config.length > 0);
 }
 writer::~writer() {
     if (pimpl) {
@@ -64,18 +63,23 @@ void writer::write(record_view record) {
     }
     ss += '\t';
 
-    auto oldSize = ss.size();
-    ss.resize(oldSize + 256); // can only convert floats that fit into 256characters
-    auto [ptr, ec] = std::to_chars(ss.data() + oldSize, ss.data() + ss.size(), qual);
-    if (ec == std::errc()) {
-        ss.resize(ptr - ss.data());
+    if (qual) {
+        auto oldSize = ss.size();
+        ss.resize(oldSize + 256); // can only convert floats that fit into 256characters
+        auto [ptr, ec] = std::to_chars(ss.data() + oldSize, ss.data() + ss.size(), *qual);
+        if (ec == std::errc()) {
+            ss.resize(ptr - ss.data());
+        } else {
+            // Something didn't work, fall back to slow std::stringstream implementation
+            ss.resize(oldSize);
+            auto str = std::stringstream{};
+            str << *qual;
+            ss += str.str();
+        }
     } else {
-        // Something didn't work, fall back to slow std::stringstream implementation
-        ss.resize(oldSize);
-        auto str = std::stringstream{};
-        str << qual;
-        ss += str.str();
+        ss += '*';
     }
+
     ss += '\t';
 
 
@@ -101,7 +105,7 @@ void writer::write(record_view record) {
 
 
     std::visit([&](auto& writer) {
-       writer.write(ss, true);
+       writer.write(ss, false);
     }, pimpl->writer);
 }
 
