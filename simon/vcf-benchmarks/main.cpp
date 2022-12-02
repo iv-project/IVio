@@ -1,15 +1,16 @@
-#include <cstring>
-#include <cstdint>
-#include <unistd.h>
-#include <array>
 #include <algorithm>
-#include <optional>
-#include <vector>
+#include <array>
+#include <cstdint>
+#include <cstring>
+#include <fstream>
+#include <iostream>
 #include <limits>
 #include <numeric>
+#include <optional>
+#include <ranges>
+#include <unistd.h>
 #include <variant>
-#include <iostream>
-#include <fstream>
+#include <vector>
 
 #include "io3/io3.h"
 
@@ -34,8 +35,6 @@ constexpr static std::array<char, 256> ccmap = []() {
     return c;
 }();
 
-#include <ranges>
-#include <iostream>
 
 inline constexpr auto seq_cleanuped_view = std::views::transform([](char c) {
             return ccmap[reinterpret_cast<uint8_t&>(c)];
@@ -69,12 +68,21 @@ void benchmark_io3(Reader& reader, Writer& writer) {
     }
 }
 
+template <typename Reader, typename Writer>
+void benchmark_io3_bcf(Reader& reader, Writer& writer) {
+    writer.writeHeader(reader.headerBuffer);
+    for (auto && view : reader) {
+        writer.write(view);
+    }
+}
+
+
 
 void seqan2_bench(std::string const& file);
 void bio_bench(std::string const& file);
 
 int main(int argc, char** argv) {
-//    try {
+    try {
     if (argc != 3) return 0;
     std::string method = argv[1];
     std::string file = argv[2];
@@ -108,12 +116,16 @@ int main(int argc, char** argv) {
     } else if (method == "io3_stream" and ext == ".bcf") {
         auto ifs = std::ifstream{file.c_str()};
         benchmark_io3(io3::bcf_reader{io3::bgzf_stream_reader(ifs)});
+    } else if (method == "io3_copy" and ext == ".bcf") {
+        auto reader = io3::bcf_reader{io3::bgzf_file_reader{io3::file_reader(file.c_str())}};
+        auto writer = io3::bcf::writer{{.output = file + ".out.bcf"}};
+        benchmark_io3_bcf(reader, writer);
     } else {
         std::cout << "unknown\n";
     }
-//    } catch(char const* what) {
-//        std::cout << "exception(c): " << what << "\n";
-//    } catch(std::string const& what) {
-//        std::cout << "exception(s): " << what << "\n";
-//    }
+    } catch(char const* what) {
+        std::cout << "exception(c): " << what << "\n";
+    } catch(std::string const& what) {
+        std::cout << "exception(s): " << what << "\n";
+    }
 }

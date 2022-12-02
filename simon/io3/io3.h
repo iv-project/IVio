@@ -11,4 +11,6 @@
 #include "vcf_reader.h"
 #include "vcf_writer.h"
 #include "bcf_reader.h"
+#include "bcf_writer.h"
 #include "bgzf_reader.h"
+#include "bgzf_writer.h"

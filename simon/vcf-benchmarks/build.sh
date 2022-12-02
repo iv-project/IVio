@@ -18,8 +18,10 @@ mkdir -p obj/io3/fasta
 g++ ${ARGS} -c ../io3/fasta/reader.cpp -o obj/io3/fasta/reader.o
 g++ ${ARGS} -c ../io3/fasta/writer.cpp -o obj/io3/fasta/writer.o
 g++ ${ARGS} -c ../io3/vcf_writer.cpp -o obj/io3/vcf_writer.o
+g++ ${ARGS} -c ../io3/bcf_writer.cpp -o obj/io3/bcf_writer.o
 g++ ${ARGS} -c main.cpp -o obj/main.o
 g++ ${ARGS} -c seqan2.cpp -o obj/seqan2.o
 g++ ${ARGS} -c bio.cpp -o obj/bio.o
 
-g++ $(find obj | grep \.o\$) -lz-ng -lz -o benchmark
+#g++ $(find obj | grep \.o\$) -lasan -lz-ng -lz  -o benchmark
+g++ $(find obj | grep \.o\$) -lz-ng -lz  -o benchmark
