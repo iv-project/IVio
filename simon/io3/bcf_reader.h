@@ -41,10 +41,11 @@ struct bcf_reader {
     std::unordered_map<std::string_view, std::vector<std::string_view>> headerMap;
 
     std::vector<std::string_view>& contigMap = headerMap["contig"];
-    std::vector<std::string_view>& filterMap = headerMap["FILTER"];
+    std::vector<std::string_view>& filterMap = headerMap["filter"];
 
     struct {
         std::vector<std::string_view> alts;
+        std::vector<std::string_view> filters;
         std::vector<std::string_view> samples;
     } storage;
 
@@ -82,10 +83,22 @@ struct bcf_reader {
             if (end == std::string::npos) end = headerBuffer.size();
             tableHeader = {headerBuffer.data() + start, headerBuffer.data() + end};
         }
+        for (auto v : headerMap["FILTER"]) {
+            auto pos = v.find("IDX=");
+            if (pos == std::string_view::npos) throw "unexpected formating";
+            auto pos2 = v.find('>', pos+4); // !TODO might also be a ","
+            if (pos2 == std::string_view::npos) throw "unexpected formatting (2)";
+            auto v2 = v.substr(pos+4, pos2);
+            auto idx = size_t(std::stoi(std::string{v2})); //!TODO from_chars is faster
+            headerMap["filter"].resize(std::max(headerMap["filter"].size(), idx+1));
+            headerMap["filter"][idx] = v;
+        }
+
     }
 
     void readHeader() {
         auto [ptr, size] = reader.read(9);
+
         if (size < 9) throw "something went wrong reading bcf file (1)";
 
         size_t txt_len = io3::bgzfUnpack<uint32_t>(ptr + 5);
@@ -143,6 +156,24 @@ struct bcf_reader {
             }
             return {{ptr2+o+1, ptr2+o+1+l}, o+1+l};
         };
+
+        auto readVector = [&](size_t o) -> std::tuple<std::vector<int32_t>, size_t> {
+            auto v = io3::bgzfUnpack<uint8_t>(ptr2 + o);
+            auto t = v & 0x0f;
+            auto l = v >> 4;
+            if (l == 15) {
+                auto [i, o2] = readInt(o+1);
+                l = i;
+                o = o2;
+            }
+            auto res = std::vector<int32_t>{};
+            res.resize(l);
+            for (auto& v : res) {
+                std::tie(v, o) = readInt(o);
+            }
+            return {res, o};
+        };
+
         auto [id, o2] = readString(32);
         auto [ref, o3] = readString(o2);
 
@@ -157,6 +188,12 @@ struct bcf_reader {
             o3 = o4;
         }
 
+        auto [filters, o5] = readVector(o3);
+        storage.filters.clear();
+        for (auto f : filters) {
+            storage.filters.emplace_back(filterMap.at(f));
+        }
+
         lastUsed = l_shared + l_indiv + 8;
 
 
@@ -167,7 +204,7 @@ struct bcf_reader {
             .ref     = ref,
             .alt     = storage.alts,
             .qual    = qual,
-//            .filter  = reader.string_view(0, 0),
+            .filter  = storage.filters,
             .info    = reader.string_view(0, 0),
             .format  = reader.string_view(0, 0),
             .samples = storage.samples,

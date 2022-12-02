@@ -57,6 +57,28 @@ struct bcf_buffer {
             buffer[oldSize+i] = v[i];
         }
     };
+    void writeVector(std::vector<int32_t> v) {
+        if (v.size() < 15) { // No overflow
+            auto l = (v.size() << 4) | 0x07;
+            pack<uint8_t>(l);
+        } else { // overflow
+            pack<uint8_t>(0xf7);
+            if (v.size() > 127) {
+                throw "BCF: string to long";
+            }
+            writeInt<int8_t>(v.size());
+        }
+        for (auto e : v) {
+            if ( e >= std::numeric_limits<int8_t>::lowest() and e <= std::numeric_limits<int8_t>::max()) {
+                writeInt<int8_t>(e);
+            } else if ( e >= -std::numeric_limits<int16_t>::lowest() and e <= std::numeric_limits<int16_t>::max()) {
+                writeInt<int16_t>(e);
+            } else {
+                writeInt<int32_t>(e);
+            }
+        }
+    };
+
 };
 
 }
@@ -128,14 +150,12 @@ void writer::write(record_view record) {
     buffer.pack<uint32_t>(l_shared);
     buffer.pack<uint32_t>(l_indiv);
 
-    auto chromId = 0;
+    auto chromId = contigMap.at(std::string{chrom}); //!TODO make it std::string_view compatible
     auto rlen = 0;
     buffer.pack<uint32_t>(chromId);
     buffer.pack<uint32_t>(pos-1);
     buffer.pack<uint32_t>(rlen);
     buffer.pack<float>(qual.value_or(0b0111'1111'1000'0000'0000'0000'0001));
-
-
 
     auto n_info = 0;
     auto n_allele = alt.size()+1;
@@ -155,7 +175,15 @@ void writer::write(record_view record) {
     //    std::cout << "alt: " << a.size() << "\n";
         buffer.writeString(a);
     }
-    buffer.writeString(".");
+
+    if (filters.empty()) {
+        buffer.writeString("."); // symbol for missing
+    } else {
+        auto filterIds = std::vector<int32_t>{};
+        for (auto const& f : filters) {
+            filterMap.at(std::string{f}); //!TODO make it std::string_view compatible
+        }
+    }
 
     // overwrite l_shared with actuall correct data
     l_shared = buffer.buffer.size() - 8;

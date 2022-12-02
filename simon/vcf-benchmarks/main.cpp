@@ -71,6 +71,13 @@ void benchmark_io3(Reader& reader, Writer& writer) {
 template <typename Reader, typename Writer>
 void benchmark_io3_bcf(Reader& reader, Writer& writer) {
     writer.writeHeader(reader.headerBuffer);
+    for (size_t i{0}; i < reader.contigMap.size(); ++i) {
+        writer.contigMap.try_emplace(std::string{reader.contigMap[i]}, i);
+    }
+    for (size_t i{0}; i < reader.filterMap.size(); ++i) {
+        writer.filterMap.try_emplace(std::string{reader.filterMap[i]}, i);
+    }
+
     for (auto && view : reader) {
         writer.write(view);
     }

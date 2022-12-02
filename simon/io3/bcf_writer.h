@@ -29,6 +29,9 @@ private:
     std::unique_ptr<writer_pimpl> pimpl;
 
 public:
+    std::unordered_map<std::string, size_t> contigMap;
+    std::unordered_map<std::string, size_t> filterMap;
+
     writer(writer_config config);
     ~writer();
     void writeHeader(std::string_view v);
