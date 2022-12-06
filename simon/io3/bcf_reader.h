@@ -194,6 +194,14 @@ struct bcf_reader {
             storage.filters.emplace_back(filterMap.at(f));
         }
 
+        auto info = [&]() {
+            assert(o5 <= l_shared+8);
+
+            auto p1 = o5;
+            auto p2 = l_shared+8;
+            return std::string_view{ptr2 + o5, ptr2 + l_shared+8};
+        }();
+
         lastUsed = l_shared + l_indiv + 8;
 
 
@@ -205,7 +213,7 @@ struct bcf_reader {
             .alt     = storage.alts,
             .qual    = qual,
             .filter  = storage.filters,
-            .info    = reader.string_view(0, 0),
+            .info    = info,
             .format  = reader.string_view(0, 0),
             .samples = storage.samples,
         };

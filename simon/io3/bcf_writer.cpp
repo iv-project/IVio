@@ -185,6 +185,13 @@ void writer::write(record_view record) {
         }
     }
 
+    // copying the string into the buffer !TODO
+    {
+        auto oldSize = buffer.buffer.size();
+        buffer.buffer.resize(buffer.buffer.size() + info.size());
+        std::memcpy(buffer.buffer.data() + oldSize, info.data(), info.size());
+    }
+
     // overwrite l_shared with actuall correct data
     l_shared = buffer.buffer.size() - 8;
     bgzfPack<uint32_t>(l_shared, buffer.buffer.data());
