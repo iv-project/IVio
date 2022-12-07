@@ -8,9 +8,9 @@
 #include <optional>
 #include <ranges>
 
-namespace io3 {
+namespace io3::vcf {
 
-struct vcf_reader_view_record_view {
+struct reader_view_record_view {
     using string_view_list = std::span<std::string_view>;
 
     std::string_view     chrom;
@@ -25,15 +25,15 @@ struct vcf_reader_view_record_view {
     string_view_list     samples;
 };
 
-struct vcf_reader_view_iter {
-    using record_view = vcf_reader_view_record_view;
+struct reader_view_iter {
+    using record_view = reader_view_record_view;
     std::function<std::optional<record_view>()> next;
     std::optional<record_view> nextItem = next();
 
     auto operator*() const -> record_view {
        return *nextItem;
     }
-    auto operator++() -> vcf_reader_view_iter& {
+    auto operator++() -> reader_view_iter& {
         nextItem = next();
         return *this;
     }
@@ -44,29 +44,29 @@ struct vcf_reader_view_iter {
 
 
 template <reader_and_dropper_c Reader>
-struct vcf_reader {
+struct reader_impl {
     Reader reader;
     size_t lastUsed{};
 
-    using record_view = vcf_reader_view_record_view;
-    using iter        = vcf_reader_view_iter;
+    using record_view = reader_view_record_view;
+    using iter        = reader_view_iter;
 
     template <typename R>
-    vcf_reader(R&& r)
+    reader_impl(R&& r)
         : reader{std::move(r)}
     {
         readHeader();
     }
 
-    vcf_reader(vcf_reader const&) = delete;
-    vcf_reader(vcf_reader&& _other) noexcept = default;
-    ~vcf_reader() = default;
+    reader_impl(reader_impl const&) = delete;
+    reader_impl(reader_impl&& _other) noexcept = default;
+    ~reader_impl() = default;
 
 
-    friend auto begin(vcf_reader& reader) {
+    friend auto begin(reader_impl& reader) {
         return iter{[&reader]() { return reader.next(); }};
     }
-    friend auto end(vcf_reader const&) {
+    friend auto end(reader_impl const&) {
         return nullptr;
     }
 
@@ -174,10 +174,13 @@ struct vcf_reader {
 };
 
 template <typename Reader>
-vcf_reader(Reader&& reader) -> vcf_reader<io3::buffered_reader<Reader>>;
+reader_impl(Reader&& reader) -> reader_impl<io3::buffered_reader<Reader>>;
 
 template <reader_and_dropper_c Reader>
-vcf_reader(Reader&& reader) -> vcf_reader<Reader>;
+reader_impl(Reader&& reader) -> reader_impl<Reader>;
 
-static_assert(record_reader_c<vcf_reader<io3::buffered_reader<io3::file_reader>>>);
+template <typename Reader>
+using reader = reader_impl<Reader>;
+
+static_assert(record_reader_c<reader<io3::buffered_reader<io3::file_reader>>>);
 }

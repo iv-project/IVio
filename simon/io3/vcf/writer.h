@@ -1,5 +1,7 @@
 #pragma once
 
+#include "reader.h"
+
 #include <filesystem>
 #include <functional>
 #include <ostream>
@@ -7,12 +9,9 @@
 #include <variant>
 #include <span>
 
-#include "vcf_reader.h"
-
-
 namespace io3::vcf {
 
-using record_view = io3::vcf_reader_view_record_view;
+using record_view = reader_view_record_view;
 
 struct writer_config {
     // Source: file or stream

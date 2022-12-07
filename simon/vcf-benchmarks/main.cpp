@@ -106,14 +106,14 @@ int main(int argc, char** argv) {
 
 
     if (method == "io3_file" and ext == ".vcf") {
-        benchmark_io3(io3::vcf_reader{io3::file_reader(file.c_str())});
+        benchmark_io3(io3::vcf::reader{io3::file_reader(file.c_str())});
     } else if (method == "io3_mmap" and ext == ".vcf") {
-        benchmark_io3(io3::vcf_reader{io3::mmap_reader(file.c_str())});
+        benchmark_io3(io3::vcf::reader{io3::mmap_reader(file.c_str())});
     } else if (method == "io3_stream" and ext == ".vcf") {
         auto ifs = std::ifstream{file.c_str()};
-        benchmark_io3(io3::vcf_reader{io3::stream_reader(ifs)});
+        benchmark_io3(io3::vcf::reader{io3::stream_reader(ifs)});
     } else if (method == "io3_copy" and ext == ".vcf") {
-        auto reader = io3::vcf_reader{io3::file_reader(file.c_str())};
+        auto reader = io3::vcf::reader{io3::file_reader(file.c_str())};
         auto writer = io3::vcf::writer{{.output = file + ".out.vcf"}};
         benchmark_io3(reader, writer);
     } else if (method == "io3_file" and ext == ".bcf") {

@@ -1,4 +1,4 @@
-#include "vcf_writer.h"
+#include "writer.h"
 
 #include "../buffered_writer.h"
 #include "../file_writer.h"
