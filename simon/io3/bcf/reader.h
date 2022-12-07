@@ -9,7 +9,7 @@
 
 namespace io3::bcf {
 
-struct reader_view_record_view {
+struct record_view {
     using string_view_list = std::span<std::string_view>;
 
     std::string_view     chrom;
@@ -24,15 +24,14 @@ struct reader_view_record_view {
     string_view_list     samples;
 };
 
-struct reader_view_iter {
-    using record_view = reader_view_record_view;
+struct iter {
     std::function<std::optional<record_view>()> next;
     std::optional<record_view> nextItem = next();
 
     auto operator*() const -> record_view {
        return *nextItem;
     }
-    auto operator++() -> reader_view_iter& {
+    auto operator++() -> iter& {
         nextItem = next();
         return *this;
     }
@@ -47,9 +46,6 @@ template <reader_and_dropper_c Reader>
 struct reader_impl {
     Reader reader;
     size_t lastUsed{};
-
-    using record_view = reader_view_record_view;
-    using iter        = reader_view_iter;
 
     template <typename R>
     reader_impl(R&& r)

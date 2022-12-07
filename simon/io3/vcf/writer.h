@@ -11,8 +11,6 @@
 
 namespace io3::vcf {
 
-using record_view = reader_view_record_view;
-
 struct writer_config {
     // Source: file or stream
     std::variant<std::filesystem::path, std::reference_wrapper<std::ostream>> output;
