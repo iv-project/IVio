@@ -18,7 +18,7 @@ mkdir -p obj/io3/fasta obj/io3/bcf obj/io3/vcf
 g++ ${ARGS} -c ../io3/fasta/reader.cpp -o obj/io3/fasta/reader.o
 g++ ${ARGS} -c ../io3/fasta/writer.cpp -o obj/io3/fasta/writer.o
 g++ ${ARGS} -c ../io3/vcf/vcf_writer.cpp -o obj/io3/vcf/vcf_writer.o
-g++ ${ARGS} -c ../io3/bcf/bcf_writer.cpp -o obj/io3/bcf/bcf_writer.o
+g++ ${ARGS} -c ../io3/bcf/writer.cpp -o obj/io3/bcf/writer.o
 g++ ${ARGS} -c main.cpp -o obj/main.o
 g++ ${ARGS} -c seqan2.cpp -o obj/seqan2.o
 g++ ${ARGS} -c bio.cpp -o obj/bio.o

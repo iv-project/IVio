@@ -117,14 +117,14 @@ int main(int argc, char** argv) {
         auto writer = io3::vcf::writer{{.output = file + ".out.vcf"}};
         benchmark_io3(reader, writer);
     } else if (method == "io3_file" and ext == ".bcf") {
-         benchmark_io3(io3::bcf_reader{io3::bgzf_file_reader{file.c_str()}});
+         benchmark_io3(io3::bcf::reader{io3::bgzf_file_reader{file.c_str()}});
     } else if (method == "io3_mmap" and ext == ".bcf") {
-         benchmark_io3(io3::bcf_reader{io3::bgzf_mmap_reader{file.c_str()}});
+         benchmark_io3(io3::bcf::reader{io3::bgzf_mmap_reader{file.c_str()}});
     } else if (method == "io3_stream" and ext == ".bcf") {
         auto ifs = std::ifstream{file.c_str()};
-        benchmark_io3(io3::bcf_reader{io3::bgzf_stream_reader(ifs)});
+        benchmark_io3(io3::bcf::reader{io3::bgzf_stream_reader(ifs)});
     } else if (method == "io3_copy" and ext == ".bcf") {
-        auto reader = io3::bcf_reader{io3::bgzf_file_reader{io3::file_reader(file.c_str())}};
+        auto reader = io3::bcf::reader{io3::bgzf_file_reader{io3::file_reader(file.c_str())}};
         auto writer = io3::bcf::writer{{.output = file + ".out.bcf"}};
         benchmark_io3_bcf(reader, writer);
     } else {
