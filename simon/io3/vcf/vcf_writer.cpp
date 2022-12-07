@@ -1,9 +1,9 @@
 #include "vcf_writer.h"
 
-#include "buffered_writer.h"
-#include "file_writer.h"
-#include "stream_writer.h"
-#include "zlib_file_writer.h"
+#include "../buffered_writer.h"
+#include "../file_writer.h"
+#include "../stream_writer.h"
+#include "../zlib_file_writer.h"
 
 #include <cassert>
 

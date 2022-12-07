@@ -1,6 +1,6 @@
 #include "bcf_writer.h"
 
-#include "bgzf_writer.h"
+#include "../bgzf_writer.h"
 
 #include <cassert>
 #include <cstddef>

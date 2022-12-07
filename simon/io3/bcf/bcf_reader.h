@@ -1,9 +1,9 @@
 #pragma once
 
-#include "bgzf_reader.h"
-#include "buffered_reader.h"
-#include "file_reader.h"
-#include "vcf_reader.h"
+#include "../bgzf_reader.h"
+#include "../buffered_reader.h"
+#include "../file_reader.h"
+#include "../vcf/vcf_reader.h"
 
 namespace io3 {
 
