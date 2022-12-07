@@ -11,7 +11,7 @@
 
 namespace io3::bcf {
 
-using record_view = io3::vcf::reader_view_record_view;
+using record_view = reader_view_record_view;
 
 struct writer_config {
     // Source: file or stream

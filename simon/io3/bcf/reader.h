@@ -3,17 +3,53 @@
 #include "../bgzf_reader.h"
 #include "../buffered_reader.h"
 #include "../file_reader.h"
-#include "../vcf/reader.h"
+
+#include <functional>
+#include <unordered_map>
 
 namespace io3::bcf {
+
+struct reader_view_record_view {
+    using string_view_list = std::span<std::string_view>;
+
+    std::string_view     chrom;
+    int32_t              pos;
+    std::string_view     id;
+    std::string_view     ref;
+    string_view_list     alt;
+    std::optional<float> qual;
+    string_view_list     filter;
+    std::string_view     info;
+    std::string_view     format;
+    string_view_list     samples;
+};
+
+struct reader_view_iter {
+    using record_view = reader_view_record_view;
+    std::function<std::optional<record_view>()> next;
+    std::optional<record_view> nextItem = next();
+
+    auto operator*() const -> record_view {
+       return *nextItem;
+    }
+    auto operator++() -> reader_view_iter& {
+        nextItem = next();
+        return *this;
+    }
+    auto operator!=(std::nullptr_t) const {
+        return nextItem.has_value();
+    }
+};
+
+
 
 template <reader_and_dropper_c Reader>
 struct reader_impl {
     Reader reader;
     size_t lastUsed{};
 
-    using record_view = vcf::reader_view_record_view;
-    using iter        = vcf::reader_view_iter;
+    using record_view = reader_view_record_view;
+    using iter        = reader_view_iter;
 
     template <typename R>
     reader_impl(R&& r)
