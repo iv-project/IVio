@@ -3,7 +3,6 @@
 #include "meta.h"
 
 #include <filesystem>
-#include <functional>
 #include <istream>
 #include <memory>
 #include <variant>

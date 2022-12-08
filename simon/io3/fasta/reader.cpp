@@ -10,12 +10,9 @@
 
 namespace io3::fasta {
 struct reader_pimpl {
-    using Readers = std::variant<fasta_reader_impl<mmap_reader>,
-                                 fasta_reader_impl<buffered_reader<>>
-                                 >;
-    Readers reader;
+    fasta_reader_impl reader;
     reader_pimpl(std::filesystem::path file, bool)
-        : reader {[&]() -> Readers {
+        : reader {[&]() {
             if (file.extension() == ".fa") {
                 return fasta_reader_impl{mmap_reader{file.c_str()}};
             } else if (file.extension() == ".gz") {
@@ -25,7 +22,7 @@ struct reader_pimpl {
         }()}
     {}
     reader_pimpl(std::istream& file, bool compressed)
-        : reader {[&]() -> Readers {
+        : reader {[&]() {
             if (!compressed) {
                 return fasta_reader_impl{buffered_reader{stream_reader{file}}};
             } else {
@@ -43,9 +40,8 @@ reader::reader(reader_config config)
 reader::~reader() = default;
 
 auto begin(reader& _reader) -> reader::iter {
-    return reader::iter{std::visit([](auto& _reader) -> std::function<std::optional<fasta::record_view>()>{
-        return [&_reader]() { return _reader.next(); };
-    }, _reader.pimpl->reader)};
+    auto& r= _reader.pimpl->reader;
+    return {[&]() { return r.next(); }};
 }
 
 }

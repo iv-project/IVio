@@ -6,17 +6,16 @@
 
 namespace io3 {
 
-template <BufferedReadable Reader>
 struct fasta_reader_impl {
-    Reader reader;
+    VarBufferedReader reader;
     size_t lastUsed{};
     std::string s;
 
     using record_view = fasta::record_view;
     using iter        = fasta::iter;
 
-    fasta_reader_impl(Reader&& r)
-        : reader{std::move(r)}
+    fasta_reader_impl(VarBufferedReader reader)
+        : reader{std::move(reader)}
     {}
 
     fasta_reader_impl(fasta_reader_impl const&) = delete;
@@ -61,5 +60,5 @@ struct fasta_reader_impl {
     }
 };
 
-static_assert(record_reader_c<fasta_reader_impl<io3::buffered_reader<>>>);
+static_assert(record_reader_c<fasta_reader_impl>);
 }
