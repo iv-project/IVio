@@ -70,9 +70,9 @@ using zlib_file_reader   = zlib_reader_impl<buffered_reader<file_reader>>;
 using zlib_mmap_reader   = zlib_reader_impl<mmap_reader>;
 using zlib_stream_reader = zlib_reader_impl<buffered_reader<stream_reader>>;
 
-static_assert(reader_c<zlib_file_reader>);
-static_assert(reader_c<zlib_mmap_reader>);
-static_assert(reader_c<zlib_stream_reader>);
+static_assert(Readable<zlib_file_reader>);
+static_assert(Readable<zlib_mmap_reader>);
+static_assert(Readable<zlib_stream_reader>);
 
 
 }

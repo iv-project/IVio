@@ -159,7 +159,7 @@ using bgzf_file_reader   = bgzf_reader_impl<buffered_reader<file_reader>>;
 using bgzf_mmap_reader   = bgzf_reader_impl<mmap_reader>;
 using bgzf_stream_reader = bgzf_reader_impl<buffered_reader<stream_reader>>;
 
-static_assert(reader_c<bgzf_file_reader>);
-static_assert(reader_c<bgzf_mmap_reader>);
-static_assert(reader_c<bgzf_stream_reader>);
+static_assert(Readable<bgzf_file_reader>);
+static_assert(Readable<bgzf_mmap_reader>);
+static_assert(Readable<bgzf_stream_reader>);
 }

@@ -56,5 +56,5 @@ public:
     }
 };
 
-static_assert(reader_c<file_reader>);
+static_assert(Readable<file_reader>);
 }

@@ -13,7 +13,7 @@ namespace io3 {
  * - read: reads data into a given buffer
  */
 template <typename T>
-concept reader_c = requires(T t) {
+concept Readable = requires(T t) {
     { t.read(std::span<char>{}) } -> std::same_as<size_t>;
 };
 

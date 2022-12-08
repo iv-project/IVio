@@ -8,7 +8,7 @@
 
 namespace io3 {
 
-template <reader_c Reader, size_t minV = 2<<12>
+template <Readable Reader, size_t minV = 2<<12>
 class buffered_reader : public Reader {
     std::vector<char> buf = []() { auto vec = std::vector<char>{}; vec.reserve(minV); return vec; }();
     int inPos{};

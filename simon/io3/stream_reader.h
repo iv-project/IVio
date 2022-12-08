@@ -29,5 +29,5 @@ public:
     }
 };
 
-static_assert(reader_c<stream_reader>);
+static_assert(Readable<stream_reader>);
 }
