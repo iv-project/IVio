@@ -2,8 +2,9 @@
 
 #include "record.h"
 
-#include "../bgzf_reader.h"
 #include "../buffered_reader.h"
+
+#include "../bgzf_reader.h"
 #include "../file_reader.h"
 
 #include <functional>
@@ -29,28 +30,26 @@ struct iter {
 
 
 
-template <BufferedReadable Reader>
-struct reader_impl {
-    Reader reader;
+struct reader {
+    VarBufferedReader _reader;
     size_t lastUsed{};
 
-    template <typename R>
-    reader_impl(R&& r)
-        : reader{std::forward<R>(r)}
+    reader(VarBufferedReader r)
+        : _reader{std::move(r)}
     {
         readHeader();
     }
 
 
-    reader_impl(reader_impl const&) = delete;
-    reader_impl(reader_impl&& _other) noexcept = default;
-    ~reader_impl() = default;
+    reader(reader const&) = delete;
+    reader(reader&& _other) noexcept = default;
+    ~reader() = default;
 
 
-    friend auto begin(reader_impl& reader) {
-        return iter{[&reader]() { return reader.next(); }};
+    friend auto begin(reader& _reader) -> iter {
+        return iter{[&_reader]() { return _reader.next(); }};
     }
-    friend auto end(reader_impl const&) {
+    friend auto end(reader const&) {
         return nullptr;
     }
 
@@ -116,27 +115,27 @@ struct reader_impl {
     }
 
     void readHeader() {
-        auto [ptr, size] = reader.read(9);
+        auto [ptr, size] = _reader.read(9);
 
         if (size < 9) throw "something went wrong reading bcf file (1)";
 
         size_t txt_len = io3::bgzfUnpack<uint32_t>(ptr + 5);
-        reader.read(9 + txt_len); // read complete header !TODO safe header for future processing
-        headerBuffer = std::string{reader.string_view(9, 9+txt_len)};
+        _reader.read(9 + txt_len); // read complete header !TODO safe header for future processing
+        headerBuffer = std::string{_reader.string_view(9, 9+txt_len)};
         parseHeader();
-        reader.dropUntil(9 + txt_len);
+        _reader.dropUntil(9 + txt_len);
     }
 
     auto next() -> std::optional<record_view> {
-        reader.dropUntil(lastUsed);
-        auto [ptr, size] = reader.read(8);
+        _reader.dropUntil(lastUsed);
+        auto [ptr, size] = _reader.read(8);
         if (size == 0) return std::nullopt;
         if (size < 8) throw "something went wrong reading bcf file (2)";
 
         auto l_shared = io3::bgzfUnpack<uint32_t>(ptr+0);
         auto l_indiv  = io3::bgzfUnpack<uint32_t>(ptr+4);
         auto flen = l_shared + l_indiv + 8;
-        auto [ptr2, size2] = reader.read(flen);
+        auto [ptr2, size2] = _reader.read(flen);
         if (size2 < flen) throw "something went wrong reading bcf file (3)";
         if (size2 < 32+3) throw "something went worng reading bcf file (4)";
         auto chromId  = io3::bgzfUnpack<int32_t>(ptr2 + 8);
@@ -233,20 +232,12 @@ struct reader_impl {
             .qual    = qual,
             .filter  = storage.filters,
             .info    = info,
-            .format  = reader.string_view(0, 0),
+            .format  = _reader.string_view(0, 0),
             .samples = storage.samples,
         };
     }
 };
 
-template <typename Reader>
-reader_impl(Reader&& reader) -> reader_impl<VarBufferedReader>;
 
-template <BufferedReadable Reader>
-reader_impl(Reader&& reader) -> reader_impl<VarBufferedReader>;
-
-template <BufferedReadable Reader>
-using reader = reader_impl<Reader>;
-
-static_assert(record_reader_c<reader<VarBufferedReader>>);
+static_assert(record_reader_c<reader>);
 }
