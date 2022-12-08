@@ -13,16 +13,16 @@ namespace io3::vcf {
 struct record_view {
     using string_view_list = std::span<std::string_view>;
 
-    std::string_view     chrom;
-    int32_t              pos;
-    std::string_view     id;
-    std::string_view     ref;
-    string_view_list     alt;
-    std::optional<float> qual;
-    string_view_list     filter;
-    string_view_list     info;
-    string_view_list     formats;
-    string_view_list     samples;
+    std::string_view            chrom;
+    int32_t                     pos;
+    std::string_view            id;
+    std::string_view            ref;
+    string_view_list            alt;
+    std::optional<float>        qual;
+    string_view_list            filter;
+    string_view_list            info;
+    string_view_list            formats;
+    std::span<string_view_list> samples;
 };
 
 struct iter {
@@ -108,7 +108,8 @@ struct reader_impl {
         std::vector<std::string_view> filters;
         std::vector<std::string_view> infos;
         std::vector<std::string_view> formats;
-        std::vector<std::string_view> samples;
+        std::vector<std::string_view> samples_fields;
+        std::vector<std::span<std::string_view>> samples;
     } storage;
 
     template <size_t ct, char sep>
@@ -154,7 +155,21 @@ struct reader_impl {
         if(infos == ".") storage.infos.clear();
 
         clearAndSplit(storage.formats, formats, ':');
-        clearAndSplit(storage.samples, samples, ':');
+
+        storage.samples_fields.clear();
+        auto field_groups = std::vector<size_t>{0};
+        for (auto v : std::views::split(samples, '\t')) {
+            for (auto v2 : std::views::split(v, ':')) {
+                storage.samples_fields.emplace_back(v2.begin(), v2.end());
+            }
+            field_groups.emplace_back(ssize(storage.samples_fields));
+        }
+
+        storage.samples.clear();
+        for (auto i{1}; i < ssize(field_groups); ++i) {
+            auto iter = begin(storage.samples_fields);
+            storage.samples.emplace_back(iter + field_groups[i-1], iter + field_groups[i]);
+        }
 
 
         return record_view {

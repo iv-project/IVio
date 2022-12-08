@@ -100,9 +100,18 @@ void writer::write(record_view record) {
     join(formats, ':');
 
     if (!samples.empty()) {
-        ss += samples[0];
+        auto join = [&](auto const& s) {
+            if (s.empty()) return;
+            ss += s[0];
+            for (auto i{1}; i < ssize(s); ++i) {
+                ss += ':';
+                ss += s[i];
+            }
+        };
+        join(samples[0]);
         for (size_t i{1}; i < samples.size(); ++i) {
-            ss += ':'; ss += samples[i];
+            ss += '\t';
+            join(samples[i]);
         }
     }
     ss += '\n';

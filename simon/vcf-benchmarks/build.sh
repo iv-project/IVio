@@ -1,7 +1,7 @@
 #!/usr/bin/bash
 cd "$(dirname "$0")"
 
-FLAGS="-march=native -O3 -DNDEBUG"
+FLAGS="-march=native -O3 -DNDEBUG -s"
 #FLAGS="-O0 -ggdb -fsanitize=address"
 #FLAGS="-O0 -ggdb"
 #FLAGS="-march=native -O3 -DNDEBUG -ggdb"
@@ -24,4 +24,4 @@ g++ ${ARGS} -c seqan2.cpp -o obj/seqan2.o
 g++ ${ARGS} -c bio.cpp -o obj/bio.o
 
 #g++ $(find obj | grep \.o\$) -lasan -lz-ng -lz  -o benchmark
-g++ $(find obj | grep \.o\$) -lz-ng -lz  -o benchmark
+g++ $(find obj | grep \.o\$) -lz-ng -lz  -o benchmark -s
