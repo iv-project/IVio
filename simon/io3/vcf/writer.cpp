@@ -6,6 +6,7 @@
 #include "../zlib_file_writer.h"
 
 #include <cassert>
+#include <charconv>
 
 namespace io3::vcf {
 

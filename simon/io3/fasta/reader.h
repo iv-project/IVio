@@ -29,6 +29,9 @@ private:
     std::unique_ptr<reader_pimpl> pimpl;
 
 public:
+    std::vector<std::tuple<std::string, std::string>> header;
+    std::vector<std::string> genotypes;
+
     reader(reader_config config);
     ~reader();
 
