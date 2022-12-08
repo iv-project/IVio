@@ -1,6 +1,6 @@
 #include "reader.h"
 
-#include "reader_impl.h"
+#include "../buffered_reader.h"
 #include "../file_reader.h"
 #include "../mmap_reader.h"
 #include "../stream_reader.h"
@@ -10,26 +10,60 @@
 
 namespace io3::fasta {
 struct reader_pimpl {
-    fasta_reader_impl reader;
+    VarBufferedReader reader;
+    size_t lastUsed{};
+    std::string s;
+
     reader_pimpl(std::filesystem::path file, bool)
-        : reader {[&]() {
+        : reader {[&]() -> VarBufferedReader {
             if (file.extension() == ".fa") {
-                return fasta_reader_impl{mmap_reader{file.c_str()}};
+                return mmap_reader{file.c_str()};
             } else if (file.extension() == ".gz") {
-                return fasta_reader_impl{buffered_reader{zlib_reader{mmap_reader{file.c_str()}}}};
+                return buffered_reader{zlib_reader{mmap_reader{file.c_str()}}};
             }
             throw std::runtime_error("unknown file extension");
         }()}
     {}
     reader_pimpl(std::istream& file, bool compressed)
-        : reader {[&]() {
+        : reader {[&]() -> VarBufferedReader {
             if (!compressed) {
-                return fasta_reader_impl{buffered_reader{stream_reader{file}}};
+                return buffered_reader{stream_reader{file}};
             } else {
-                return fasta_reader_impl{buffered_reader{zlib_reader{stream_reader{file}}}};
+                return buffered_reader{zlib_reader{stream_reader{file}}};
             }
         }()}
     {}
+
+    auto next() -> std::optional<record_view> {
+        auto startId = reader.readUntil('>', lastUsed);
+        if (reader.eof(startId)) return std::nullopt;
+        reader.dropUntil(startId+1);
+
+        auto endId = reader.readUntil('\n', 0);
+        if (reader.eof(endId)) return std::nullopt;
+
+        auto startSeq = endId+1;
+
+        // convert into dense string representation
+        s.clear();
+        {
+            auto s2 = startSeq;
+            do {
+                auto s1 = s2;
+                s2 = reader.readUntil('\n', s1);
+                s += reader.string_view(s1, s2);
+                s2 += 1;
+            } while (!reader.eof(s2) and reader.string_view(s2, s2+1)[0] != '>');
+            lastUsed = s2;
+        }
+
+
+        return record_view {
+            .id  = reader.string_view(0,        endId),
+            .seq = s,
+        };
+    }
+
 };
 
 reader::reader(reader_config config)
@@ -39,9 +73,12 @@ reader::reader(reader_config config)
 {}
 reader::~reader() = default;
 
+auto reader::next() -> std::optional<record_view> {
+    return pimpl->next();
+}
+
 auto begin(reader& _reader) -> reader::iter {
-    auto& r= _reader.pimpl->reader;
-    return {[&]() { return r.next(); }};
+    return {_reader};
 }
 
 }
