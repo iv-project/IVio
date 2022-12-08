@@ -34,36 +34,6 @@ struct reader_pimpl {
         }()}
     {}
 
-    auto next() -> std::optional<record_view> {
-        auto startId = reader.readUntil('>', lastUsed);
-        if (reader.eof(startId)) return std::nullopt;
-        reader.dropUntil(startId+1);
-
-        auto endId = reader.readUntil('\n', 0);
-        if (reader.eof(endId)) return std::nullopt;
-
-        auto startSeq = endId+1;
-
-        // convert into dense string representation
-        s.clear();
-        {
-            auto s2 = startSeq;
-            do {
-                auto s1 = s2;
-                s2 = reader.readUntil('\n', s1);
-                s += reader.string_view(s1, s2);
-                s2 += 1;
-            } while (!reader.eof(s2) and reader.string_view(s2, s2+1)[0] != '>');
-            lastUsed = s2;
-        }
-
-
-        return record_view {
-            .id  = reader.string_view(0,        endId),
-            .seq = s,
-        };
-    }
-
 };
 
 reader::reader(reader_config config)
@@ -74,7 +44,37 @@ reader::reader(reader_config config)
 reader::~reader() = default;
 
 auto reader::next() -> std::optional<record_view> {
-    return pimpl->next();
+    auto& reader   = pimpl->reader;
+    auto& lastUsed = pimpl->lastUsed;
+    auto& s        = pimpl->s;
+
+    auto startId = reader.readUntil('>', lastUsed);
+    if (reader.eof(startId)) return std::nullopt;
+    reader.dropUntil(startId+1);
+
+    auto endId = reader.readUntil('\n', 0);
+    if (reader.eof(endId)) return std::nullopt;
+
+    auto startSeq = endId+1;
+
+    // convert into dense string representation
+    s.clear();
+    {
+        auto s2 = startSeq;
+        do {
+            auto s1 = s2;
+            s2 = reader.readUntil('\n', s1);
+            s += reader.string_view(s1, s2);
+            s2 += 1;
+        } while (!reader.eof(s2) and reader.string_view(s2, s2+1)[0] != '>');
+        lastUsed = s2;
+    }
+
+
+    return record_view {
+        .id  = reader.string_view(0,        endId),
+        .seq = s,
+    };
 }
 
 auto begin(reader& _reader) -> reader::iter {
