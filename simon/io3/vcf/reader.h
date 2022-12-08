@@ -4,7 +4,6 @@
 
 #include "../buffered_reader.h"
 
-#include <functional>
 #include <memory>
 #include <optional>
 #include <tuple>
@@ -40,14 +39,14 @@ public:
 };
 
 struct reader::iter {
-    std::function<std::optional<record_view>()> next;
-    std::optional<record_view> nextItem = next();
+    reader& _reader;
+    std::optional<record_view> nextItem = _reader.next();
 
     auto operator*() const -> record_view {
        return *nextItem;
     }
     auto operator++() -> iter& {
-        nextItem = next();
+        nextItem = _reader.next();
         return *this;
     }
     auto operator!=(std::nullptr_t) const {

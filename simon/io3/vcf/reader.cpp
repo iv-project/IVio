@@ -166,6 +166,6 @@ auto reader::next() -> std::optional<record_view> {
 }
 
 auto begin(reader& _reader) -> reader::iter {
-    return reader::iter{[&_reader]() { return _reader.next(); }};
+    return reader::iter{_reader};
 }
 }
