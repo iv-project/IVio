@@ -20,7 +20,7 @@ struct record_view {
     string_view_list     alt;
     std::optional<float> qual;
     string_view_list     filter;
-    std::string_view     info;
+    string_view_list     info;
     std::string_view     format;
     string_view_list     samples;
 };
@@ -106,6 +106,7 @@ struct reader_impl {
     struct {
         std::vector<std::string_view> alts;
         std::vector<std::string_view> filters;
+        std::vector<std::string_view> infos;
         std::vector<std::string_view> samples;
     } storage;
 
@@ -134,24 +135,24 @@ struct reader_impl {
         auto res = readLine<10, '\t'>();
         if (!res) return std::nullopt;
 
-        auto [chrom, pos, id, ref, alt, qual, filters, info, format, samples] = *res;
+        auto [chrom, pos, id, ref, alt, qual, filters, infos, format, samples] = *res;
 
-        storage.alts.clear();
-        for (auto && v : std::views::split(alt, ',')) {
-            storage.alts.emplace_back(v.begin(), v.end());
-        }
 
-        storage.filters.clear();
-        if (filters != ".") {
-            for (auto && v : std::views::split(filters, ';')) {
-                storage.filters.emplace_back(v.begin(), v.end());
+        auto clearAndSplit = [&](std::vector<std::string_view>& targetVec, std::string_view str, char d) {
+            targetVec.clear();
+            for (auto && v : std::views::split(str, d)) {
+                targetVec.emplace_back(v.begin(), v.end());
             }
-        }
+        };
 
-        storage.samples.clear();
-        for (auto && v : std::views::split(samples, ' ')) {
-            storage.samples.emplace_back(v.begin(), v.end());
-        }
+        clearAndSplit(storage.alts, alt, ',');
+        clearAndSplit(storage.filters, filters, ';');
+        if (filters == ".") storage.filters.clear();
+
+        clearAndSplit(storage.infos, infos, ';');
+        if(infos == ".") storage.infos.clear();
+
+        clearAndSplit(storage.samples, samples, ' ');
 
 
         return record_view {
@@ -162,7 +163,7 @@ struct reader_impl {
             .alt     = storage.alts,
             .qual    = convertTo<float>(reader, qual),
             .filter  = storage.filters,
-            .info    = info,
+            .info    = storage.infos,
             .format  = format,
             .samples = storage.samples,
         };
