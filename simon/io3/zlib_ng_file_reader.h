@@ -67,9 +67,9 @@ struct zlib_ng_reader_impl {
     }
 };
 
-using zlib_ng_file_reader   = zlib_ng_reader_impl<buffered_reader<file_reader>>;
+using zlib_ng_file_reader   = zlib_ng_reader_impl<buffered_reader<>>;
 using zlib_ng_mmap_reader   = zlib_ng_reader_impl<mmap_reader>;
-using zlib_ng_stream_reader = zlib_ng_reader_impl<buffered_reader<stream_reader>>;
+using zlib_ng_stream_reader = zlib_ng_reader_impl<buffered_reader<>>;
 
 static_assert(Readable<zlib_ng_file_reader>);
 static_assert(Readable<zlib_ng_mmap_reader>);

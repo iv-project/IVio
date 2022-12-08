@@ -61,5 +61,5 @@ struct fasta_reader_impl {
     }
 };
 
-static_assert(record_reader_c<fasta_reader_impl<io3::buffered_reader<io3::file_reader>>>);
+static_assert(record_reader_c<fasta_reader_impl<io3::buffered_reader<>>>);
 }

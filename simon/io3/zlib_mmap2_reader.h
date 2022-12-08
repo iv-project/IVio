@@ -120,6 +120,11 @@ struct zlib_mmap2_reader : protected mmap_reader {
         }
     }
 
+    auto read(size_t ct) -> std::tuple<char const*, size_t> {
+        return {nullptr, 0}; //!TODO this is broken
+    }
+
+
     void dropUntil(size_t i) {
         queue.dropUntil(i);
         filesize = filesize - i;

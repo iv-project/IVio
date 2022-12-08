@@ -28,6 +28,7 @@ template <typename T>
 concept BufferedReadable = requires(T t) {
     { t.readUntil(char{}, size_t{}) } -> std::same_as<size_t>;
     { t.dropUntil(size_t{}) } -> std::same_as<void>;
+    { t.read(size_t{}) } -> std::same_as<std::tuple<char const*, size_t>>;
     { t.eof(size_t{}) } -> std::same_as<bool>;
     { t.string_view(size_t{}, size_t{}) } -> std::same_as<std::string_view>;
 };

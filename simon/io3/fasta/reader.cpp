@@ -11,9 +11,7 @@
 namespace io3::fasta {
 struct reader_pimpl {
     using Readers = std::variant<fasta_reader_impl<mmap_reader>,
-                                 fasta_reader_impl<buffered_reader<stream_reader>>,
-                                 fasta_reader_impl<buffered_reader<zlib_mmap_reader>>,
-                                 fasta_reader_impl<buffered_reader<zlib_stream_reader>>
+                                 fasta_reader_impl<buffered_reader<>>
                                  >;
     Readers reader;
     reader_pimpl(std::filesystem::path file, bool)
@@ -21,7 +19,7 @@ struct reader_pimpl {
             if (file.extension() == ".fa") {
                 return fasta_reader_impl{mmap_reader{file.c_str()}};
             } else if (file.extension() == ".gz") {
-                return fasta_reader_impl{buffered_reader{zlib_mmap_reader{file.c_str()}}};
+                return fasta_reader_impl{buffered_reader{zlib_reader{mmap_reader{file.c_str()}}}};
             }
             throw std::runtime_error("unknown file extension");
         }()}
@@ -31,7 +29,7 @@ struct reader_pimpl {
             if (!compressed) {
                 return fasta_reader_impl{buffered_reader{stream_reader{file}}};
             } else {
-                return fasta_reader_impl{buffered_reader{zlib_stream_reader{file}}};
+                return fasta_reader_impl{buffered_reader{zlib_reader{stream_reader{file}}}};
             }
         }()}
     {}
