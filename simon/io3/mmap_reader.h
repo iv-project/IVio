@@ -95,5 +95,5 @@ public:
     }
 };
 
-static_assert(reader_and_dropper_c<mmap_reader>);
+static_assert(BufferedReadable<mmap_reader>);
 }

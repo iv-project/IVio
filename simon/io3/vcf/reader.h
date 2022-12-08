@@ -42,7 +42,7 @@ struct iter {
 };
 
 
-template <reader_and_dropper_c Reader>
+template <BufferedReadable Reader>
 struct reader_impl {
     Reader reader;
     size_t lastUsed{};
@@ -200,7 +200,7 @@ struct reader_impl {
 template <typename Reader>
 reader_impl(Reader&& reader) -> reader_impl<io3::buffered_reader<Reader>>;
 
-template <reader_and_dropper_c Reader>
+template <BufferedReadable Reader>
 reader_impl(Reader&& reader) -> reader_impl<Reader>;
 
 template <typename Reader>

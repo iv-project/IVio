@@ -120,7 +120,7 @@ struct ZlibContext {
     }
 };
 
-template <reader_and_dropper_c Reader>
+template <BufferedReadable Reader>
 struct bgzf_reader_impl {
     Reader      file;
     ZlibContext zlibCtx;

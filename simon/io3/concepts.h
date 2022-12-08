@@ -25,7 +25,7 @@ concept Readable = requires(T t) {
  * - string_view: returns a view to a buffer range as returned by readUntil
  */
 template <typename T>
-concept reader_and_dropper_c = requires(T t) {
+concept BufferedReadable = requires(T t) {
     { t.readUntil(char{}, size_t{}) } -> std::same_as<size_t>;
     { t.dropUntil(size_t{}) } -> std::same_as<void>;
     { t.eof(size_t{}) } -> std::same_as<bool>;

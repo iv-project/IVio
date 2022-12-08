@@ -134,5 +134,5 @@ struct zlib_mmap2_reader : protected mmap_reader {
     }
 };
 
-static_assert(reader_and_dropper_c<zlib_mmap2_reader>);
+static_assert(BufferedReadable<zlib_mmap2_reader>);
 }

@@ -77,5 +77,5 @@ public:
     }
 };
 
-static_assert(reader_and_dropper_c<buffered_reader<file_reader>>);
+static_assert(BufferedReadable<buffered_reader<file_reader>>);
 }
