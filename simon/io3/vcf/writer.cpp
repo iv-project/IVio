@@ -47,7 +47,7 @@ writer::~writer() {
 void writer::write(record_view record) {
     assert(pimpl);
 
-    auto const& [chrom, pos, id, ref, alt, qual, filters, infos, format, samples] = record;
+    auto const& [chrom, pos, id, ref, alt, qual, filters, infos, formats, samples] = record;
     auto ss = std::string{};
     ss += chrom; ss += '\t';
     ss += std::to_string(pos); ss += '\t';
@@ -97,12 +97,12 @@ void writer::write(record_view record) {
 
     if (!join(filters, ';')) ss += ".\n";
     join(infos, ';');
-    ss += format; ss += '\t';
+    join(formats, ':');
 
     if (!samples.empty()) {
         ss += samples[0];
         for (size_t i{1}; i < samples.size(); ++i) {
-            ss += ' '; ss += samples[i];
+            ss += ':'; ss += samples[i];
         }
     }
     ss += '\n';

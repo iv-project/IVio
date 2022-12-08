@@ -21,7 +21,7 @@ struct record_view {
     std::optional<float> qual;
     string_view_list     filter;
     string_view_list     info;
-    std::string_view     format;
+    string_view_list     formats;
     string_view_list     samples;
 };
 
@@ -107,6 +107,7 @@ struct reader_impl {
         std::vector<std::string_view> alts;
         std::vector<std::string_view> filters;
         std::vector<std::string_view> infos;
+        std::vector<std::string_view> formats;
         std::vector<std::string_view> samples;
     } storage;
 
@@ -135,7 +136,7 @@ struct reader_impl {
         auto res = readLine<10, '\t'>();
         if (!res) return std::nullopt;
 
-        auto [chrom, pos, id, ref, alt, qual, filters, infos, format, samples] = *res;
+        auto [chrom, pos, id, ref, alt, qual, filters, infos, formats, samples] = *res;
 
 
         auto clearAndSplit = [&](std::vector<std::string_view>& targetVec, std::string_view str, char d) {
@@ -152,7 +153,8 @@ struct reader_impl {
         clearAndSplit(storage.infos, infos, ';');
         if(infos == ".") storage.infos.clear();
 
-        clearAndSplit(storage.samples, samples, ' ');
+        clearAndSplit(storage.formats, formats, ':');
+        clearAndSplit(storage.samples, samples, ':');
 
 
         return record_view {
@@ -164,7 +166,7 @@ struct reader_impl {
             .qual    = convertTo<float>(reader, qual),
             .filter  = storage.filters,
             .info    = storage.infos,
-            .format  = format,
+            .formats = storage.formats,
             .samples = storage.samples,
         };
     }
