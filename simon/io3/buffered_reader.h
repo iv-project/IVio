@@ -1,11 +1,9 @@
 #pragma once
 
 #include "concepts.h"
-#include "file_reader.h"
 
 #include <functional>
 #include <memory>
-#include <ranges>
 #include <vector>
 
 namespace io3 {
@@ -29,18 +27,6 @@ struct VarReader {
 
 };
 
-template <Readable T, typename ...Args>
-auto make_var_reader(Args &&... args) -> VarReader {
-    auto sptr = std::make_shared<T>(std::forward<Args>(args)...);
-
-    VarReader reader;
-
-    reader.read = [sptr] (std::span<char> s) -> size_t {
-        return sptr->read(s);
-    };
-    return reader;
-}
-
 template <size_t minV = 2<<12>
 class buffered_reader {
     VarReader reader;
@@ -48,10 +34,6 @@ class buffered_reader {
     int inPos{};
 
 public:
-    template<Readable Reader>
-    buffered_reader(Reader&& _other)
-        : reader{make_var_reader<Reader>(std::forward<Reader>(_other))}
-    {}
     buffered_reader(VarReader reader)
         : reader{std::move(reader)}
     {}
@@ -154,29 +136,5 @@ struct VarBufferedReader {
     std::function<bool(size_t)>                            eof;
     std::function<std::string_view(size_t, size_t)>        string_view;
 };
-
-template <BufferedReadable T, typename ...Args>
-auto make_var_buffered_reader(Args &&... args) -> VarBufferedReader {
-    auto sptr = std::make_shared<T>(std::forward<Args>(args)...);
-
-    VarBufferedReader reader;
-    reader.readUntil = [sptr] (char c, size_t s) {
-        return sptr->readUntil(c, s);
-    };
-    reader.dropUntil = [sptr] (size_t s) {
-        return sptr->dropUntil(s);
-    };
-    reader.read = [sptr] (size_t s) {
-        return sptr->read(s);
-    };
-    reader.eof = [sptr] (size_t s) {
-        return sptr->eof(s);
-    };
-    reader.string_view = [sptr] (size_t s, size_t e) {
-        return sptr->string_view(s, e);
-    };
-    return reader;
-}
-
 
 }
