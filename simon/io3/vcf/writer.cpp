@@ -18,6 +18,10 @@ struct writer_pimpl {
 
     writer_config config;
     Writers writer;
+
+    bool finishedHeader{false};
+    std::vector<std::string> genotype;
+
     writer_pimpl(writer_config config)
         : config{config}
         , writer {[&]() -> Writers {
@@ -34,7 +38,15 @@ struct writer_pimpl {
 writer::writer(writer_config config)
     : pimpl{std::make_unique<writer_pimpl>(config)}
 {
+    auto ss = std::string{
+        "##fileformat=VCFv4.3\n"
+    };
+
+    std::visit([&](auto& writer) {
+       writer.write(ss, false);
+    }, pimpl->writer);
 }
+
 writer::~writer() {
     if (pimpl) {
         std::visit([&](auto& writer) {
@@ -43,9 +55,48 @@ writer::~writer() {
     }
 }
 
+void writer::writeHeader(std::string_view key, std::string_view value) {
+    assert(pimpl);
+    if (pimpl->finishedHeader) {
+        throw std::runtime_error("vcf header can't be changed after a record was written");
+    }
+    if (key == "fileformat") { // ignore request to write file format
+        return;
+    }
+
+    auto ss = std::string{};
+    ss.reserve(4 + key.size() + value.size());
+    ss = "##";
+    ss += key;
+    ss += '=';
+    ss += value;
+    ss += '\n';
+    std::visit([&](auto& writer) {
+       writer.write(ss, false);
+    }, pimpl->writer);
+}
+
+void writer::addGenotype(std::string genotype) {
+    assert(pimpl);
+    pimpl->genotype.emplace_back(std::move(genotype));
+}
+
 
 void writer::write(record_view record) {
     assert(pimpl);
+
+    if (not pimpl->finishedHeader) {
+        auto ss = std::string{"#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT"};
+        for (auto const& s : pimpl->genotype) {
+            ss += '\t' + s;
+        }
+        ss += '\n';
+        std::visit([&](auto& writer) {
+            writer.write(ss, false);
+        }, pimpl->writer);
+
+        pimpl->finishedHeader = true;
+    }
 
     auto const& [chrom, pos, id, ref, alt, qual, filters, infos, formats, samples] = record;
     auto ss = std::string{};

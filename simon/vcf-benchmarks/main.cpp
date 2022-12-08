@@ -63,6 +63,12 @@ void benchmark_io3(Reader&& reader) {
 
 template <typename Reader, typename Writer>
 void benchmark_io3(Reader& reader, Writer& writer) {
+    for (auto const& [key, value] : reader.header) {
+        writer.writeHeader(key, value);
+    }
+    for (auto gt : reader.genotypes) {
+        writer.addGenotype(gt);
+    }
     for (auto && view : reader) {
         writer.write(view);
     }

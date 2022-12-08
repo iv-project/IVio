@@ -66,28 +66,38 @@ struct reader_impl {
         return nullptr;
     }
 
-    std::vector<std::string> header;
-    std::string tableHeader;
+    std::vector<std::tuple<std::string, std::string>> header;
+    std::vector<std::string> genotypes;
 
     bool readHeaderLine() {
         auto [buffer, size] = reader.read(2);
         if (size >= 2 and buffer[0] == '#' and buffer[1] == '#') {
             auto start = 2;
-            auto end = reader.readUntil('\n', start);
-            header.emplace_back(reader.string_view(start, end));
+            auto mid = reader.readUntil('=', start);
+            if (reader.eof(mid)) return false;
+            auto end = reader.readUntil('\n', mid+1);
+            header.emplace_back(reader.string_view(start, mid), reader.string_view(mid+1, end));
             if (reader.eof(end)) return false;
             reader.dropUntil(end+1);
             return true;
         }
         return false;
     }
+
     void readHeader() {
         while (readHeaderLine()) {}
         auto [buffer, size] = reader.read(1);
         if (size >= 1 and buffer[0] == '#') {
             auto start = 1;
             auto end = reader.readUntil('\n', start);
-            tableHeader = reader.string_view(start, end);
+            auto tableHeader = reader.string_view(start, end);
+            for (auto v : std::views::split(tableHeader, '\t')) {
+                genotypes.emplace_back(v.begin(), v.end());
+            }
+            if (genotypes.size() < 9) {
+                throw std::runtime_error("Header description line is invalid");
+            }
+            genotypes.erase(begin(genotypes), begin(genotypes)+9);
             reader.dropUntil(end);
             if (!reader.eof(end)) reader.dropUntil(1);
         }

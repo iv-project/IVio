@@ -21,6 +21,7 @@ struct writer_config {
 
 
 struct writer_pimpl;
+
 struct writer {
 private:
     std::unique_ptr<writer_pimpl> pimpl;
@@ -28,6 +29,8 @@ private:
 public:
     writer(writer_config config);
     ~writer();
+    void writeHeader(std::string_view key, std::string_view value);
+    void addGenotype(std::string genotype);
     void write(record_view record);
 };
 
