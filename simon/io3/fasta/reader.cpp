@@ -19,7 +19,7 @@ struct reader_pimpl {
             if (file.extension() == ".fa") {
                 return mmap_reader{file.c_str()};
             } else if (file.extension() == ".gz") {
-                return buffered_reader{zlib_reader{mmap_reader{file.c_str()}}};
+                return zlib_reader{mmap_reader{file.c_str()}};
             }
             throw std::runtime_error("unknown file extension");
         }()}
@@ -27,9 +27,9 @@ struct reader_pimpl {
     reader_pimpl(std::istream& file, bool compressed)
         : reader {[&]() -> VarBufferedReader {
             if (!compressed) {
-                return buffered_reader{stream_reader{file}};
+                return stream_reader{file};
             } else {
-                return buffered_reader{zlib_reader{stream_reader{file}}};
+                return zlib_reader{stream_reader{file}};
             }
         }()}
     {}
