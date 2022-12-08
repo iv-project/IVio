@@ -253,13 +253,13 @@ struct reader_impl {
 };
 
 template <typename Reader>
-reader_impl(Reader&& reader) -> reader_impl<io3::buffered_reader<Reader, 1<<16>>;
+reader_impl(Reader&& reader) -> reader_impl<VarBufferedReader>;
 
 template <BufferedReadable Reader>
-reader_impl(Reader&& reader) -> reader_impl<Reader>;
+reader_impl(Reader&& reader) -> reader_impl<VarBufferedReader>;
 
 template <BufferedReadable Reader>
 using reader = reader_impl<Reader>;
 
-static_assert(record_reader_c<reader<io3::buffered_reader<io3::file_reader>>>);
+static_assert(record_reader_c<reader<VarBufferedReader>>);
 }

@@ -120,46 +120,38 @@ struct ZlibContext {
     }
 };
 
-template <BufferedReadable Reader>
-struct bgzf_reader_impl {
-    Reader      file;
-    ZlibContext zlibCtx;
+struct bgzf_reader {
+    VarBufferedReader reader;
+    ZlibContext       zlibCtx;
 
-    template <typename T>
-    bgzf_reader_impl(T&& name)
-        : file(std::forward<T>(name))
+    bgzf_reader(VarBufferedReader reader)
+        : reader{std::move(reader)}
     {}
 
-    bgzf_reader_impl(bgzf_reader_impl&& _other)
-        : file{std::move(_other.file)}
+    bgzf_reader(bgzf_reader&& _other)
+        : reader{std::move(reader)}
     {}
 
-    ~bgzf_reader_impl() = default;
+    ~bgzf_reader() = default;
 
     size_t read(std::ranges::sized_range auto&& range) {
         while(true) {
-            auto [ptr, avail_in] = file.read(18);
+            auto [ptr, avail_in] = reader.read(18);
             if (avail_in == 0) return 0;
             if (avail_in < 18) throw "failed reading (1)";
 
             size_t compressedLen = bgzfUnpack<uint16_t>(ptr + 16) + 1u;
-            auto [ptr2, avail_in2] = file.read(compressedLen);
+            auto [ptr2, avail_in2] = reader.read(compressedLen);
             if (avail_in2 < compressedLen) throw "failed reading (2)";
 
             assert(range.size() >= (1<<16));
 
             size_t size = zlibCtx.decompressBlock({ptr2+18, compressedLen-18}, {range.data(), range.size()});
-            file.dropUntil(compressedLen);
+            reader.dropUntil(compressedLen);
             return size;
         }
     }
 };
 
-using bgzf_file_reader   = bgzf_reader_impl<buffered_reader<file_reader>>;
-using bgzf_mmap_reader   = bgzf_reader_impl<mmap_reader>;
-using bgzf_stream_reader = bgzf_reader_impl<buffered_reader<stream_reader>>;
-
-static_assert(Readable<bgzf_file_reader>);
-static_assert(Readable<bgzf_mmap_reader>);
-static_assert(Readable<bgzf_stream_reader>);
+static_assert(Readable<bgzf_reader>);
 }

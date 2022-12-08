@@ -42,27 +42,25 @@ struct iter {
 };
 
 
-template <BufferedReadable Reader>
-struct reader_impl {
-    Reader reader;
+struct reader {
+    VarBufferedReader _reader;
     size_t lastUsed{};
 
-    template <typename R>
-    reader_impl(R&& r)
-        : reader{std::move(r)}
+    reader(VarBufferedReader reader)
+        : _reader{std::move(reader)}
     {
         readHeader();
     }
 
-    reader_impl(reader_impl const&) = delete;
-    reader_impl(reader_impl&& _other) noexcept = default;
-    ~reader_impl() = default;
+    reader(reader const&) = delete;
+    reader(reader&& _other) noexcept = default;
+    ~reader() = default;
 
 
-    friend auto begin(reader_impl& reader) {
-        return iter{[&reader]() { return reader.next(); }};
+    friend auto begin(reader& _reader) {
+        return iter{[&_reader]() { return _reader.next(); }};
     }
-    friend auto end(reader_impl const&) {
+    friend auto end(reader const&) {
         return nullptr;
     }
 
@@ -70,15 +68,15 @@ struct reader_impl {
     std::vector<std::string> genotypes;
 
     bool readHeaderLine() {
-        auto [buffer, size] = reader.read(2);
+        auto [buffer, size] = _reader.read(2);
         if (size >= 2 and buffer[0] == '#' and buffer[1] == '#') {
             auto start = 2;
-            auto mid = reader.readUntil('=', start);
-            if (reader.eof(mid)) return false;
-            auto end = reader.readUntil('\n', mid+1);
-            header.emplace_back(reader.string_view(start, mid), reader.string_view(mid+1, end));
-            if (reader.eof(end)) return false;
-            reader.dropUntil(end+1);
+            auto mid = _reader.readUntil('=', start);
+            if (_reader.eof(mid)) return false;
+            auto end = _reader.readUntil('\n', mid+1);
+            header.emplace_back(_reader.string_view(start, mid), _reader.string_view(mid+1, end));
+            if (_reader.eof(end)) return false;
+            _reader.dropUntil(end+1);
             return true;
         }
         return false;
@@ -86,11 +84,11 @@ struct reader_impl {
 
     void readHeader() {
         while (readHeaderLine()) {}
-        auto [buffer, size] = reader.read(1);
+        auto [buffer, size] = _reader.read(1);
         if (size >= 1 and buffer[0] == '#') {
             auto start = 1;
-            auto end = reader.readUntil('\n', start);
-            auto tableHeader = reader.string_view(start, end);
+            auto end = _reader.readUntil('\n', start);
+            auto tableHeader = _reader.string_view(start, end);
             for (auto v : std::views::split(tableHeader, '\t')) {
                 genotypes.emplace_back(v.begin(), v.end());
             }
@@ -98,13 +96,13 @@ struct reader_impl {
                 throw std::runtime_error("Header description line is invalid");
             }
             genotypes.erase(begin(genotypes), begin(genotypes)+9);
-            reader.dropUntil(end);
-            if (!reader.eof(end)) reader.dropUntil(1);
+            _reader.dropUntil(end);
+            if (!_reader.eof(end)) _reader.dropUntil(1);
         }
     }
 
     template <typename T>
-    static auto convertTo(Reader& reader, std::string_view view) {
+    static auto convertTo(std::string_view view) {
         T value;
         auto result = std::from_chars(begin(view), end(view), value);
         if (result.ec == std::errc::invalid_argument) {
@@ -127,22 +125,22 @@ struct reader_impl {
         auto res = std::array<std::string_view, ct>{};
         size_t start{};
         for (size_t i{}; i < ct-1; ++i) {
-            auto end = reader.readUntil(sep, start);
-            if (reader.eof(end)) return std::nullopt;
-            res[i] = reader.string_view(start, end);
+            auto end = _reader.readUntil(sep, start);
+            if (_reader.eof(end)) return std::nullopt;
+            res[i] = _reader.string_view(start, end);
             start = end+1;
         }
-        auto end = reader.readUntil('\n', start);
-        if (reader.eof(end)) return std::nullopt;
-        res.back() = reader.string_view(start, end);
+        auto end = _reader.readUntil('\n', start);
+        if (_reader.eof(end)) return std::nullopt;
+        res.back() = _reader.string_view(start, end);
         lastUsed = end;
-        if (!reader.eof(lastUsed)) lastUsed += 1;
+        if (!_reader.eof(lastUsed)) lastUsed += 1;
         return res;
     }
 
     auto next() -> std::optional<record_view> {
-        if (reader.eof(lastUsed)) return std::nullopt;
-        reader.dropUntil(lastUsed);
+        if (_reader.eof(lastUsed)) return std::nullopt;
+        _reader.dropUntil(lastUsed);
 
         auto res = readLine<10, '\t'>();
         if (!res) return std::nullopt;
@@ -184,11 +182,11 @@ struct reader_impl {
 
         return record_view {
             .chrom   = chrom,
-            .pos     = convertTo<int32_t>(reader, pos),
+            .pos     = convertTo<int32_t>(pos),
             .id      = id,
             .ref     = ref,
             .alt     = storage.alts,
-            .qual    = convertTo<float>(reader, qual),
+            .qual    = convertTo<float>(qual),
             .filter  = storage.filters,
             .info    = storage.infos,
             .formats = storage.formats,
@@ -197,14 +195,5 @@ struct reader_impl {
     }
 };
 
-template <typename Reader>
-reader_impl(Reader&& reader) -> reader_impl<io3::buffered_reader<Reader>>;
-
-template <BufferedReadable Reader>
-reader_impl(Reader&& reader) -> reader_impl<Reader>;
-
-template <typename Reader>
-using reader = reader_impl<Reader>;
-
-static_assert(record_reader_c<reader<io3::buffered_reader<io3::file_reader>>>);
+static_assert(record_reader_c<reader>);
 }
