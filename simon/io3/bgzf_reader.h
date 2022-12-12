@@ -66,6 +66,9 @@ struct ZlibContext {
         }
     }
 
+    ZlibContext(ZlibContext const&) = delete;
+    ZlibContext(ZlibContext&&) = delete;
+
     ~ZlibContext() noexcept {
         auto status = inflateEnd(&strm);
         if (status != Z_OK) {
@@ -74,8 +77,11 @@ struct ZlibContext {
             throw "BGZF inflateEnd() failed";
             #pragma GCC diagnostic pop
         }
-
     }
+
+    auto operator=(ZlibContext const&) -> ZlibContext = delete;
+    auto operator=(ZlibContext&&) -> ZlibContext = delete;
+
 
     void reset() {
         auto status = inflateReset(&strm);
@@ -128,9 +134,14 @@ struct bgzf_reader {
         : reader{std::move(reader)}
     {}
 
+    bgzf_reader(bgzf_reader const&) = delete;
     bgzf_reader(bgzf_reader&& _other)
-        : reader{std::move(reader)}
+        : reader{std::move(_other.reader)}
     {}
+
+    auto operator=(bgzf_reader const&) -> bgzf_reader& = delete;
+    auto operator=(bgzf_reader&&) -> bgzf_reader& = delete;
+
 
     ~bgzf_reader() = default;
 

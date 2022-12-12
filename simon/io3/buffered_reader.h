@@ -27,7 +27,7 @@ struct VarReader {
 
 };
 
-template <size_t minV = 2<<12>
+template <size_t minV = 1<<12>
 class buffered_reader {
     VarReader reader;
     std::vector<char> buf = []() { auto vec = std::vector<char>{}; vec.reserve(minV); return vec; }();
