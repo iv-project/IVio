@@ -4,7 +4,8 @@
 
 using namespace seqan;
 
-void seqan2_bench(std::string const& file) {
+void seqan2_bench(std::string_view _file) {
+    auto file = std::string{_file};
     VcfFileIn fileIn(toCString(file));
 
     VcfHeader header;

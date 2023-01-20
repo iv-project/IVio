@@ -1,12 +1,6 @@
 #include <bio/var_io/reader.hpp>
 
-template <typename... Ts>
-void noOpt(Ts&&...) {
-    asm("");
-}
-
-
-void bio_bench(std::string const& _file) {
+void bio_bench(std::string_view _file) {
 
     std::filesystem::path file{_file};
 

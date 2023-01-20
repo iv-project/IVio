@@ -24,6 +24,7 @@ g++ ${ARGS} -c ../io3/bcf/writer.cpp -o obj/io3/bcf/writer.o
 g++ ${ARGS} -c src/main.cpp -o obj/src/main.o
 g++ ${ARGS} -c src/seqan2.cpp -o obj/src/seqan2.o
 g++ ${ARGS} -c src/bio.cpp -o obj/src/bio.o
+g++ ${ARGS} -c src/io3.cpp -o obj/src/io3.o
 
 #g++ $(find obj | grep \.o\$) -lasan -lz-ng -lz  -o benchmark
 g++ $(find obj | grep \.o\$) -lz-ng -lz  -o benchmark
