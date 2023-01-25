@@ -1,7 +1,7 @@
 #!/usr/bin/bash
 cd "$(dirname "$0")"
 
-methods=(seqan2 seqan3 io3 io3_stream io2 io2-copy bio)
+methods=(seqan2 seqan3 io3 io3_stream io2 io2-copy bio direct)
 #methods=(io3)
 #methods=(direct io3_file io3_mmap io3_stream seqan2 seqan3 io2 io2-copy bio io3-auto-select)
 #methods=(io3_file io3_mmap io3_stream io3_ng_file io3_ng_mmap io3_ng_stream io3)

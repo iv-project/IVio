@@ -56,7 +56,7 @@ public:
     }
 
     auto read(size_t) -> std::tuple<char const*, size_t> {
-        return {buffer+inPos, filesize};
+        return {buffer+inPos, filesize-inPos};
     }
 
     void dropUntil(size_t i) {

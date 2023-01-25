@@ -22,5 +22,6 @@ g++ ${ARGS} -c src/seqan3.cpp -o obj/src/seqan3.o
 g++ ${ARGS} -c src/io2.cpp -o obj/src/io2.o
 g++ ${ARGS} -c src/bio.cpp -o obj/src/bio.o
 g++ ${ARGS} -c src/io3.cpp -o obj/src/io3.o
+g++ ${ARGS} -c src/direct.cpp -o obj/src/direct.o
 
-g++ $(find obj | grep \.o\$) -lz-ng -lz -o benchmark
+g++ $(find obj | grep \.o\$) -lz-ng -lz ${FLAGS} -o benchmark
