@@ -1,18 +1,6 @@
-#include <cassert>
-#include <cstring>
-#include <cstdint>
-#include <unistd.h>
-#include <array>
-#include <algorithm>
-#include <optional>
-#include <vector>
-#include <limits>
-#include <numeric>
-#include <variant>
-#include <iostream>
-#include <fstream>
+#include <string_view>
 #include <filesystem>
-
+#include <iostream>
 
 void seqan2_bench(std::string_view file);
 void seqan3_bench(std::string_view file);
