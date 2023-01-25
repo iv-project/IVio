@@ -1,28 +1,13 @@
-#include <cassert>
-#include <cstring>
-#include <cstdint>
-#include <unistd.h>
 #include <array>
-#include <algorithm>
-#include <optional>
-#include <vector>
-#include <limits>
-#include <numeric>
-#include <variant>
-#include <iostream>
+#include <cassert>
 #include <fstream>
+#include <io3/fasta/reader.h>
+#include <io3/fasta/writer.h>
+#include <iostream>
+#include <ranges>
 
-#include "file_reader.h"
-
-#include "mmap_file_reader.h"
-#include "zlib_reader.h"
-#include "zlib_mmap_reader.h"
-
-#include "io3/fasta/reader.h"
-#include "io3/fasta/writer.h"
-
-constexpr static std::array<char, 256> ccmap = []() {
-    std::array<char, 256> c;
+constexpr static auto ccmap = []() {
+    std::array<uint8_t, 256> c;
     c.fill(3);
     c['A'] = 0;
     c['C'] = 1;
@@ -34,28 +19,27 @@ constexpr static std::array<char, 256> ccmap = []() {
     c['g'] = 2;
     c['n'] = 3;
     c['t'] = 4;
-    c['\n'] = (char)0xff;
-    c['\r'] = (char)0xff;
-    c[' '] = (char)0xff;
-    c['\t'] = (char)0xff;
+    c['\n'] = 0xff;
+    c['\r'] = 0xff;
+    c[' ']  = 0xff;
+    c['\t'] = 0xff;
 
     return c;
 }();
 
-#include "fasta_reader_view.h"
-#include "fasta_reader_contigous.h"
-#include "fasta_reader_mmap.h"
-#include "fasta_reader_mmap2.h"
-//#include "fasta_reader_best.h"
-
-#include <ranges>
-#include <iostream>
+inline constexpr auto rank_view = std::views::transform([](char c) {
+    auto rank = ccmap[reinterpret_cast<uint8_t&>(c)];
+    if (rank == 0xff) {
+        throw "invalid variable";
+    }
+    return rank;
+});
 
 template <typename Reader>
 void benchmark_io3(Reader&& reader) {
     std::array<int, 5> ctChars{};
     for (auto && [id, seq] : reader) {
-        for (auto c : seq | seq_cleanuped_view) {
+        for (auto c : seq | rank_view) {
             assert(c < ctChars.size());
             ctChars[c] += 1;
         }
