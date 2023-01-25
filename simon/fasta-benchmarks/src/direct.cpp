@@ -21,8 +21,8 @@
 #include "io3/fasta/reader.h"
 #include "io3/fasta/writer.h"
 
-constexpr static std::array<char, 256> ccmap = []() {
-    std::array<char, 256> c;
+constexpr static std::array<uint8_t, 256> ccmap = []() {
+    std::array<uint8_t, 256> c;
     c.fill(3);
     c['A'] = 0;
     c['C'] = 1;
@@ -34,10 +34,10 @@ constexpr static std::array<char, 256> ccmap = []() {
     c['g'] = 2;
     c['n'] = 3;
     c['t'] = 4;
-    c['\n'] = (char)0xff;
-    c['\r'] = (char)0xff;
-    c[' '] = (char)0xff;
-    c['\t'] = (char)0xff;
+    c['\n'] = 0xff;
+    c['\r'] = 0xff;
+    c[' '] = 0xff;
+    c['\t'] = 0xff;
 
     return c;
 }();
@@ -48,40 +48,34 @@ constexpr static std::array<char, 256> ccmap = []() {
 #include "fasta_reader_mmap2.h"
 //#include "fasta_reader_best.h"
 
+#include <io3/mmap_reader.h>
+
 #include <ranges>
 #include <iostream>
 
 
 
 void direct_bench(std::filesystem::path path) {
-    auto reader = mmap_file_reader(path.c_str());
+    auto reader = io3::mmap_reader(path.c_str());
 
-
-    auto iter = begin(reader);
-    auto end_ = end(reader);
-
-    auto readUntil = [&](char c) {
-        auto ptr = (char const*)memchr(iter, c, end_-iter);
-        if (ptr == nullptr) {
-            return end_;
-        }
-        return ptr;
-    };
 
     std::array<int, 256> ctChars{};
 
-    iter = readUntil('>');
-    while (iter != end_) {
-        auto startSeq = readUntil('\n');
-        if (startSeq == end_) break;
-        if (startSeq+1  == end_) break;
-        for (iter = startSeq+1; iter < end_ and *iter != '>'; ++iter) {
-            auto c = ccmap[*iter];
+    reader.dropUntil(reader.readUntil('>', 0)); // drop header
+
+    while (!reader.eof(0)) {
+        auto [ptr, size] = reader.read(std::numeric_limits<uint64_t>::max());
+        auto buffer = std::string_view{ptr, size};
+        auto pos = buffer.find('\n', 0);
+        if (pos == std::string_view::npos) break;
+        if (++pos >= size) break;
+        for(;pos < size and buffer[pos] != '>'; ++pos) {
+            assert(pos < size);
+            assert(buffer[pos] < 256);
+            auto c = ccmap[buffer[pos]];
             ctChars[c] += 1;
         }
-        if (iter - begin(reader) >= 1'024ul * 1'024ul) {
-            reader.doneUntil(iter);
-        }
+        reader.dropUntil(pos);
     }
 
     size_t a{};
