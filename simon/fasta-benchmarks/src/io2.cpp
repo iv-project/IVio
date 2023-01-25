@@ -2,7 +2,7 @@
 
 #include <seqan3/utility/range/to.hpp>
 
-void io2_bench(std::string const& _file) {
+void io2_bench(std::string_view _file) {
     auto reader = io2::seq_io::reader {
         .input = _file,
 //        .alphabet = sgg_io::type<seqan3::dna4>, // by default dna5
@@ -25,7 +25,7 @@ void io2_bench(std::string const& _file) {
 
 
 
-void io2_copy_bench(std::string const& _file) {
+void io2_copy_bench(std::string_view _file) {
     auto reader = io2::seq_io::reader {
         .input = _file,
 //        .alphabet = sgg_io::type<seqan3::dna4>, // by default dna5

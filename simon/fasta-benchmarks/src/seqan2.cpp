@@ -2,7 +2,8 @@
 
 using namespace seqan;
 
-void seqan2_bench(std::string const& file) {
+void seqan2_bench(std::string_view _file) {
+    auto file = std::string{_file};
     SeqFileIn seqFileIn(toCString(file));
 
     std::array<int, 5> ctChars{};

@@ -1,6 +1,6 @@
 #include <seqan3/io/sequence_file/all.hpp>
 
-void seqan3_bench(std::string const& _file) {
+void seqan3_bench(std::string_view _file) {
     std::filesystem::path fasta_file{_file};
     auto reader = seqan3::sequence_file_input{fasta_file};
 

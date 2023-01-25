@@ -1,12 +1,6 @@
 #include <bio/seq_io/reader.hpp>
 
-template <typename... Ts>
-void noOpt(Ts&&...) {
-    asm("");
-}
-
-
-void bio_bench(std::string const& _file) {
+void bio_bench(std::string_view _file) {
 
     std::filesystem::path fasta_file{_file};
 
@@ -25,7 +19,3 @@ void bio_bench(std::string const& _file) {
     }
     std::cout << "total: " << a << "\n";
 }
-/*int main(int argc, char** argv) {
-    bio_bench(argv[1]);
-}*/
-

@@ -139,87 +139,68 @@ void benchmarkDirect(std::filesystem::path path) {
 }
 
 
-void seqan2_bench(std::string const& file);
-void seqan3_bench(std::string const& file);
-void io2_bench(std::string const& file);
-void io2_copy_bench(std::string const& file);
-void bio_bench(std::string const& file);
+void seqan2_bench(std::string_view file);
+void seqan3_bench(std::string_view file);
+void io2_bench(std::string_view file);
+void io2_copy_bench(std::string_view file);
+void bio_bench(std::string_view file);
+void io3_bench(std::string_view file, std::string_view method);
 
 int main(int argc, char** argv) {
-//    try {
-    if (argc != 3) return 0;
-    std::string method = argv[1];
-    std::string file = argv[2];
+    try {
+        if (argc != 3) return 0;
+        auto method = std::string_view{argv[1]};
+        auto file   = std::string_view{argv[2]};
 
-    auto ext = file.substr(file.size() - 3);
+        auto ext = file.substr(file.size() - 3);
 
-    if (method == "seqan2") {
-        seqan2_bench(file);
-        return 0;
-    } else if (method == "seqan3") {
-        seqan3_bench(file);
-        return 0;
-    } else if (method == "io2") {
-        io2_bench(file);
-        return 0;
-    } else if (method == "io2-copy") {
-        io2_copy_bench(file);
-        return 0;
-    } else if (method == "bio") {
-        bio_bench(file);
-        return 0;
+        if (method == "seqan2") {
+            seqan2_bench(file);
+            return 0;
+        } else if (method == "seqan3") {
+            seqan3_bench(file);
+            return 0;
+        } else if (method == "io2") {
+            io2_bench(file);
+            return 0;
+        } else if (method == "io2-copy") {
+            io2_copy_bench(file);
+            return 0;
+        } else if (method == "bio") {
+            bio_bench(file);
+            return 0;
+        } else if (method.starts_with("io3")) {
+            io3_bench(file, method);
+            return 0;
+        }
+
+
+        if (method == "direct" and ext == ".fa") {
+            benchmarkDirect(file);
+        } else if (method == "view" and ext == ".gz") {
+            benchmark(fasta_reader_view{zlib_reader(argv[2])});
+        } else if (method == "cont" and ext == ".gz") {
+            benchmark(fasta_reader_contigous{zlib_reader(argv[2])});
+        } else if (method == "view" and ext == ".fa") {
+            benchmark(fasta_reader_view{file_reader(argv[2])});
+        } else if (method == "cont" and ext == ".fa") {
+            benchmark(fasta_reader_contigous{file_reader(argv[2])});
+        } else if (method == "mmap_view" and ext == ".fa") {
+            benchmark(fasta_reader_mmap{mmap_file_reader(argv[2])});
+        } else if (method == "mmap_view" and ext == ".gz") {
+            benchmark(fasta_reader_view{zlib_mmap_reader(argv[2])});
+        } else if (method == "mmap_cont" and ext == ".gz") {
+            benchmark(fasta_reader_contigous{zlib_mmap_reader(argv[2])});
+        } else if (method == "mmap_view2" and ext == ".gz") {
+            benchmark(fasta_reader_mmap2{zlib_mmap_reader(argv[2])});
+        } else {
+            std::cout << "unknown\n";
+        }
+    } catch (std::exception const& e) {
+        std::cout << "exception(e): " << e.what() << "\n";
+    } catch(char const* what) {
+        std::cout << "exception(c): " << what << "\n";
+    } catch(std::string const& what) {
+        std::cout << "exception(s): " << what << "\n";
     }
-
-
-    if (method == "direct" and ext == ".fa") {
-        benchmarkDirect(file);
-    } else if (method == "io3") {
-        benchmark_io3(io3::fasta::reader{{.input = file}});
-    } else if (method == "io3_stream" and ext == ".fa") {
-        auto ifs = std::ifstream{file.c_str()};
-        benchmark_io3(io3::fasta::reader{{.input = ifs}});
-    } else if (method == "io3_stream" and ext == ".gz") {
-        auto ifs = std::ifstream{file.c_str()};
-        benchmark_io3(io3::fasta::reader{{.input = ifs, .compressed = true}});
-    } else if (method == "io3_read_write") {
-        auto reader = io3::fasta::reader{{.input = file}};
-        auto writer = io3::fasta::writer{{.output = file + ".out" + ext}};
-        benchmark_io3(reader, writer);
-    } else if (method == "io3_read_write_stream" and ext == ".fa") {
-        auto ifs = std::ifstream{file.c_str()};
-        auto ofs = std::ofstream{file + ".out.fa"};
-        auto reader = io3::fasta::reader{{.input = ifs, .compressed = false}};
-        auto writer = io3::fasta::writer{{.output = ofs, .compressed = false}};
-        benchmark_io3(reader, writer);
-    } else if (method == "io3_read_write_stream" and ext == ".gz") {
-        auto ifs = std::ifstream{file.c_str()};
-        auto ofs = std::ofstream{file + ".out.fa.gz"};
-        auto reader = io3::fasta::reader{{.input = ifs, .compressed = true}};
-        auto writer = io3::fasta::writer{{.output = ofs, .compressed = true}};
-        benchmark_io3(reader, writer);
-
-    } else if (method == "view" and ext == ".gz") {
-        benchmark(fasta_reader_view{zlib_reader(file.c_str())});
-    } else if (method == "cont" and ext == ".gz") {
-        benchmark(fasta_reader_contigous{zlib_reader(file.c_str())});
-    } else if (method == "view" and ext == ".fa") {
-        benchmark(fasta_reader_view{file_reader(file.c_str())});
-    } else if (method == "cont" and ext == ".fa") {
-        benchmark(fasta_reader_contigous{file_reader(file.c_str())});
-    } else if (method == "mmap_view" and ext == ".fa") {
-        benchmark(fasta_reader_mmap{mmap_file_reader(file.c_str())});
-    } else if (method == "mmap_view" and ext == ".gz") {
-        benchmark(fasta_reader_view{zlib_mmap_reader(file.c_str())});
-    } else if (method == "mmap_cont" and ext == ".gz") {
-        benchmark(fasta_reader_contigous{zlib_mmap_reader(file.c_str())});
-    } else if (method == "mmap_view2" and ext == ".gz") {
-        benchmark(fasta_reader_mmap2{zlib_mmap_reader(file.c_str())});
-    } else {
-        std::cout << "unknown\n";
-    }
-//    } catch(char const* what) {
-//        std::cout << "exception(c): " << what << "\n";
-//    } catch(std::string const& what) {
-//        std::cout << "exception(s): " << what << "\n";
-//    }
 }
