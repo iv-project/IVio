@@ -8,7 +8,7 @@
 
 constexpr static auto ccmap = []() {
     std::array<uint8_t, 256> c;
-    c.fill(3);
+    c.fill(0xff);
     c['A'] = 0;
     c['C'] = 1;
     c['G'] = 2;
@@ -19,10 +19,6 @@ constexpr static auto ccmap = []() {
     c['g'] = 2;
     c['n'] = 3;
     c['t'] = 4;
-    c['\n'] = 0xff;
-    c['\r'] = 0xff;
-    c[' ']  = 0xff;
-    c['\t'] = 0xff;
 
     return c;
 }();
@@ -30,7 +26,7 @@ constexpr static auto ccmap = []() {
 inline constexpr auto rank_view = std::views::transform([](char c) {
     auto rank = ccmap[reinterpret_cast<uint8_t&>(c)];
     if (rank == 0xff) {
-        throw "invalid variable";
+        throw "invalid character";
     }
     return rank;
 });
