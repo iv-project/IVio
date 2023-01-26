@@ -9,6 +9,7 @@ void io2_copy_bench(std::string_view file);
 void bio_bench(std::string_view file);
 void io3_bench(std::string_view file, std::string_view method);
 void direct_bench(std::filesystem::path path);
+void extreme_bench(std::filesystem::path path);
 
 int main(int argc, char** argv) {
     try {
@@ -30,6 +31,8 @@ int main(int argc, char** argv) {
             io3_bench(file, method);
         } else if (method == "direct") {
             direct_bench(file);
+        } else if (method == "extreme") {
+            extreme_bench(file);
         } else {
             throw std::runtime_error("unknown method: " + std::string{method});
         }
