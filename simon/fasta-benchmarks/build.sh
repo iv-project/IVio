@@ -1,8 +1,8 @@
 #!/usr/bin/bash
 cd "$(dirname "$0")"
 
-FLAGS="-march=native -O3 -DNDEBUG -s"
-#FLAGS="-O0 -ggdb -fsanitize=address"
+FLAGS="-march=native -O3 -DNDEBUG -s -Wall"
+#FLAGS="-O0 -ggdb -fsanitize=address -Wall"
 #FLAGS="-march=native -O3 -DNDEBUG -ggdb"
 #
 INCLUDES="-I ../../io2/include \

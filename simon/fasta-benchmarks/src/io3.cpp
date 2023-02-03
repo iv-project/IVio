@@ -32,7 +32,7 @@ inline constexpr auto rank_view = std::views::transform([](char c) {
 });
 
 template <typename Reader>
-void benchmark_io3(Reader&& reader) {
+static void benchmark_io3(Reader&& reader) {
     std::array<int, 5> ctChars{};
     for (auto && [id, seq] : reader) {
         for (auto c : seq | rank_view) {
@@ -50,7 +50,7 @@ void benchmark_io3(Reader&& reader) {
 }
 
 template <typename Reader, typename Writer>
-void benchmark_io3(Reader&& reader, Writer&& writer) {
+static void benchmark_io3(Reader&& reader, Writer&& writer) {
     for (auto && record : reader) {
         writer.write(record);
     }

@@ -13,7 +13,7 @@ void bio_bench(std::string_view _file) {
         }
     }
     size_t a{};
-    for (int i{0}; i<ctChars.size(); ++i) {
+    for (size_t i{0}; i<ctChars.size(); ++i) {
         std::cout << i << ": " << ctChars[i] << "\n";
         a += ctChars[i];
     }
