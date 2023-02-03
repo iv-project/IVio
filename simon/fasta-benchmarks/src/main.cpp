@@ -28,28 +28,32 @@ int main(int argc, char** argv) {
         int fastestRun{};
         auto fastestTime = std::numeric_limits<int>::max();
         int maxNbrOfRuns{5};
-        for (int i{}; i < maxNbrOfRuns; ++i) {
-            auto start  = std::chrono::high_resolution_clock::now();
+        try {
+            for (int i{}; i < maxNbrOfRuns; ++i) {
+                auto start  = std::chrono::high_resolution_clock::now();
 
-            auto r = [&]() {
-                if (method == "seqan2")           return seqan2_bench(file);
-                if (method == "seqan3")           return seqan3_bench(file);
-                if (method == "io2")              return io2_bench(file);
-                if (method == "io2-copy")         return io2_copy_bench(file);
-                if (method == "bio")              return bio_bench(file);
-                if (method.starts_with("io3_mt")) return io3_mt_bench(file, method);
-                if (method.starts_with("io3"))    return io3_bench(file, method);
-                if (method == "direct")           return direct_bench(file);
-                if (method == "extreme")          return extreme_bench(file);
-                throw std::runtime_error("unknown method: " + std::string{method});
-            }();
-            auto end  = std::chrono::high_resolution_clock::now();
-            auto diff = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
-            if (diff < fastestTime) {
-                bestResult = r;
-                fastestTime = diff;
-                fastestRun = i;
+                auto r = [&]() {
+                    if (method == "seqan2")           return seqan2_bench(file);
+                    if (method == "seqan3")           return seqan3_bench(file);
+                    if (method == "io2")              return io2_bench(file);
+                    if (method == "io2-copy")         return io2_copy_bench(file);
+                    if (method == "bio")              return bio_bench(file);
+                    if (method.starts_with("io3_mt")) return io3_mt_bench(file, method);
+                    if (method.starts_with("io3"))    return io3_bench(file, method);
+                    if (method == "direct")           return direct_bench(file);
+                    if (method == "extreme")          return extreme_bench(file);
+                    throw std::runtime_error("unknown method: " + std::string{method});
+                }();
+                auto end  = std::chrono::high_resolution_clock::now();
+                auto diff = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+                if (diff < fastestTime) {
+                    bestResult = r;
+                    fastestTime = diff;
+                    fastestRun = i;
+                }
             }
+        } catch(...){
+            bestResult = Result{}; // reset results, will cause this to be incorrect
         }
         auto groundTruth = io3_bench(file, "io3");
         // print results
