@@ -1,42 +1,16 @@
 #include "Result.h"
+#include "dna5_rank_view.h"
 
-#include <iostream>
 #include <cassert>
 #include <fstream>
 #include <io3/fasta/reader.h>
 #include <io3/fasta/writer.h>
-#include <ranges>
-
-constexpr static auto ccmap = []() {
-    std::array<uint8_t, 256> c;
-    c.fill(0xff);
-    c['A'] = 0;
-    c['C'] = 1;
-    c['G'] = 2;
-    c['N'] = 3;
-    c['T'] = 4;
-    c['a'] = 0;
-    c['c'] = 1;
-    c['g'] = 2;
-    c['n'] = 3;
-    c['t'] = 4;
-
-    return c;
-}();
-
-inline constexpr auto rank_view = std::views::transform([](char c) {
-    auto rank = ccmap[reinterpret_cast<uint8_t&>(c)];
-    if (rank == 0xff) {
-        throw "invalid character";
-    }
-    return rank;
-});
 
 template <typename Reader>
 static auto benchmark_io3(Reader&& reader) -> Result {
     Result result;
     for (auto && [id, seq] : reader) {
-        for (auto c : seq | rank_view) {
+        for (auto c : seq | dna5_rank_view) {
             assert(c < ctChars.size());
             result.ctChars[c] += 1;
         }
