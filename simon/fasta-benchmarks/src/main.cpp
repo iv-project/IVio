@@ -51,7 +51,8 @@ int main(int argc, char** argv) {
         }();
         auto end  = std::chrono::high_resolution_clock::now();
         auto diff = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
-        print_results(r, diff);
+        auto groundTruth = io3_bench(file, "io3");
+        print_results(method, groundTruth, r, diff);
 
     } catch (std::exception const& e) {
         std::cout << "exception(e): " << e.what() << "\n";

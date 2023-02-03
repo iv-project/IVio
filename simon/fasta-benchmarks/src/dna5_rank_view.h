@@ -11,13 +11,13 @@ inline constexpr auto dna5_rank_view = std::views::transform([](char c) {
         c['A'] = 0;
         c['C'] = 1;
         c['G'] = 2;
-        c['N'] = 3;
-        c['T'] = 4;
+        c['T'] = 3;
+        c['N'] = 4;
         c['a'] = 0;
         c['c'] = 1;
         c['g'] = 2;
-        c['n'] = 3;
-        c['t'] = 4;
+        c['t'] = 3;
+        c['n'] = 4;
         return c;
     }();
 

@@ -4,17 +4,17 @@
 
 constexpr static auto ccmap = []() {
     std::array<uint8_t, 256> c;
-    c.fill(3);
+    c.fill(0xff);
     c['A'] = 0;
     c['C'] = 1;
     c['G'] = 2;
-    c['N'] = 3;
-    c['T'] = 4;
+    c['T'] = 3;
+    c['N'] = 4;
     c['a'] = 0;
     c['c'] = 1;
     c['g'] = 2;
-    c['n'] = 3;
-    c['t'] = 4;
+    c['t'] = 3;
+    c['n'] = 4;
     c['\n'] = 0xff;
     c['\r'] = 0xff;
     c[' '] = 0xff;

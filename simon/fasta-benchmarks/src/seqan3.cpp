@@ -14,5 +14,6 @@ auto seqan3_bench(std::string_view _file) -> Result {
             result.ctChars[c.to_rank()] += 1;
         }
     }
+    std::swap(result.ctChars[3], result.ctChars[4]); // swap so N is on last place
     return result;
 }

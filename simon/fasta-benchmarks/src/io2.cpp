@@ -16,6 +16,7 @@ auto io2_bench(std::string_view _file) -> Result {
             result.ctChars[c.to_rank()] += 1;
         }
     }
+    std::swap(result.ctChars[3], result.ctChars[4]);
     return result;
 }
 
@@ -33,5 +34,6 @@ auto io2_copy_bench(std::string_view _file) -> Result {
             result.ctChars[c.to_rank()] += 1;
         }
     }
+    std::swap(result.ctChars[3], result.ctChars[4]);
     return result;
 }

@@ -14,5 +14,6 @@ auto bio_bench(std::string_view _file) -> Result {
             result.ctChars[c.to_rank()] += 1;
         }
     }
+    std::swap(result.ctChars[3], result.ctChars[4]);
     return result;
 }
