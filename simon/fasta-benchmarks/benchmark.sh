@@ -1,24 +1,18 @@
 #!/usr/bin/bash
 cd "$(dirname "$0")"
 
-methods=(seqan2 seqan3 io3 io3_stream io2 io2-copy bio direct)
-#methods=(io3)
-#methods=(direct io3_file io3_mmap io3_stream seqan2 seqan3 io2 io2-copy bio io3-auto-select)
-#methods=(io3_file io3_mmap io3_stream io3_ng_file io3_ng_mmap io3_ng_stream io3)
+methods=(seqan2 seqan3 io3 io3_mt io2 io2-copy bio direct extreme)
+files=(data/illumina.fa data/illumina.fa.gz data/hg38.fa data/hg38.fa.gz)
 
-
-file=$1
 timing=()
 memory=()
-for method in ${methods[@]}; do
-    l="$(for i in $(seq 3); do
-        /usr/bin/time -f "run %e %M" ./benchmark ${method} ${file} 2>&1 | grep "^run "
-    done | cut -b 5- | sort -n | head -n 1)"
-    t=$(echo $l | cut -d " " -f 1)
-    m=$(echo $l | cut -d " " -f 2)
-    printf "%s %f %d\n" $method $t $m
-    timing+=($t)
-    memory+=($m)
+for file in ${files[@]}; do
+    echo -e "method  \tcorrect \ttotal(MB)\tspeed(MB/s)\tmemory(MB)";
+    for method in ${methods[@]}; do
+        ./benchmark ${method} ${file} | tail -n +2
+        timing+=($t)
+        memory+=($m)
+    done
 done
 
 if [ "$2" == "--octave" ]; then

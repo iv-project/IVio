@@ -16,18 +16,37 @@ auto io3_mt_bench(std::string_view file, std::string_view method) -> Result;
 auto direct_bench(std::filesystem::path path) -> Result;
 auto extreme_bench(std::filesystem::path path) -> Result;
 
-void print_results(Result const& result, uint64_t timeInMs) {
+
+
+void print_results(std::string_view method, Result const& groundTruth, Result const& result, uint64_t timeInMs) {
+    bool correct{true};
     size_t a{};
     for (size_t i{0}; i<result.ctChars.size(); ++i) {
-        std::cout << i << ": " << result.ctChars[i] << "\n";
+        if (groundTruth.ctChars[i] != result.ctChars[i]) {
+            correct = false;
+        }
         a += result.ctChars[i];
     }
-    std::cout << "total: " << a << "\n";
-    std::cout << a / 1000 / timeInMs << " MB/s\n";
-
-    rusage usage;
-    getrusage(RUSAGE_SELF, &usage);
-    std::cout << "Memory:" << usage.ru_maxrss/1024 << " MB\n";
+    auto memory = []() {
+        rusage usage;
+        getrusage(RUSAGE_SELF, &usage);
+        return usage.ru_maxrss / 1024;
+    }();
+    auto p = [](auto v, size_t w) {
+        auto ss = std::stringstream{};
+        ss << std::boolalpha << v;
+        auto str = ss.str();
+        while (str.size() < w) {
+            str += " ";
+        }
+        return str;
+    };
+    std::cout << "method  \tcorrect \ttotal(MB)\tspeed(MB/s)\tmemory(MB)\n";
+    std::cout << p(method, 8) << "\t"
+              << p(correct, 8) << "\t"
+              << p(a/1024/1024, 8) << "\t"
+              << p(a/1024/timeInMs, 8) << "\t"
+              << memory << "\n";
 }
 
 int main(int argc, char** argv) {
@@ -35,6 +54,7 @@ int main(int argc, char** argv) {
         if (argc != 3) return 0;
         auto method = std::string_view{argv[1]};
         auto file   = std::string_view{argv[2]};
+//        std::numeric_limitis
         auto start  = std::chrono::high_resolution_clock::now();
 
         auto r = [&]() {
