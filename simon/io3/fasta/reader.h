@@ -7,8 +7,8 @@
 #include <istream>
 #include <memory>
 #include <optional>
-#include <string_view>
 #include <variant>
+#include <vector>
 
 namespace io3::fasta {
 

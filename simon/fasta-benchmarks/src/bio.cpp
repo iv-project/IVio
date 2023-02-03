@@ -1,21 +1,18 @@
+#include "Result.h"
+
 #include <bio/seq_io/reader.hpp>
 
-void bio_bench(std::string_view _file) {
+auto bio_bench(std::string_view _file) -> Result {
 
     std::filesystem::path fasta_file{_file};
 
-    std::array<int, 5> ctChars{};
+    Result result;
 
     auto fin  = bio::seq_io::reader{fasta_file};
     for (auto && [id, seq, qual] : fin) {
         for (auto c : seq) {
-            ctChars[c.to_rank()] += 1;
+            result.ctChars[c.to_rank()] += 1;
         }
     }
-    size_t a{};
-    for (size_t i{0}; i<ctChars.size(); ++i) {
-        std::cout << i << ": " << ctChars[i] << "\n";
-        a += ctChars[i];
-    }
-    std::cout << "total: " << a << "\n";
+    return result;
 }

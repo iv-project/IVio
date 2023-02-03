@@ -1,9 +1,10 @@
-#include <array>
+#include "Result.h"
+
+#include <iostream>
 #include <cassert>
 #include <fstream>
 #include <io3/fasta/reader.h>
 #include <io3/fasta/writer.h>
-#include <iostream>
 #include <ranges>
 
 constexpr static auto ccmap = []() {
@@ -32,21 +33,15 @@ inline constexpr auto rank_view = std::views::transform([](char c) {
 });
 
 template <typename Reader>
-static void benchmark_io3(Reader&& reader) {
-    std::array<int, 5> ctChars{};
+static auto benchmark_io3(Reader&& reader) -> Result {
+    Result result;
     for (auto && [id, seq] : reader) {
         for (auto c : seq | rank_view) {
             assert(c < ctChars.size());
-            ctChars[c] += 1;
+            result.ctChars[c] += 1;
         }
     }
-
-    size_t a{};
-    for (size_t i{0}; i<ctChars.size(); ++i) {
-        std::cout << i << ": " << ctChars[i] << "\n";
-        a += ctChars[i];
-    }
-    std::cout << "total: " << a << "\n";
+    return result;
 }
 
 template <typename Reader, typename Writer>
@@ -58,20 +53,20 @@ static void benchmark_io3(Reader&& reader, Writer&& writer) {
 
 
 
-void io3_bench(std::string_view _file, std::string_view _method) {
+auto io3_bench(std::string_view _file, std::string_view _method) -> Result {
     auto file   = std::string{_file};
     auto method = std::string{_method};
     auto ext = file.substr(file.size() - 3);
 
     if (method == "io3") {
-        benchmark_io3(io3::fasta::reader{{.input = file}});
+        return benchmark_io3(io3::fasta::reader{{.input = file}});
     } else if (method == "io3_stream" and ext == ".fa") {
         auto ifs = std::ifstream{file.c_str()};
-        benchmark_io3(io3::fasta::reader{{.input = ifs}});
+        return benchmark_io3(io3::fasta::reader{{.input = ifs}});
     } else if (method == "io3_stream" and ext == ".gz") {
         auto ifs = std::ifstream{file.c_str()};
-        benchmark_io3(io3::fasta::reader{{.input = ifs, .compressed = true}});
-    } else if (method == "io3_read_write") {
+        return benchmark_io3(io3::fasta::reader{{.input = ifs, .compressed = true}});
+/*    } else if (method == "io3_read_write") {
         auto reader = io3::fasta::reader{{.input = file}};
         auto writer = io3::fasta::writer{{.output = file + ".out" + ext}};
         benchmark_io3(reader, writer);
@@ -86,7 +81,7 @@ void io3_bench(std::string_view _file, std::string_view _method) {
         auto ofs = std::ofstream{file + ".out.fa.gz"};
         auto reader = io3::fasta::reader{{.input = ifs, .compressed = true}};
         auto writer = io3::fasta::writer{{.output = ofs, .compressed = true}};
-        benchmark_io3(reader, writer);
+        benchmark_io3(reader, writer);*/
     } else {
         throw std::runtime_error("invalid method: " + method);
     }

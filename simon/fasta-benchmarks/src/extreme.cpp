@@ -1,6 +1,6 @@
-#include <array>
+#include "Result.h"
+
 #include <io3/mmap_reader.h>
-#include <iostream>
 
 constexpr static auto ccmap = []() {
     std::array<uint8_t, 256> c;
@@ -23,7 +23,7 @@ constexpr static auto ccmap = []() {
     return c;
 }();
 
-void extreme_bench(std::filesystem::path path) {
+auto extreme_bench(std::filesystem::path path) -> Result {
     auto reader = io3::mmap_reader(path.c_str());
 
     std::array<int, 256> ctChars{};
@@ -40,17 +40,18 @@ void extreme_bench(std::filesystem::path path) {
             for(;pos < size and buffer[pos] != '>'; ++pos) {
                 assert(pos < size);
                 assert(buffer[pos] < 256);
-                auto c = ccmap[buffer[pos]];
-                ctChars[c] += 1;
+                ctChars[buffer[pos]] += 1;
             }
         }
     }
 
-    size_t a{};
-    for (size_t i{0}; i<5; ++i) {
-        std::cout << i << ": " << ctChars[i] << "\n";
-        a += ctChars[i];
-    }
-    std::cout << "total: " << a << "\n";
-}
 
+
+    Result result;
+    result.ctChars[0] = ctChars['A'] + ctChars['a'];
+    result.ctChars[1] = ctChars['C'] + ctChars['c'];
+    result.ctChars[2] = ctChars['G'] + ctChars['G'];
+    result.ctChars[3] = ctChars['N'] + ctChars['n'];
+    result.ctChars[4] = ctChars['T'] + ctChars['t'];
+    return result;
+}

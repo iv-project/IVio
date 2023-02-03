@@ -1,6 +1,6 @@
-#include <array>
+#include "Result.h"
+
 #include <io3/mmap_reader.h>
-#include <iostream>
 
 constexpr static auto ccmap = []() {
     std::array<uint8_t, 256> c;
@@ -23,7 +23,7 @@ constexpr static auto ccmap = []() {
     return c;
 }();
 
-void direct_bench(std::filesystem::path path) {
+auto direct_bench(std::filesystem::path path) -> Result {
     auto reader = io3::mmap_reader(path.c_str());
 
     std::array<int, 256> ctChars{};
@@ -44,12 +44,9 @@ void direct_bench(std::filesystem::path path) {
         }
         reader.dropUntil(pos);
     }
-
-    size_t a{};
-    for (size_t i{0}; i<5; ++i) {
-        std::cout << i << ": " << ctChars[i] << "\n";
-        a += ctChars[i];
+    Result result;
+    for (size_t i : {0, 1, 2, 3, 4}) {
+        result.ctChars[i] = ctChars[i];
     }
-    std::cout << "total: " << a << "\n";
+    return result;
 }
-
