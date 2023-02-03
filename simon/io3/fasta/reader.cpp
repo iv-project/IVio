@@ -9,13 +9,13 @@
 #include "../zlib_ng_file_reader.h"
 
 namespace io3::fasta {
-struct reader_pimpl {
-    VarBufferedReader reader;
+struct reader::pimpl {
+    VarBufferedReader ureader;
     size_t lastUsed{};
     std::string s;
 
-    reader_pimpl(std::filesystem::path file, bool)
-        : reader {[&]() -> VarBufferedReader {
+    pimpl(std::filesystem::path file, bool)
+        : ureader {[&]() -> VarBufferedReader {
             if (file.extension() == ".fa") {
                 return mmap_reader{file.c_str()};
             } else if (file.extension() == ".gz") {
@@ -24,8 +24,8 @@ struct reader_pimpl {
             throw std::runtime_error("unknown file extension");
         }()}
     {}
-    reader_pimpl(std::istream& file, bool compressed)
-        : reader {[&]() -> VarBufferedReader {
+    pimpl(std::istream& file, bool compressed)
+        : ureader {[&]() -> VarBufferedReader {
             if (!compressed) {
                 return stream_reader{file};
             } else {
@@ -36,24 +36,24 @@ struct reader_pimpl {
 
 };
 
-reader::reader(reader_config config)
-    : pimpl{std::visit([&](auto& p) {
-        return std::make_unique<reader_pimpl>(p, config.compressed);
-    }, config.input)}
+reader::reader(config const& config_)
+    : pimpl_{std::visit([&](auto& p) {
+        return std::make_unique<pimpl>(p, config_.compressed);
+    }, config_.input)}
 {}
 reader::~reader() = default;
 
 auto reader::next() -> std::optional<record_view> {
-    auto& reader   = pimpl->reader;
-    auto& lastUsed = pimpl->lastUsed;
-    auto& s        = pimpl->s;
+    auto& ureader  = pimpl_->ureader;
+    auto& lastUsed = pimpl_->lastUsed;
+    auto& s        = pimpl_->s;
 
-    auto startId = reader.readUntil('>', lastUsed);
-    if (reader.eof(startId)) return std::nullopt;
-    reader.dropUntil(startId+1);
+    auto startId = ureader.readUntil('>', lastUsed);
+    if (ureader.eof(startId)) return std::nullopt;
+    ureader.dropUntil(startId+1);
 
-    auto endId = reader.readUntil('\n', 0);
-    if (reader.eof(endId)) return std::nullopt;
+    auto endId = ureader.readUntil('\n', 0);
+    if (ureader.eof(endId)) return std::nullopt;
 
     auto startSeq = endId+1;
 
@@ -63,22 +63,22 @@ auto reader::next() -> std::optional<record_view> {
         auto s2 = startSeq;
         do {
             auto s1 = s2;
-            s2 = reader.readUntil('\n', s1);
-            s += reader.string_view(s1, s2);
+            s2 = ureader.readUntil('\n', s1);
+            s += ureader.string_view(s1, s2);
             s2 += 1;
-        } while (!reader.eof(s2) and reader.string_view(s2, s2+1)[0] != '>');
+        } while (!ureader.eof(s2) and ureader.string_view(s2, s2+1)[0] != '>');
         lastUsed = s2;
     }
 
 
     return record_view {
-        .id  = reader.string_view(0,        endId),
+        .id  = ureader.string_view(0, endId),
         .seq = s,
     };
 }
 
-auto begin(reader& _reader) -> reader::iter {
-    return {_reader};
+auto begin(reader& reader_) -> reader_iter<reader> {
+    return {reader_};
 }
 
 }

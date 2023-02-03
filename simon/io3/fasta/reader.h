@@ -12,52 +12,50 @@
 
 namespace io3::fasta {
 
-struct reader_config {
-    // Source: file or stream
-    std::variant<std::filesystem::path, std::reference_wrapper<std::istream>> input;
+template <typename reader>
+struct reader_iter {
+    using record_view = typename reader::record_view;
 
-    // This is only relevant if a stream is being used
-    bool compressed{};
-};
-
-struct reader_pimpl;
-struct reader {
-    using record_view = fasta::record_view;
-    struct iter;
-
-private:
-    std::unique_ptr<reader_pimpl> pimpl;
-
-public:
-    std::vector<std::tuple<std::string, std::string>> header;
-    std::vector<std::string> genotypes;
-
-    reader(reader_config config);
-    ~reader();
-
-    auto next() -> std::optional<record_view>;
-
-    friend auto begin(reader& reader) -> iter;
-    friend auto end(reader& reader) {
-        return nullptr;
-    }
-};
-
-struct reader::iter {
-    reader& _reader;
-    std::optional<record_view> nextItem = _reader.next();
+    reader& reader_;
+    std::optional<record_view> nextItem = reader_.next();
 
     auto operator*() const -> record_view {
        return *nextItem;
     }
-    auto operator++() -> iter& {
-        nextItem = _reader.next();
+    auto operator++() -> reader_iter& {
+        nextItem = reader_.next();
         return *this;
     }
     auto operator!=(std::nullptr_t) const {
         return nextItem.has_value();
     }
-};
 
+};
+struct reader {
+    struct pimpl;
+    using record_view = fasta::record_view;
+
+    struct config {
+        // Source: file or stream
+        std::variant<std::filesystem::path, std::reference_wrapper<std::istream>> input;
+
+        // This is only relevant if a stream is being used
+        bool compressed{};
+    };
+
+private:
+    std::unique_ptr<struct pimpl> pimpl_;
+
+public:
+    reader(config const& config_);
+    ~reader();
+
+    auto next() -> std::optional<record_view>;
+
+    friend auto begin(reader& reader_) -> reader_iter<reader>;
+    friend auto end(reader&) {
+        return nullptr;
+    }
+};
 
 }
