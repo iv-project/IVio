@@ -8,10 +8,10 @@
 #include "../zlib_mmap2_reader.h"
 #include "../zlib_ng_file_reader.h"
 
-namespace io3::fasta {
+namespace io3 {
 
 template <>
-struct reader_base<reader>::pimpl {
+struct reader_base<fasta::reader>::pimpl {
     VarBufferedReader ureader;
     size_t lastUsed{};
     std::string s;
@@ -36,12 +36,16 @@ struct reader_base<reader>::pimpl {
         }()}
     {}
 };
+}
+
+namespace io3::fasta {
 
 reader::reader(config const& config_)
     : reader_base{std::visit([&](auto& p) {
         return std::make_unique<pimpl>(p, config_.compressed);
     }, config_.input)}
 {}
+
 reader::~reader() = default;
 
 auto reader::next() -> std::optional<record_view> {
