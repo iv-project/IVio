@@ -96,16 +96,16 @@ struct reader_pimpl {
         if (size2 < 32+3) throw "something went worng reading bcf file (4)";
         auto chromId  = io3::bgzfUnpack<int32_t>(ptr2 + 8);
         auto pos      = io3::bgzfUnpack<int32_t>(ptr2 + 12)+1;
-        auto rlen     = io3::bgzfUnpack<int32_t>(ptr2 + 16);
+        //auto rlen     = io3::bgzfUnpack<int32_t>(ptr2 + 16);
         auto qual     = [&]() -> std::optional<float> {
             auto q     = io3::bgzfUnpack<float>(ptr2 + 20);
             if (q == 0b0111'1111'1000'0000'0000'0000'0001) return std::nullopt;
             return q;
         }();
-        auto n_info   = io3::bgzfUnpack<int16_t>(ptr2 + 24);
+        //auto n_info   = io3::bgzfUnpack<int16_t>(ptr2 + 24);
         auto n_allele = io3::bgzfUnpack<int16_t>(ptr2 + 26);
-        auto n_sample = io3::bgzfUnpack<int32_t>(ptr2 + 28) & 0x00ffffff;
-        auto n_fmt    = io3::bgzfUnpack<uint8_t>(ptr2 + 31);
+        //auto n_sample = io3::bgzfUnpack<int32_t>(ptr2 + 28) & 0x00ffffff;
+        //auto n_fmt    = io3::bgzfUnpack<uint8_t>(ptr2 + 31);
 
         auto readInt = [&](size_t o) -> std::tuple<int32_t, size_t> {
             auto v = io3::bgzfUnpack<uint8_t>(ptr2 + o);
@@ -122,7 +122,7 @@ struct reader_pimpl {
         };
         auto readString = [&](size_t o) -> std::tuple<std::string_view, size_t> {
             auto v = io3::bgzfUnpack<uint8_t>(ptr2 + o);
-            auto t = v & 0x0f;
+            //auto t = v & 0x0f;
             auto l = v >> 4;
             if (l == 15) {
                 auto [i, o2] = readInt(o+1);
@@ -133,7 +133,7 @@ struct reader_pimpl {
 
         auto readVector = [&](size_t o) -> std::tuple<std::vector<int32_t>, size_t> {
             auto v = io3::bgzfUnpack<uint8_t>(ptr2 + o);
-            auto t = v & 0x0f;
+            //auto t = v & 0x0f;
             auto l = v >> 4;
             if (l == 15) {
                 auto [i, o2] = readInt(o+1);
@@ -151,12 +151,18 @@ struct reader_pimpl {
         auto [id, o2] = readString(32);
         auto [ref, o3] = readString(o2);
 
-        if (contigMap.size() <= chromId) {
+        if (chromId < 0) {
+            throw "chromId is invalid, negative values not allowed";
+        }
+        if (contigMap.size() <= size_t(chromId)) {
             throw "chromId " + std::to_string(chromId) + " is missing in the header";
         }
 
         storage.alts.clear();
-        for (size_t i{1}; i < n_allele; ++i) {
+        if (n_allele < 0) {
+            throw "n_allele is negative, not allowed";
+        }
+        for (size_t i{1}; i < size_t(n_allele); ++i) {
             auto [alt, o4] = readString(o3);
             storage.alts.emplace_back(alt);
             o3 = o4;
@@ -171,8 +177,8 @@ struct reader_pimpl {
         auto info = [&]() {
             assert(o5 <= l_shared+8);
 
-            auto p1 = o5;
-            auto p2 = l_shared+8;
+            //auto p1 = o5;
+            //auto p2 = l_shared+8;
             return std::string_view{ptr2 + o5, ptr2 + l_shared+8};
         }();
 
