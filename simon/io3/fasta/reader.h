@@ -13,26 +13,40 @@
 namespace io3::fasta {
 
 template <typename reader>
-struct reader_iter {
-    using record_view = typename reader::record_view;
+struct reader_base {
+    struct iter {
+        using record_view = typename reader::record_view;
 
-    reader& reader_;
-    std::optional<record_view> nextItem = reader_.next();
+        reader& reader_;
+        std::optional<record_view> nextItem = reader_.next();
 
-    auto operator*() const -> record_view {
-       return *nextItem;
-    }
-    auto operator++() -> reader_iter& {
-        nextItem = reader_.next();
-        return *this;
-    }
-    auto operator!=(std::nullptr_t) const {
-        return nextItem.has_value();
-    }
+        auto operator*() const -> record_view {
+           return *nextItem;
+        }
+        auto operator++() -> iter& {
+            nextItem = reader_.next();
+            return *this;
+        }
+        auto operator!=(std::nullptr_t) const {
+            return nextItem.has_value();
+        }
+    };
 
-};
-struct reader {
+protected:
     struct pimpl;
+    std::unique_ptr<pimpl> pimpl_;
+public:
+    reader_base(std::unique_ptr<pimpl> pimpl_)
+        : pimpl_{std::move(pimpl_)}
+    {}
+    friend auto begin(reader& reader_) {
+        return iter{reader_};
+    }
+    friend auto end(reader&) {
+        return nullptr;
+    }
+};
+struct reader : public reader_base<reader> {
     using record_view = fasta::record_view;
 
     struct config {
@@ -43,19 +57,11 @@ struct reader {
         bool compressed{};
     };
 
-private:
-    std::unique_ptr<struct pimpl> pimpl_;
-
 public:
     reader(config const& config_);
     ~reader();
 
     auto next() -> std::optional<record_view>;
-
-    friend auto begin(reader& reader_) -> reader_iter<reader>;
-    friend auto end(reader&) {
-        return nullptr;
-    }
 };
 
 }

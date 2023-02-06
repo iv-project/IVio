@@ -9,7 +9,9 @@
 #include "../zlib_ng_file_reader.h"
 
 namespace io3::fasta {
-struct reader::pimpl {
+
+template <>
+struct reader_base<reader>::pimpl {
     VarBufferedReader ureader;
     size_t lastUsed{};
     std::string s;
@@ -33,11 +35,10 @@ struct reader::pimpl {
             }
         }()}
     {}
-
 };
 
 reader::reader(config const& config_)
-    : pimpl_{std::visit([&](auto& p) {
+    : reader_base{std::visit([&](auto& p) {
         return std::make_unique<pimpl>(p, config_.compressed);
     }, config_.input)}
 {}
@@ -75,10 +76,6 @@ auto reader::next() -> std::optional<record_view> {
         .id  = ureader.string_view(0, endId),
         .seq = s,
     };
-}
-
-auto begin(reader& reader_) -> reader_iter<reader> {
-    return {reader_};
 }
 
 }
