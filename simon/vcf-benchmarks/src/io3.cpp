@@ -1,22 +1,24 @@
-#include "io3/io3.h"
+#include "Result.h"
+#include "../../fasta-benchmarks/src/dna5_rank_view.h"
 
-#include <algorithm>
-#include <array>
-#include <cstdint>
-#include <cstring>
-#include <fstream>
-#include <iostream>
-#include <limits>
-#include <numeric>
-#include <optional>
-#include <ranges>
-#include <unistd.h>
-#include <variant>
-#include <vector>
+#include <io3/vcf/reader.h>
 
+auto io3_bench(std::string_view _file) -> Result {
+    auto file = std::string{_file};
 
+    Result result;
+    for (auto && view : io3::vcf::reader{{file}}) {
+        result.l += 1;
+        result.ct += view.pos;
+        for (auto c : view.ref | dna5_rank_view) {
+            result.ctChars[c] += 1;
+        }
+        result.bytes += view.ref.size();
+    }
+    return result;
+}
 
-constexpr static std::array<char, 256> ccmap = []() {
+/*constexpr static std::array<char, 256> ccmap = []() {
     std::array<char, 256> c;
     c.fill(3);
     c['A'] = 0;
@@ -45,25 +47,23 @@ inline constexpr auto seq_cleanuped_view = std::views::transform([](char c) {
                 throw "invalid variable";
             }
             return true;
-        });
+        });*/
 
-
+/*
 template <typename Reader>
-void benchmark_io3(Reader&& reader) {
-    size_t ct{}, sum{}, l{};
+auto benchmark_io3(Reader&& reader) -> Result {
+    Result result;
     for (auto && view : reader) {
-        l += 1;
-        ct += view.pos;
-//        std::cout << l << " " << ct << " " << view.pos << "\n";
+        result.l += 1;
+        result.ct += view.pos;
         for (auto c : view.ref | seq_cleanuped_view) {
-            sum += c;
+            result.sum += c;
         }
-  //      if (l > 800) exit(0);
     }
-    std::cout << "total: " << ct << " " << sum << " " << l << "\n";
-}
+    return result;
+}*/
 
-template <typename Reader, typename Writer>
+/*template <typename Reader, typename Writer>
 void benchmark_io3(Reader& reader, Writer& writer) {
     for (auto const& [key, value] : reader.header) {
         writer.writeHeader(key, value);
@@ -89,14 +89,24 @@ void benchmark_io3_bcf(Reader& reader, Writer& writer) {
     for (auto && view : reader) {
         writer.write(view);
     }
-}
+}*/
 
 
-void io3_bench(std::string_view method, std::string_view _file) {
+/*void io3_bench(std::string_view _file) {
     auto file = std::string{_file};
-    auto ext = file.substr(file.size() - 4);
 
-    if (method == "io3" and ext == ".vcf") {
+    Result result;
+    for (auto && view : io3::vcf::reader{{file}}) {
+        result.l += 1;
+        result.ct += view.pos;
+        for (auto c : view.ref | seq_cleanuped_view) {
+            result.sum += c;
+        }
+    }
+    return result;
+
+
+    if (ext == ".vcf") {
         benchmark_io3(io3::vcf::reader{{file}});
     } else if (method == "io3_copy" and ext == ".vcf") {
         auto reader = io3::vcf::reader{{file}};
@@ -116,4 +126,4 @@ void io3_bench(std::string_view method, std::string_view _file) {
     } else {
         std::cout << "unknown\n";
     }
-}
+}*/
