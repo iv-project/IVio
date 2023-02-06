@@ -49,6 +49,8 @@ reader::reader(config const& config_)
 reader::~reader() = default;
 
 auto reader::next() -> std::optional<record_view> {
+    assert(pimpl_);
+
     auto& ureader  = pimpl_->ureader;
     auto& lastUsed = pimpl_->lastUsed;
     auto& s        = pimpl_->s;
@@ -81,5 +83,7 @@ auto reader::next() -> std::optional<record_view> {
         .seq = s,
     };
 }
+
+static_assert(record_reader_c<reader>);
 
 }

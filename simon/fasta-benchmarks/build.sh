@@ -13,7 +13,7 @@ INCLUDES="-I ../../io2/include \
 ARGS="-std=c++20 ${FLAGS} ${INCLUDES}"
 
 
-mkdir -p obj/io3/fasta obj/src
+mkdir -p obj/io3/fasta obj/io3/bcf obj/io3/vcf obj/src
 g++ ${ARGS} -c ../io3/fasta/reader.cpp -o obj/io3/fasta/reader.o
 g++ ${ARGS} -c ../io3/fasta/reader_mt.cpp -o obj/io3/fasta/reader_mt.o
 g++ ${ARGS} -c ../io3/fasta/writer.cpp -o obj/io3/fasta/writer.o

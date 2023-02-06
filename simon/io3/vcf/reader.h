@@ -1,36 +1,34 @@
 #pragma once
 
+#include "../reader_base.h"
 #include "record.h"
 
-#include "../buffered_reader.h"
-
-#include <memory>
+#include <filesystem>
 #include <optional>
 #include <tuple>
+#include <variant>
 #include <vector>
 
 namespace io3::vcf {
 
-struct reader_pimpl;
-struct reader {
-    struct iter;
-private:
-    std::unique_ptr<reader_pimpl> pimpl;
+struct reader : public reader_base<reader> {
+    using record_view = vcf::record_view;
 
-public:
     std::vector<std::tuple<std::string, std::string>> header;
     std::vector<std::string> genotypes;
 
-    reader(VarBufferedReader reader);
-    reader(reader const&) = delete;
-    reader(reader&& _other) noexcept = default;
+    struct config {
+        // Source: file or stream
+        std::variant<std::filesystem::path, std::reference_wrapper<std::istream>> input;
+
+        // This is only relevant if a stream is being used
+        bool compressed{};
+    };
+
+public:
+    reader(config const& config_);
+
     ~reader();
-
-
-    friend auto begin(reader& _reader) -> iter;
-    friend auto end(reader const&) {
-        return nullptr;
-    }
 
     bool readHeaderLine();
     void readHeader();
@@ -38,21 +36,4 @@ public:
     auto next() -> std::optional<record_view>;
 };
 
-struct reader::iter {
-    reader& _reader;
-    std::optional<record_view> nextItem = _reader.next();
-
-    auto operator*() const -> record_view {
-       return *nextItem;
-    }
-    auto operator++() -> iter& {
-        nextItem = _reader.next();
-        return *this;
-    }
-    auto operator!=(std::nullptr_t) const {
-        return nextItem.has_value();
-    }
-};
-
-static_assert(record_reader_c<reader>);
 }

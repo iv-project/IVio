@@ -4,8 +4,8 @@
 #include "record.h"
 
 #include <filesystem>
-#include <istream>
 #include <optional>
+#include <tuple>
 #include <variant>
 
 namespace io3::fasta {
