@@ -1,3 +1,4 @@
+#include "Result.h"
 #include "io2/sam_io_reader.h"
 
 #include <seqan3/alphabet/nucleotide/dna5.hpp>
@@ -9,30 +10,17 @@
 #include <filesystem>
 #include <sstream>
 
-template <typename... Ts>
-void noOpt(Ts&&...) {
-    asm("");
-}
+auto io2_bench(std::string_view _file) -> Result {
+    Result result;
 
-
-void io2_bench(std::string const& _file) {
-
-    std::filesystem::path file{_file};
-
-    size_t a{};
     auto fin = io2::sam_io::reader{
-        .input = file
+        .input = std::filesystem::path{_file},
     };
     for (auto && record : fin) {
-        for (auto c : record.id) {
-            a += c;
-        }
         for (auto c : record.seq) {
-            a+= c.to_rank();
+            result.ctChars[c.to_rank()] += 1;
         }
-/*        for (auto c : record.cigar_sequence()) {
-            a += c.to_rank();
-        }*/
     }
-    std::cout << "total: " << a << "\n";
+    std::swap(result.ctChars[3], result.ctChars[4]);
+    return result;
 }

@@ -1,86 +1,83 @@
-#include <cstring>
-#include <cstdint>
-#include <unistd.h>
-#include <array>
-#include <algorithm>
-#include <optional>
-#include <vector>
-#include <limits>
-#include <numeric>
-#include <variant>
+#include "Result.h"
+
+#include <chrono>
+#include <filesystem>
 #include <iostream>
-#include <ranges>
+#include <string_view>
+#include <sys/resource.h>
 
-template <typename... Ts>
-void noOpt(Ts&&...) {
-    asm("");
-}
-
-template <typename Reader>
-void benchmark(Reader&& reader) {
-    std::array<int, 5> ctChars{};
-    for (auto && [id, seq] : reader) {
-        for (auto c : seq) {
-            ctChars[c] += 1;
-        }
-    }
-
-    size_t a{};
-    for (size_t i{0}; i<ctChars.size(); ++i) {
-        std::cout << i << ": " << ctChars[i] << "\n";
-        a += ctChars[i];
-    }
-    std::cout << "total: " << a << "\n";
-}
-
-void seqan2_bench(std::string const& file);
-void seqan3_bench(std::string const& file);
-void io2_bench(std::string const& file);
+auto seqan2_bench(std::string_view file) -> Result;
+auto seqan3_bench(std::string_view file) -> Result;
+auto io2_bench(std::string_view file) -> Result;
 
 int main(int argc, char** argv) {
-//    try {
-    if (argc != 3) return 0;
-    std::string method = argv[1];
-    std::string file = argv[2];
+    try {
+        if (argc != 3) return 0;
+        auto method = std::string_view{argv[1]};
+        auto file   = std::string_view{argv[2]};
 
-    auto ext = file.substr(file.size() - 3);
+        Result bestResult;
+        int fastestRun{};
+        auto fastestTime = std::numeric_limits<int>::max();
+        int maxNbrOfRuns{5};
+        try {
+            for (int i{}; i < maxNbrOfRuns; ++i) {
+                auto start  = std::chrono::high_resolution_clock::now();
 
-    if (method == "seqan2") {
-        seqan2_bench(file);
-        return 0;
-    } else if (method == "seqan3") {
-        seqan3_bench(file);
-        return 0;
-     } else if (method == "io2") {
-        io2_bench(file);
-        return 0;
+                auto r = [&]() {
+                    if (method == "seqan2")           return seqan2_bench(file);
+                    if (method == "seqan3")           return seqan3_bench(file);
+                    if (method == "io2")              return io2_bench(file);
+                    throw std::runtime_error("unknown method: " + std::string{method});
+                }();
+                auto end  = std::chrono::high_resolution_clock::now();
+                auto diff = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+                if (diff < fastestTime) {
+                    bestResult = r;
+                    fastestTime = diff;
+                    fastestRun = i;
+                }
+            }
+        } catch(...){
+            bestResult = Result{}; // reset results, will cause this to be incorrect
+        }
+        auto groundTruth = io2_bench(file);
+        // print results
+        [&]() {
+            auto const& result = bestResult;
+            auto timeInMs = fastestTime;
+            bool correct{true};
+            size_t a{};
+            for (size_t i{0}; i<result.ctChars.size(); ++i) {
+                if (groundTruth.ctChars[i] != result.ctChars[i]) {
+                    correct = false;
+                }
+                a += result.ctChars[i];
+            }
+            auto memory = []() {
+                rusage usage;
+                getrusage(RUSAGE_SELF, &usage);
+                return usage.ru_maxrss / 1024;
+            }();
+            auto p = [](auto v, size_t w) {
+                auto ss = std::stringstream{};
+                ss << std::boolalpha << v;
+                auto str = ss.str();
+                while (str.size() < w) {
+                    str += " ";
+                }
+                return str;
+            };
+            std::cout << "method  \tcorrect \ttotal(MB)\tspeed(MB/s)\tmemory(MB)\n";
+            std::cout << p(method, 8) << "\t"
+                      << p(correct, 8) << "\t"
+                      << p(a/1024/1024, 8) << "\t"
+                      << p(a/1024/timeInMs, 8) << "\t"
+                      << p(memory, 8) << "\t"
+                      << (fastestRun+1) << "/" << maxNbrOfRuns << "\n";
+        }();
+
+    } catch (std::exception const& e) {
+        std::cout << "exception(e): " << e.what() << "\n";
     }
-
-
-/*    if (method == "view" and ext == ".gz") {
-        benchmark(fasta_reader_view{zlib_reader(file.c_str())});
-    } else if (method == "cont" and ext == ".gz") {
-        benchmark(fasta_reader_contigous{zlib_reader(file.c_str())});
-    } else if (method == "view" and ext == ".fa") {
-        benchmark(fasta_reader_view{file_reader(file.c_str())});
-    } else if (method == "cont" and ext == ".fa") {
-        benchmark(fasta_reader_contigous{file_reader(file.c_str())});
-    } else if (method == "mmap_view" and ext == ".fa") {
-        benchmark(fasta_reader_mmap{mmap_file_reader(file.c_str())});
-    } else if (method == "mmap_view" and ext == ".gz") {
-        benchmark(fasta_reader_view{zlib_mmap_reader(file.c_str())});
-    } else if (method == "mmap_cont" and ext == ".gz") {
-        benchmark(fasta_reader_contigous{zlib_mmap_reader(file.c_str())});
-    } else if (method == "mmap_view2" and ext == ".gz") {
-        benchmark(fasta_reader_mmap2{zlib_mmap_reader(file.c_str())});
-    } else if (method == "best") {
-        benchmark(fasta_reader_best{file});
-    } else*/ {
-        std::cout << "unknown\n";
-    }
-//    } catch(char const* what) {
-//        std::cout << "exception(c): " << what << "\n";
-//    } catch(std::string const& what) {
-//        std::cout << "exception(s): " << what << "\n";
-//    }
 }
