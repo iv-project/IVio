@@ -1,6 +1,7 @@
 #include "reader.h"
 
 #include "../bgzf_reader.h"
+#include "../bgzf_mt_reader.h"
 #include "../buffered_reader.h"
 #include "../file_reader.h"
 #include "../mmap_reader.h"
@@ -39,7 +40,7 @@ struct reader_base<bcf::reader>::pimpl {
     pimpl(std::filesystem::path file, bool)
         : ureader {[&]() -> VarBufferedReader {
             if (file.extension() == ".bcf") {
-                return buffered_reader<1<<16>{bgzf_reader{mmap_reader{file.c_str()}}};
+                return buffered_reader{bgzf_mt_reader{mmap_reader{file.c_str()}}};
             }
             throw std::runtime_error("unknown file extension");
         }()}
