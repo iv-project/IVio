@@ -15,10 +15,11 @@ ARGS="-std=c++20 ${FLAGS} ${INCLUDES}"
 
 
 mkdir -p obj/io3/fastq obj/io3/bcf obj/io3/vcf obj/io3/bam obj/src
-g++ ${ARGS} -c ../io3/fastq/reader.cpp -o obj/io3/fastq/reader.o
+g++ ${ARGS} -c ../io3/bam/reader.cpp -o obj/io3/bam/reader.o
 g++ ${ARGS} -c src/main.cpp -o obj/src/main.o
 g++ ${ARGS} -c src/seqan2.cpp -o obj/src/seqan2.o
 g++ ${ARGS} -c src/seqan3.cpp -o obj/src/seqan3.o
 g++ ${ARGS} -c src/io2.cpp -o obj/src/io2.o
+g++ ${ARGS} -c src/io3.cpp -o obj/src/io3.o
 
 g++ $(find obj | grep \.o\$) -lz-ng -lz ${FLAGS} -o benchmark
