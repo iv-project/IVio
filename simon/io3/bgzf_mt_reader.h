@@ -38,13 +38,13 @@ struct reader_mt_phase {
     }
 };
 
-template <size_t minV = 1<<12>
 struct bgzf_mt_reader {
     VarBufferedReader reader;
     ZlibContext       zlibCtx;
 
     reader_mt_phase phase;
     std::jthread thread;
+    std::atomic_bool skipWaitNext{};
     std::string_view next;
     std::mutex mutex;
     bool threadStarted{};
@@ -121,17 +121,24 @@ struct bgzf_mt_reader {
 
     ~bgzf_mt_reader() = default;
 
-/*    size_t read(std::ranges::sized_range auto&& range) {
-        startThread();
-        phase.waitFor(1);
-        assert(range.size() >= next.size());
-        std::memcpy(range.data(), next.data(), next.size());
-        auto size = next.size();
-        phase.trigger(0);
+    size_t read(std::ranges::sized_range auto&& range) {
+        if (!skipWaitNext) {
+            startThread();
+            phase.waitFor(1);
+        }
+        size_t size = std::min(range.size(), next.size());
+        std::memcpy(range.data(), next.data(), size);
+        if (size == next.size()) {
+            skipWaitNext = false;
+            phase.trigger(0);
+        } else {
+            next = {next.data()+size, next.size() - size};
+            skipWaitNext = true;
+        }
         return size;
-    }*/
+    }
 
-    std::vector<char> buf = []() { auto vec = std::vector<char>{}; vec.reserve(minV); return vec; }();
+/*    std::vector<char> buf = []() { auto vec = std::vector<char>{}; vec.reserve(minV); return vec; }();
     int inPos{};
 
     auto readMore() -> bool {
@@ -187,9 +194,9 @@ struct bgzf_mt_reader {
 
     auto string_view(size_t start, size_t end) -> std::string_view {
         return std::string_view{buf.data()+start+inPos, buf.data()+end+inPos};
-    }
+    }*/
 };
-//static_assert(Readable<bgzf_mt_reader>);
-static_assert(BufferedReadable<bgzf_mt_reader<>>);
+static_assert(Readable<bgzf_mt_reader>);
+//static_assert(BufferedReadable<bgzf_mt_reader<>>);
 
 }

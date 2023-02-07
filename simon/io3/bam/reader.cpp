@@ -43,8 +43,8 @@ struct reader_base<bam::reader>::pimpl {
     pimpl(std::filesystem::path file, bool)
         : ureader {[&]() -> VarBufferedReader {
             if (file.extension() == ".bam") {
-//                return buffered_reader<1<<16>{bgzf_mt_reader{mmap_reader{file.c_str()}}};
-                return bgzf_mt_reader<1<<16>{mmap_reader{file.c_str()}};
+                return buffered_reader{bgzf_mt_reader{mmap_reader{file.c_str()}}};
+//                return bgzf_mt_reader<1<<16>{mmap_reader{file.c_str()}};
 //                return buffered_reader<1<<16>{bgzf_reader{mmap_reader{file.c_str()}}};
 
             }
@@ -125,8 +125,8 @@ struct reader_base<bam::reader>::pimpl {
             auto [ptr, size] = ureader.read(9);
             if (size < 9) throw " something went wrong reading bam file (1b)";
             auto l_name = io3::bgzfUnpack<uint32_t>(ptr);
-            ureader.read(8 + l_name); // !TODO this is not safe
-            auto l_ref  = io3::bgzfUnpack<uint32_t>(ptr+4+l_name);
+            auto [ptr2, size2] = ureader.read(8 + l_name); // !TODO this is not safe
+            auto l_ref  = io3::bgzfUnpack<uint32_t>(ptr2+4+l_name);
             //!TODO read name and save it somewhere
             ureader.dropUntil(8+l_name);
         }
@@ -140,18 +140,18 @@ struct reader_base<bam::reader>::pimpl {
 
         auto block_size  = io3::bgzfUnpack<uint32_t>(ptr+0);
 
-        ureader.read(block_size+4); // read again, !TODO this could fail
-        auto refID       = io3::bgzfUnpack<int32_t>(ptr+4);
-        auto pos         = io3::bgzfUnpack<int32_t>(ptr+8);
-        auto l_read_name = io3::bgzfUnpack<uint8_t>(ptr+12);
-        auto mapq        = io3::bgzfUnpack<uint8_t>(ptr+13);
-        auto bin         = io3::bgzfUnpack<uint16_t>(ptr+14);
-        auto n_cigar_op  = io3::bgzfUnpack<uint16_t>(ptr+16);
-        auto flag        = io3::bgzfUnpack<uint16_t>(ptr+18);
-        auto l_seq       = io3::bgzfUnpack<uint32_t>(ptr+20);
-        auto next_refID  = io3::bgzfUnpack<int32_t>(ptr+24);
-        auto next_pos    = io3::bgzfUnpack<int32_t>(ptr+28);
-        auto tlen        = io3::bgzfUnpack<int32_t>(ptr+32);
+        auto [ptr2, size2] = ureader.read(block_size+4); // read again, !TODO this could fail
+        auto refID       = io3::bgzfUnpack<int32_t>(ptr2+4);
+        auto pos         = io3::bgzfUnpack<int32_t>(ptr2+8);
+        auto l_read_name = io3::bgzfUnpack<uint8_t>(ptr2+12);
+        auto mapq        = io3::bgzfUnpack<uint8_t>(ptr2+13);
+        auto bin         = io3::bgzfUnpack<uint16_t>(ptr2+14);
+        auto n_cigar_op  = io3::bgzfUnpack<uint16_t>(ptr2+16);
+        auto flag        = io3::bgzfUnpack<uint16_t>(ptr2+18);
+        auto l_seq       = io3::bgzfUnpack<uint32_t>(ptr2+20);
+        auto next_refID  = io3::bgzfUnpack<int32_t>(ptr2+24);
+        auto next_pos    = io3::bgzfUnpack<int32_t>(ptr2+28);
+        auto tlen        = io3::bgzfUnpack<int32_t>(ptr2+32);
         auto read_name   = ureader.string_view(36, 36+l_read_name);
         auto start_cigar = l_read_name + 36;
         auto cigar       = ureader.string_view(start_cigar, start_cigar+n_cigar_op*4);
