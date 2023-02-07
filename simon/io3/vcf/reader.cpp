@@ -117,7 +117,6 @@ struct reader_base<vcf::reader>::pimpl {
         return res;
     }
 };
-
 }
 
 namespace io3::vcf {

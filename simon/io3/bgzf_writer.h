@@ -2,11 +2,11 @@
 
 #include "file_writer.h"
 
+#include <fstream>
+#include <iostream>
+#include <cstring>
 #include <ranges>
 #include <zlib.h>
-
-#include <iostream>
-#include <fstream>
 
 namespace io3 {
 

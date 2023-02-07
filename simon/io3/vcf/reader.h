@@ -27,7 +27,6 @@ struct reader : public reader_base<reader> {
 
 public:
     reader(config const& config_);
-
     ~reader();
 
     bool readHeaderLine();

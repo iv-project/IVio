@@ -1,24 +1,20 @@
 #pragma once
 
+#include "../reader_base.h"
 #include "record.h"
 
-#include "../buffered_reader.h"
-
-#include "../bgzf_reader.h"
-#include "../file_reader.h"
-
-#include <functional>
+#include <filesystem>
+#include <optional>
+#include <tuple>
+#include <variant>
+#include <vector>
 #include <unordered_map>
 
 namespace io3::bcf {
 
-struct reader_pimpl;
-struct reader {
-    struct iter;
-private:
-    std::unique_ptr<reader_pimpl> pimpl;
+struct reader : public reader_base<reader> {
+    using record_view = bcf::record_view;
 
-public:
     std::string headerBuffer;
     std::vector<std::string_view> header;
     std::string_view              tableHeader;
@@ -27,38 +23,19 @@ public:
     std::vector<std::string_view>& contigMap = headerMap["contig"];
     std::vector<std::string_view>& filterMap = headerMap["filter"];
 
+    struct config {
+        // Source: file or stream
+        std::variant<std::filesystem::path, std::reference_wrapper<std::istream>> input;
 
-    reader(VarBufferedReader r);
-    reader(reader const&) = delete;
-    reader(reader&& _other) noexcept = default;
+        // This is only relevant if a stream is being used
+        bool compressed{};
+    };
+
+public:
+    reader(config const& config_);
     ~reader();
 
     auto next() -> std::optional<record_view>;
-
-    friend auto begin(reader& _reader) -> iter;
-    friend auto end(reader const&) {
-        return nullptr;
-    }
 };
 
-struct reader::iter {
-    reader& _reader;
-    std::optional<record_view> nextItem = _reader.next();
-
-    auto operator*() const -> record_view {
-       return *nextItem;
-    }
-    auto operator++() -> iter& {
-        nextItem = _reader.next();
-        return *this;
-    }
-    auto operator!=(std::nullptr_t) const {
-        return nextItem.has_value();
-    }
-};
-
-
-
-
-static_assert(record_reader_c<reader>);
 }

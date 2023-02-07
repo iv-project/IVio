@@ -1,12 +1,25 @@
 #include "reader.h"
 
 #include "../bgzf_reader.h"
+#include "../buffered_reader.h"
 #include "../file_reader.h"
+#include "../mmap_reader.h"
+#include "../stream_reader.h"
+#include "../zlib_file_reader.h"
+#include "../zlib_mmap2_reader.h"
+#include "../zlib_ng_file_reader.h"
 
-namespace io3::bcf {
+#include <cassert>
+#include <charconv>
+#include <functional>
+#include <optional>
+#include <ranges>
 
-struct reader_pimpl {
-    VarBufferedReader _reader;
+namespace io3 {
+
+template <>
+struct reader_base<bcf::reader>::pimpl {
+    VarBufferedReader ureader;
     size_t lastUsed{};
 
     std::string headerBuffer;
@@ -22,6 +35,25 @@ struct reader_pimpl {
         std::vector<std::string_view> filters;
         std::vector<std::string_view> samples;
     } storage;
+
+    pimpl(std::filesystem::path file, bool)
+        : ureader {[&]() -> VarBufferedReader {
+            if (file.extension() == ".bcf") {
+                return buffered_reader<1<<16>{bgzf_reader{mmap_reader{file.c_str()}}};
+            }
+            throw std::runtime_error("unknown file extension");
+        }()}
+    {}
+    pimpl(std::istream& file, bool compressed)
+        : ureader {[&]() -> VarBufferedReader {
+            if (!compressed) {
+                return stream_reader{file};
+            } else {
+                return zlib_reader{stream_reader{file}};
+            }
+        }()}
+    {}
+
 
 
     auto parseHeaderLine(size_t pos) -> std::tuple<bool, size_t> {
@@ -71,27 +103,27 @@ struct reader_pimpl {
     }
 
     void readHeader() {
-        auto [ptr, size] = _reader.read(9);
+        auto [ptr, size] = ureader.read(9);
 
         if (size < 9) throw "something went wrong reading bcf file (1)";
 
         size_t txt_len = io3::bgzfUnpack<uint32_t>(ptr + 5);
-        _reader.read(9 + txt_len); // read complete header !TODO safe header for future processing
-        headerBuffer = std::string{_reader.string_view(9, 9+txt_len)};
+        ureader.read(9 + txt_len); // read complete header !TODO safe header for future processing
+        headerBuffer = std::string{ureader.string_view(9, 9+txt_len)};
         parseHeader();
-        _reader.dropUntil(9 + txt_len);
+        ureader.dropUntil(9 + txt_len);
     }
 
-    auto next() -> std::optional<record_view> {
-        _reader.dropUntil(lastUsed);
-        auto [ptr, size] = _reader.read(8);
+    auto next() -> std::optional<bcf::record_view> {
+        ureader.dropUntil(lastUsed);
+        auto [ptr, size] = ureader.read(8);
         if (size == 0) return std::nullopt;
         if (size < 8) throw "something went wrong reading bcf file (2)";
 
         auto l_shared = io3::bgzfUnpack<uint32_t>(ptr+0);
         auto l_indiv  = io3::bgzfUnpack<uint32_t>(ptr+4);
         auto flen = l_shared + l_indiv + 8;
-        auto [ptr2, size2] = _reader.read(flen);
+        auto [ptr2, size2] = ureader.read(flen);
         if (size2 < flen) throw "something went wrong reading bcf file (3)";
         if (size2 < 32+3) throw "something went worng reading bcf file (4)";
         auto chromId  = io3::bgzfUnpack<int32_t>(ptr2 + 8);
@@ -185,7 +217,7 @@ struct reader_pimpl {
         lastUsed = l_shared + l_indiv + 8;
 
 
-        return record_view {
+        return bcf::record_view {
             .chrom   = contigMap[chromId],
             .pos     = pos,
             .id      = id,
@@ -194,25 +226,30 @@ struct reader_pimpl {
             .qual    = qual,
             .filter  = storage.filters,
             .info    = info,
-            .format  = _reader.string_view(0, 0),
+            .format  = ureader.string_view(0, 0),
             .samples = storage.samples,
         };
     }
 };
+}
 
-reader::reader(VarBufferedReader r)
-    : pimpl{std::make_unique<reader_pimpl>(std::move(r))}
+namespace io3::bcf {
+
+reader::reader(config const& config_)
+    : reader_base{std::visit([&](auto& p) {
+        return std::make_unique<pimpl>(p, config_.compressed);
+    }, config_.input)}
 {
-    pimpl->readHeader();
+    pimpl_->readHeader();
 }
 
 reader::~reader() = default;
+
 auto reader::next() -> std::optional<record_view> {
-    assert(pimpl);
-    return pimpl->next();
+    assert(pimpl_);
+    return pimpl_->next();
 }
-auto begin(reader& _reader) -> reader::iter {
-    return reader::iter{_reader};
-}
+
+static_assert(record_reader_c<reader>);
 
 }
