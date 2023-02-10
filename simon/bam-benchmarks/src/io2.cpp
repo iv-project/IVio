@@ -10,7 +10,8 @@
 #include <filesystem>
 #include <sstream>
 
-auto io2_bench(std::string_view _file) -> Result {
+
+auto io2_bench(std::string_view _file, size_t threadNbr) -> Result {
     Result result;
 
     auto fin = io2::sam_io::reader{

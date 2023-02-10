@@ -6,16 +6,21 @@
 #include <string_view>
 #include <sys/resource.h>
 
-auto seqan2_bench(std::string_view file) -> Result;
-auto seqan3_bench(std::string_view file) -> Result;
-auto io2_bench(std::string_view file) -> Result;
-auto io3_bench(std::string_view file) -> Result;
+auto seqan2_bench(std::string_view file, size_t threadNbr) -> Result;
+auto seqan3_bench(std::string_view file, size_t threadNbr) -> Result;
+auto io2_bench(std::string_view file, size_t threadNbr) -> Result;
+auto io3_bench(std::string_view file, size_t threadNbr) -> Result;
 
 int main(int argc, char** argv) {
     try {
-        if (argc != 3) return 0;
+        if (argc < 3) return 0;
         auto method = std::string_view{argv[1]};
         auto file   = std::string_view{argv[2]};
+        auto threadNbr = [&]() {
+            if (argc > 3) return std::stoi(argv[3]);
+            return 1;
+        }();
+        if (argc > 4) return 0;
 
         Result bestResult;
         int fastestRun{};
@@ -26,10 +31,10 @@ int main(int argc, char** argv) {
                 auto start  = std::chrono::high_resolution_clock::now();
 
                 auto r = [&]() {
-                    if (method == "seqan2")           return seqan2_bench(file);
-                    if (method == "seqan3")           return seqan3_bench(file);
-                    if (method == "io2")              return io2_bench(file);
-                    if (method == "io3")              return io3_bench(file);
+                    if (method == "seqan2")           return seqan2_bench(file, threadNbr);
+                    if (method == "seqan3")           return seqan3_bench(file, threadNbr);
+                    if (method == "io2")              return io2_bench(file, threadNbr);
+                    if (method == "io3")              return io3_bench(file, threadNbr);
                     throw std::runtime_error("unknown method: " + std::string{method});
                 }();
                 auto end  = std::chrono::high_resolution_clock::now();
@@ -43,7 +48,7 @@ int main(int argc, char** argv) {
         } catch(...){
             bestResult = Result{}; // reset results, will cause this to be incorrect
         }
-        auto groundTruth = io2_bench(file);
+        auto groundTruth = io2_bench(file, 8);
         // print results
         [&]() {
             auto const& result = bestResult;

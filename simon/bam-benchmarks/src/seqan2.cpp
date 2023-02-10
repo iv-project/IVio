@@ -5,7 +5,7 @@
 
 using namespace seqan;
 
-auto seqan2_bench(std::string_view _file) -> Result {
+auto seqan2_bench(std::string_view _file, size_t threadNbr) -> Result {
     Result result;
 
     std::string file = std::string{_file};

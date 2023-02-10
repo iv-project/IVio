@@ -90,6 +90,10 @@ struct ZlibContext {
         }
     }
 
+    size_t decompressedSize(std::span<char const> in) const {
+        return bgzfUnpack<uint32_t>(in.data() + in.size() - 4);
+    }
+
     size_t decompressBlock(std::span<char const> in, std::span<char> out) {
         reset();
 

@@ -1,118 +1,171 @@
 #pragma once
 
-#include "bgzf_mt_reader.h"
+#include "bgzf_reader.h"
 
 #include <condition_variable>
 #include <mutex>
 #include <thread>
+#include <list>
 
 namespace io3 {
 
-struct reader_mt_phase {
-    std::atomic_int phase{0};
+namespace bgzf_mt {
+template <typename Job>
+struct job_queue {
+    struct WrappedJob {
+        Job job;
+        std::mutex mutex;
+        std::condition_variable cv;
+        bool processing{};
+        bool doneflag{};
 
-    std::mutex mutex;
-    std::condition_variable cv0;
-    std::condition_variable cv1;
-
-    void waitFor(int expected) {
-        auto g = std::unique_lock{mutex};
-        if (phase == expected) return;
-        if (expected == 0) {
-            cv0.wait(g);
-        } else if (expected == 1) {
-            cv1.wait(g);
+        void done() {
+            auto g = std::unique_lock{mutex};
+            doneflag = true;
+            cv.notify_one();
+        };
+        void await() {
+            auto g = std::unique_lock{mutex};
+            if (doneflag) return;
+            cv.wait(g);
         }
-        phase = -1;
+    };
+    std::mutex mutex;
+    std::list<WrappedJob> jobs;
+    bool terminate{};
+    std::condition_variable cv;
+
+    job_queue() = default;
+    job_queue(job_queue const&) = delete;
+    job_queue(job_queue&& _other) {
+        _other.finish();
+        jobs = std::move(_other.jobs);
+    }
+    auto operator=(job_queue const&) -> job_queue& = delete;
+    auto operator=(job_queue&& _other) -> job_queue& {
+        _other.finish();
+        jobs = std::move(_other.jobs);
+        return *this;
     }
 
-    void trigger(int _phase) {
-        auto g = std::unique_lock{mutex};
-        phase = _phase;
-        g.unlock();
-        if (phase == 0) {
-            cv0.notify_one();
-        } else if (phase == 1) {
-            cv1.notify_one();
+    ~job_queue() {
+        finish();
+    }
+
+    void finish() {
+        auto g = std::unique_lock(mutex);
+        terminate = true;
+        cv.notify_all();
+    }
+
+    auto begin() -> WrappedJob* {
+        auto g = std::unique_lock(mutex);
+        if (jobs.empty()) return nullptr;
+        return &jobs.front();
+    }
+
+    void pop_front() {
+        auto g = std::unique_lock(mutex);
+        jobs.pop_front();
+    }
+
+    auto add_job(Job job) -> WrappedJob& {
+        auto g = std::unique_lock(mutex);
+        jobs.emplace_back(std::move(job));
+        cv.notify_one();
+        return jobs.back();
+    }
+
+    auto process_job() -> WrappedJob* {
+        while (!terminate) {
+            auto g = std::unique_lock(mutex);
+            for (auto& job : jobs) {
+                auto g2 = std::unique_lock{job.mutex};
+                if (job.processing == false) {
+                    job.processing = true;
+                    return &job;
+                }
+            }
+            if(terminate) break;
+            cv.wait(g);
         }
+        return nullptr;
     }
 };
+}
 
 struct bgzf_mt_reader {
+    struct Job {
+        std::string                  range{std::string(1<<16, '\0')};
+        std::string_view             range_view{range};
+        std::string                  buffer;
+        std::unique_ptr<ZlibContext> zlibCtx{std::make_unique<ZlibContext>()};
+    };
+
+    std::mutex ureaderMutex;
     VarBufferedReader reader;
-    ZlibContext       zlibCtx;
 
-    reader_mt_phase phase;
-    std::jthread thread;
-    std::atomic_bool skipWaitNext{};
-    std::string_view next;
-    std::mutex mutex;
-    bool threadStarted{};
+    std::vector<std::jthread> threads;
+    bgzf_mt::job_queue<Job>  jobs;
 
-    void startThread() {
-        if (threadStarted) return;
-        threadStarted = true;
-        thread = std::jthread{[this](std::stop_token stoken) {
-            size_t lastUsed{};
-            struct R {
-                size_t lastUsed{};
-                std::string range;
-            };
-            auto   s = std::array<R, 3>{};
-            size_t currentS{};
+    void work(bgzf_mt::job_queue<Job>::WrappedJob* job) {
+        auto& range   = job->job.range;
+        auto& buffer  = job->job.buffer;
+        auto& zlibCtx = job->job.zlibCtx;
 
-            while(!stoken.stop_requested()) {
-                auto& s0          = s[currentS];
-
-                reader.dropUntil(s0.lastUsed);
-
-                s[(currentS+1)%3].lastUsed -= s0.lastUsed;
-                s[(currentS+2)%3].lastUsed -= s0.lastUsed;
-                lastUsed -= s0.lastUsed;
-
-                // the actual reading
-                    auto [ptr, avail_in] = reader.read(lastUsed + 18);
-                    if (avail_in == lastUsed) {
-                        phase.waitFor(0);
-                        next = {};
-                        phase.trigger(1);
-                        return;
-                    }
-                    if (avail_in < lastUsed + 18) throw "failed reading (1)";
-
-                    size_t compressedLen = bgzfUnpack<uint16_t>(lastUsed + ptr + 16) + 1u;
-                    auto [ptr2, avail_in2] = reader.read(lastUsed + compressedLen);
-                    if (avail_in2 < lastUsed + compressedLen) throw "failed reading (2)";
-
-                    s0.range.resize(1<<16);
-
-                    assert(s0.range.size() >= (1<<16));
-
-                    size_t size = zlibCtx.decompressBlock({lastUsed + ptr2+18, compressedLen-18}, {s0.range.data(), s0.range.size()});
-                    s0.range.resize(size);
-                    lastUsed = lastUsed + compressedLen;
-
-                // end of reading
-                phase.waitFor(0);
-                next = s0.range;
-                phase.trigger(1);
-                currentS = (currentS + 1) % 3;
-                s0.lastUsed = lastUsed;
+        {
+            auto g = std::unique_lock{ureaderMutex};
+            auto [ptr, avail_in] = reader.read(18);
+            if (avail_in == 0) {
+                job->done();
+                return;
             }
-        }};
+            if (avail_in < 18) throw "failed reading (1)";
 
+            size_t compressedLen = bgzfUnpack<uint16_t>(ptr + 16) + 1u;
+            auto [ptr2, avail_in2] = reader.read(compressedLen);
+            if (avail_in2 < compressedLen) throw "failed reading (2)";
+            buffer.resize(compressedLen-18);
+            std::memcpy(buffer.data(), ptr2+18, compressedLen-18);
+
+            reader.dropUntil(compressedLen);
+        }
+
+        size_t size = zlibCtx->decompressBlock({buffer.begin(), buffer.size()}, {range.data(), range.size()});
+        job->job.range_view = {range.begin(), range.begin() + size};
+
+        // end of reading
+        job->done();
     }
 
-    bgzf_mt_reader(VarBufferedReader reader_)
+    void startThread(size_t threadNbr) {
+        while (threads.size() < threadNbr) {
+            threads.emplace_back(std::jthread{[this](std::stop_token stoken) {
+                while(!stoken.stop_requested()) {
+                    auto job = jobs.process_job();
+                    if (!job) return;
+                    work(job);
+                }
+            }});
+        }
+    }
+
+    bgzf_mt_reader(VarBufferedReader reader_, size_t threadNbr=1)
         : reader{std::move(reader_)}
-    {}
+    {
+        startThread(threadNbr);
+        for (size_t i{0}; i < threadNbr+1; ++i) {
+            jobs.add_job(Job{});
+        }
+    }
 
     bgzf_mt_reader(bgzf_mt_reader const&) = delete;
-    bgzf_mt_reader(bgzf_mt_reader&& _other)
-        : reader{std::move(_other.reader)}
-        , thread{std::move(_other.thread)}
-    {
-        assert(!_other.threadStarted);
+    bgzf_mt_reader(bgzf_mt_reader&& _other) {
+        auto threadNbr = _other.threads.size();
+        jobs   = std::move(_other.jobs);
+        _other.threads.clear();
+        reader = std::move(_other.reader);
+        startThread(threadNbr);
     }
 
     auto operator=(bgzf_mt_reader const&) -> bgzf_mt_reader& = delete;
@@ -122,81 +175,20 @@ struct bgzf_mt_reader {
     ~bgzf_mt_reader() = default;
 
     size_t read(std::ranges::sized_range auto&& range) {
-        if (!skipWaitNext) {
-            startThread();
-            phase.waitFor(1);
-        }
-        size_t size = std::min(range.size(), next.size());
-        std::memcpy(range.data(), next.data(), size);
-        if (size == next.size()) {
-            skipWaitNext = false;
-            phase.trigger(0);
+        auto next = jobs.begin();
+        if (!next) return 0; // abort, nothing anymore todo
+        next->await();
+        size_t size = std::min(range.size(), next->job.range_view.size());
+        std::memcpy(range.data(), next->job.range_view.data(), size);
+        if (size == next->job.range_view.size()) {
+            jobs.add_job(std::move(next->job));
+            jobs.pop_front();
         } else {
-            next = {next.data()+size, next.size() - size};
-            skipWaitNext = true;
+            next->job.range_view = {next->job.range_view.data()+size, next->job.range_view.size() - size};
         }
         return size;
     }
-
-/*    std::vector<char> buf = []() { auto vec = std::vector<char>{}; vec.reserve(minV); return vec; }();
-    int inPos{};
-
-    auto readMore() -> bool {
-        startThread();
-        phase.waitFor(1);
-        if (next.size() == 0) {
-            phase.trigger(0);
-            return false;
-        }
-
-        auto oldSize = buf.size();
-        buf.resize(buf.size() + next.size());
-        std::copy_n(next.begin(), next.size(), buf.begin() + oldSize);
-        phase.trigger(0);
-        return true;
-    }
-
-
-    size_t readUntil(char c, size_t lastUsed) {
-        while (true) {
-            auto pos = std::string_view{buf.data(), buf.size()}.find(c, lastUsed + inPos);
-            if (pos != std::string_view::npos) {
-                return pos - inPos;
-            }
-
-            if (!readMore()) {
-                return buf.size() - inPos;
-            }
-        }
-    }
-
-    auto read(size_t ct) -> std::tuple<char const*, size_t> {
-        while (buf.size()-inPos < ct) {
-            if (!readMore()) break;
-        }
-        return {buf.data()+inPos, buf.size()-inPos};
-    }
-
-    void dropUntil(size_t i) {
-        i = i + inPos;
-        if (i < minV) {
-            inPos = i;
-            return;
-        }
-        std::copy(begin(buf)+i, end(buf), begin(buf));
-        buf.resize(buf.size()-i);
-        inPos = 0;
-    }
-
-    bool eof(size_t i) const {
-        return i+inPos == buf.size();
-    }
-
-    auto string_view(size_t start, size_t end) -> std::string_view {
-        return std::string_view{buf.data()+start+inPos, buf.data()+end+inPos};
-    }*/
 };
 static_assert(Readable<bgzf_mt_reader>);
-//static_assert(BufferedReadable<bgzf_mt_reader<>>);
 
 }

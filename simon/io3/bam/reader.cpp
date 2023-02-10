@@ -16,10 +16,6 @@
 #include <optional>
 #include <ranges>
 
-namespace {
-constexpr static auto ccmap = std::string_view{"=ACMGRSVTWYHKDBN"};
-}
-
 namespace io3 {
 
 
@@ -40,24 +36,22 @@ struct reader_base<bam::reader>::pimpl {
         std::string seq;
     } storage;
 
-    pimpl(std::filesystem::path file, bool)
+    pimpl(std::filesystem::path file, bool, size_t threadNbr)
         : ureader {[&]() -> VarBufferedReader {
-            if (file.extension() == ".bam") {
-                return buffered_reader{bgzf_mt_reader{mmap_reader{file.c_str()}}};
-//                return bgzf_mt_reader<1<<16>{mmap_reader{file.c_str()}};
-//                return buffered_reader<1<<16>{bgzf_reader{mmap_reader{file.c_str()}}};
-
+            if (threadNbr == 0) {
+                return buffered_reader<1<<16>{bgzf_reader{mmap_reader{file.c_str()}}};
             }
-            throw std::runtime_error("unknown file extension");
+            return bgzf_mt_reader{mmap_reader{file.c_str()}, threadNbr};
         }()}
     {}
-    pimpl(std::istream& file, bool compressed)
+    pimpl(std::istream& file, bool compressed, size_t threadNbr)
         : ureader {[&]() -> VarBufferedReader {
             if (!compressed) {
                 return stream_reader{file};
-            } else {
-                return zlib_reader{stream_reader{file}};
+            } else if (threadNbr == 0) {
+                return buffered_reader<1<<16>{bgzf_reader{stream_reader{file}}};
             }
+            return bgzf_mt_reader{stream_reader{file}, threadNbr};
         }()}
     {}
 
@@ -161,17 +155,6 @@ struct reader_base<bam::reader>::pimpl {
         auto qual        = ureader.string_view(start_qual, start_qual + l_seq);
         //!TODO List of auxiliary data (tags) is missing
 
-        // unpack seq
-        storage.seq.resize(l_seq, 'A');
-        for (size_t i{0}; i < seq.size(); ++i) {
-            auto c = seq[i];
-            storage.seq[i*2] = ccmap[(c >> 4) & 0xf];
-            if (i*2+1 < storage.seq.size()) {
-                storage.seq[i*2+1] = ccmap[c & 0xf];
-            }
-        }
-
-
         lastUsed = block_size+4;
 
         return bam::record_view { .refID      = refID,
@@ -184,7 +167,8 @@ struct reader_base<bam::reader>::pimpl {
 //                                  .tlen       = tlen,
 //                                  .read_name  = read_name,
 //                                  .cigar      = cigar,
-                                  .seq        = storage.seq,
+                                  .seq        = {seq, l_seq},
+//                                  .seq        = storage.seq,
 //                                  .qual       = qual,
                                 };
     }
@@ -195,7 +179,7 @@ namespace io3::bam {
 
 reader::reader(config const& config_)
     : reader_base{std::visit([&](auto& p) {
-        return std::make_unique<pimpl>(p, config_.compressed);
+        return std::make_unique<pimpl>(p, config_.compressed, config_.threadNbr);
     }, config_.input)}
 {
     pimpl_->readHeader();

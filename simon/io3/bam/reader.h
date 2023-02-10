@@ -27,6 +27,8 @@ struct reader : public reader_base<reader> {
         // Source: file or stream
         std::variant<std::filesystem::path, std::reference_wrapper<std::istream>> input;
 
+        size_t threadNbr = 0;
+
         // This is only relevant if a stream is being used
         bool compressed{};
     };
