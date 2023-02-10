@@ -2,6 +2,7 @@
 
 #include <cstddef>
 #include <optional>
+#include <ranges>
 #include <span>
 #include <string_view>
 
@@ -17,28 +18,36 @@ struct record_view {
         }
         return r;
     }();
-    constexpr static auto ccmap = std::string_view{"=ACMGRSVTWYHKDBN"};
-    inline static auto const ccmap2 = []() {
-        auto values = std::array<std::tuple<char, char>, 256>{};
-
-        for (size_t i{0}; i < ccmap.size(); ++i) {
-            for (size_t j{0}; j < ccmap.size(); ++j) {
-                values[j+i*16] = {i, j};
-            }
-        }
-        return values;
-    }();
 
     struct compact_seq {
-        std::string_view data; // Data compressed as described in bam
-        size_t           size; // Number of elements stored in the sequence
-        auto operator[](size_t i) const {
-            auto c = reinterpret_cast<uint8_t const&>(data[i/2]);
-            auto [a, b] = ccmap2[c];
+        std::span<uint8_t const> data; // Data compressed as described in bam
+        size_t                   size; // Number of elements stored in the sequence
+        auto operator[](size_t i) const -> uint8_t {
+            auto c = data[i/2];
             if (i % 2 == 0) {
-                return a;
+                c >>= 4;
             }
-            return b;
+            return c & 0xf;
+        }
+
+        struct iter {
+            using value_type = uint8_t;
+            compact_seq const* seq;
+            size_t i{};
+            auto operator<=>(iter const& _other) const = default;
+            auto operator*() const {
+                return seq->operator[](i);
+            }
+            auto operator++() -> iter& {
+                ++i;
+                return *this;
+            }
+        };
+        friend auto begin(compact_seq const& seq) {
+            return iter{&seq, 0};
+        }
+        friend auto end(compact_seq const& seq) {
+            return iter{&seq, seq.size};
         }
     };
     int32_t                     refID;
@@ -50,9 +59,9 @@ struct record_view {
     int32_t                     next_pos;
     int32_t                     tlen;
     std::string_view            read_name;
-    std::string_view            cigar;
+    std::span<uint8_t const>    cigar;
     compact_seq                 seq;
-    std::string_view            qual;
+    std::span<uint8_t const>    qual;
 };
 
 }

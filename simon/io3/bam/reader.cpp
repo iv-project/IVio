@@ -32,10 +32,6 @@ struct reader_base<bam::reader>::pimpl {
     std::vector<std::string_view>& contigMap = headerMap["contig"];
     std::vector<std::string_view>& filterMap = headerMap["filter"];
 
-    struct {
-        std::string seq;
-    } storage;
-
     pimpl(std::filesystem::path file, bool, size_t threadNbr)
         : ureader {[&]() -> VarBufferedReader {
             if (threadNbr == 0) {
@@ -158,18 +154,17 @@ struct reader_base<bam::reader>::pimpl {
         lastUsed = block_size+4;
 
         return bam::record_view { .refID      = refID,
-//                                  .pos        = pos,
-//                                  .mapq       = mapq,
-//                                  .bin        = bin,
-//                                  .flag       = flag,
-//                                  .next_refID = next_refID,
-//                                  .next_pos   = next_pos,
-//                                  .tlen       = tlen,
-//                                  .read_name  = read_name,
-//                                  .cigar      = cigar,
-                                  .seq        = {seq, l_seq},
-//                                  .seq        = storage.seq,
-//                                  .qual       = qual,
+                                  .pos        = pos,
+                                  .mapq       = mapq,
+                                  .bin        = bin,
+                                  .flag       = flag,
+                                  .next_refID = next_refID,
+                                  .next_pos   = next_pos,
+                                  .tlen       = tlen,
+                                  .read_name  = read_name,
+                                  .cigar      = std::span{reinterpret_cast<uint8_t const*>(cigar.data()), cigar.size()},
+                                  .seq        = {std::span{reinterpret_cast<uint8_t const*>(seq.data()), seq.size()}, l_seq},
+                                  .qual       = std::span{reinterpret_cast<uint8_t const*>(qual.data()), qual.size()},
                                 };
     }
 };
