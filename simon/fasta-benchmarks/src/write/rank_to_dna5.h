@@ -4,7 +4,7 @@
 #include <cstdint>
 #include <span>
 
-static auto rank_to_dna5(std::span<uint8_t const> in) -> std::string {
+static void rank_to_dna5(std::span<uint8_t const> in, std::span<char> out) {
     constexpr static auto ccmap = []() {
         std::array<char, 256> c;
         c[0] = 'A';
@@ -15,10 +15,7 @@ static auto rank_to_dna5(std::span<uint8_t const> in) -> std::string {
         return c;
     }();
 
-    auto out = std::string{};
-    out.resize(in.size());
     for (size_t i{0}; i < in.size(); ++i) {
         out[i] = ccmap[in[i]];
     }
-    return out;
 }
