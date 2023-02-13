@@ -30,3 +30,9 @@ for f in $(find src/read_stream | grep .cpp\$); do
     g++ ${ARGS} -c $f -o obj/$f.o
 done
 g++ $(find obj/src/read_stream | grep \.o\$) $(find obj/io3 | grep \.o\$) -lz-ng -lz ${FLAGS} -o benchmark_read_stream
+
+for f in $(find src/write | grep .cpp\$); do
+    mkdir -p $(dirname obj/$f)
+    g++ ${ARGS} -c $f -o obj/$f.o
+done
+g++ $(find obj/src/write | grep \.o\$) $(find obj/io3 | grep \.o\$) -lz-ng -lz ${FLAGS} -o benchmark_write

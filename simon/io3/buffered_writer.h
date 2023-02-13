@@ -24,7 +24,7 @@ public:
     buffered_writer(buffered_writer&& _other) = default;
 
 
-    void write(std::span<char> _buffer, bool finish) {
+    void write(std::span<char const> _buffer, bool finish) {
         auto oldSize = buffer.size();
         buffer.resize(oldSize + _buffer.size());
         std::ranges::copy(_buffer, buffer.begin()+oldSize);

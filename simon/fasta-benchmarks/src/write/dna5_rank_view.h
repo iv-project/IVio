@@ -4,7 +4,7 @@
 #include <cstdint>
 #include <ranges>
 
-inline constexpr auto dna5_rank_view = std::views::transform([](char c) -> uint8_t {
+inline constexpr auto dna5_rank_view = std::views::transform([](char c) {
     constexpr static auto ccmap = []() {
         std::array<uint8_t, 256> c;
         c.fill(0xff);

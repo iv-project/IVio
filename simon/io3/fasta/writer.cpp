@@ -18,6 +18,7 @@ struct writer_pimpl {
 
     writer_config config;
     Writers writer;
+    std::string buffer;
     writer_pimpl(writer_config config)
         : config{config}
         , writer {[&]() -> Writers {
@@ -59,11 +60,8 @@ void writer::write(record_view record) {
     assert(pimpl);
     std::visit([&](auto& writer) {
         auto const& config = pimpl->config;
-        auto buffer = std::string{};
-        buffer.reserve(
-            record.id.size() + 2 +                                    // id name + trailing line break
-            record.seq.size() + record.seq.size() / config.length + 1 // seq name + breaking every x characters
-        );
+        auto& buffer = pimpl->buffer;
+        buffer.clear();
         buffer = '>';
         buffer += record.id;
         buffer += '\n';
