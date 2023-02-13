@@ -12,48 +12,50 @@ auto seqan3_bench(std::ifstream& stream, bool compressed) -> Result;
 auto io2_bench(std::ifstream& stream, bool compressed) -> Result;
 auto bio_bench(std::ifstream& stream, bool compressed) -> Result;
 auto io3_bench(std::ifstream& stream, bool compressed) -> Result;
-auto direct_bench(std::ifstream& stream, bool compressed) -> Result;
-auto extreme_bench(std::ifstream& stream, bool compressed) -> Result;
 
 
 
 int main(int argc, char** argv) {
+    auto p = [](auto v, size_t w) {
+        auto ss = std::stringstream{};
+        ss << std::boolalpha << v;
+        auto str = ss.str();
+        while (str.size() < w) {
+            str += " ";
+        }
+        return str;
+    };
+
     try {
         if (argc != 3) return 0;
         auto method = std::string_view{argv[1]};
         auto file   = std::filesystem::path{argv[2]};
 
-        auto compressed = (file.extension() == "gz");
+        auto compressed = (file.extension() == ".gz");
 
         Result bestResult;
         int fastestRun{};
         auto fastestTime = std::numeric_limits<int>::max();
         int maxNbrOfRuns{5};
-        try {
-            for (int i{}; i < maxNbrOfRuns; ++i) {
-                auto start  = std::chrono::high_resolution_clock::now();
-                auto ifs    = std::ifstream{file};
+        for (int i{}; i < maxNbrOfRuns; ++i) {
+            auto start  = std::chrono::high_resolution_clock::now();
+            auto ifs    = std::ifstream{file};
 
-                auto r = [&]() {
-                    if (method == "seqan2")           return seqan2_bench(ifs, compressed);
-                    if (method == "seqan3")           return seqan3_bench(ifs, compressed);
-                    if (method == "io2")              return io2_bench(ifs, compressed);
-                    if (method == "bio")              return bio_bench(ifs, compressed);
-                    if (method == "io3")              return io3_bench(ifs, compressed);
-                    if (method == "direct")           return direct_bench(ifs, compressed);
-                    if (method == "extreme")          return extreme_bench(ifs, compressed);
-                    throw std::runtime_error("unknown method: " + std::string{method});
-                }();
-                auto end  = std::chrono::high_resolution_clock::now();
-                auto diff = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
-                if (diff < fastestTime) {
-                    bestResult = r;
-                    fastestTime = diff;
-                    fastestRun = i;
-                }
+            auto r = [&]() {
+                if (method == "seqan2")           return seqan2_bench(ifs, compressed);
+                if (method == "seqan3")           return seqan3_bench(ifs, compressed);
+                if (method == "io2")              return io2_bench(ifs, compressed);
+                if (method == "bio")              return bio_bench(ifs, compressed);
+                if (method == "io3")              return io3_bench(ifs, compressed);
+                throw std::runtime_error("unknown method: " + std::string{method});
+            }();
+            auto end  = std::chrono::high_resolution_clock::now();
+            auto diff = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+            if (diff < fastestTime) {
+                bestResult = r;
+                fastestTime = diff;
+                fastestRun = i;
             }
-        } catch(...){
-            bestResult = Result{}; // reset results, will cause this to be incorrect
         }
         auto ifs         = std::ifstream{file};
         auto groundTruth = io3_bench(ifs, compressed);
@@ -61,11 +63,10 @@ int main(int argc, char** argv) {
         [&]() {
             auto const& result = bestResult;
             auto timeInMs = fastestTime;
-            bool correct{true};
             size_t a{};
             for (size_t i{0}; i<result.ctChars.size(); ++i) {
                 if (groundTruth.ctChars[i] != result.ctChars[i]) {
-                    correct = false;
+                    throw std::runtime_error("wrong result");
                 }
                 a += result.ctChars[i];
             }
@@ -74,18 +75,9 @@ int main(int argc, char** argv) {
                 getrusage(RUSAGE_SELF, &usage);
                 return usage.ru_maxrss / 1024;
             }();
-            auto p = [](auto v, size_t w) {
-                auto ss = std::stringstream{};
-                ss << std::boolalpha << v;
-                auto str = ss.str();
-                while (str.size() < w) {
-                    str += " ";
-                }
-                return str;
-            };
             std::cout << "method  \tcorrect \ttotal(MB)\tspeed(MB/s)\tmemory(MB)\n";
             std::cout << p(method, 8) << "\t"
-                      << p(correct, 8) << "\t"
+                      << p(true, 8) << "\t"
                       << p(a/1024/1024, 8) << "\t"
                       << p(a/1024/timeInMs, 8) << "\t"
                       << p(memory, 8) << "\t"
@@ -93,6 +85,12 @@ int main(int argc, char** argv) {
         }();
 
     } catch (std::exception const& e) {
-        std::cout << "exception(e): " << e.what() << "\n";
+        std::cout << "method  \tcorrect \ttotal(MB)\tspeed(MB/s)\tmemory(MB)\n";
+        std::cout << p(std::string{argv[1]}, 8) << "\t"
+                  << p(false, 8) << "\t"
+                  << p(0, 8) << "\t"
+                  << p(0, 8) << "\t"
+                  << p(0, 8) << "\t"
+                  << 0 << "/" << 0 << "\n";
     }
 }

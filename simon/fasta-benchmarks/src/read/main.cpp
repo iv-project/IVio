@@ -19,6 +19,16 @@ auto extreme_bench(std::filesystem::path path) -> Result;
 
 
 int main(int argc, char** argv) {
+    auto p = [](auto v, size_t w) {
+        auto ss = std::stringstream{};
+        ss << std::boolalpha << v;
+        auto str = ss.str();
+        while (str.size() < w) {
+            str += " ";
+        }
+        return str;
+    };
+
     try {
         if (argc != 3) return 0;
         auto method = std::string_view{argv[1]};
@@ -28,32 +38,28 @@ int main(int argc, char** argv) {
         int fastestRun{};
         auto fastestTime = std::numeric_limits<int>::max();
         int maxNbrOfRuns{5};
-        try {
-            for (int i{}; i < maxNbrOfRuns; ++i) {
-                auto start  = std::chrono::high_resolution_clock::now();
+        for (int i{}; i < maxNbrOfRuns; ++i) {
+            auto start  = std::chrono::high_resolution_clock::now();
 
-                auto r = [&]() {
-                    if (method == "seqan2")           return seqan2_bench(file);
-                    if (method == "seqan3")           return seqan3_bench(file);
-                    if (method == "io2")              return io2_bench(file);
-                    if (method == "io2-copy")         return io2_copy_bench(file);
-                    if (method == "bio")              return bio_bench(file);
-                    if (method.starts_with("io3_mt")) return io3_mt_bench(file, method);
-                    if (method.starts_with("io3"))    return io3_bench(file, method);
-                    if (method == "direct")           return direct_bench(file);
-                    if (method == "extreme")          return extreme_bench(file);
-                    throw std::runtime_error("unknown method: " + std::string{method});
-                }();
-                auto end  = std::chrono::high_resolution_clock::now();
-                auto diff = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
-                if (diff < fastestTime) {
-                    bestResult = r;
-                    fastestTime = diff;
-                    fastestRun = i;
-                }
+            auto r = [&]() {
+                if (method == "seqan2")           return seqan2_bench(file);
+                if (method == "seqan3")           return seqan3_bench(file);
+                if (method == "io2")              return io2_bench(file);
+                if (method == "io2-copy")         return io2_copy_bench(file);
+                if (method == "bio")              return bio_bench(file);
+                if (method.starts_with("io3_mt")) return io3_mt_bench(file, method);
+                if (method.starts_with("io3"))    return io3_bench(file, method);
+                if (method == "direct")           return direct_bench(file);
+                if (method == "extreme")          return extreme_bench(file);
+                throw std::runtime_error("unknown method: " + std::string{method});
+            }();
+            auto end  = std::chrono::high_resolution_clock::now();
+            auto diff = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+            if (diff < fastestTime) {
+                bestResult = r;
+                fastestTime = diff;
+                fastestRun = i;
             }
-        } catch(...){
-            bestResult = Result{}; // reset results, will cause this to be incorrect
         }
         auto groundTruth = io3_bench(file, "io3");
         // print results
@@ -73,15 +79,6 @@ int main(int argc, char** argv) {
                 getrusage(RUSAGE_SELF, &usage);
                 return usage.ru_maxrss / 1024;
             }();
-            auto p = [](auto v, size_t w) {
-                auto ss = std::stringstream{};
-                ss << std::boolalpha << v;
-                auto str = ss.str();
-                while (str.size() < w) {
-                    str += " ";
-                }
-                return str;
-            };
             std::cout << "method  \tcorrect \ttotal(MB)\tspeed(MB/s)\tmemory(MB)\n";
             std::cout << p(method, 8) << "\t"
                       << p(correct, 8) << "\t"
@@ -92,6 +89,12 @@ int main(int argc, char** argv) {
         }();
 
     } catch (std::exception const& e) {
-        std::cout << "exception(e): " << e.what() << "\n";
+        std::cout << "method  \tcorrect \ttotal(MB)\tspeed(MB/s)\tmemory(MB)\n";
+        std::cout << p(std::string{argv[1]}, 8) << "\t"
+                  << p(false, 8) << "\t"
+                  << p(0, 8) << "\t"
+                  << p(0, 8) << "\t"
+                  << p(0, 8) << "\t"
+                  << 0 << "/" << 0 << "\n";
     }
 }

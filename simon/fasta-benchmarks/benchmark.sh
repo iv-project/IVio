@@ -1,7 +1,9 @@
 #!/usr/bin/bash
 cd "$(dirname "$0")"
 
-methods=(seqan2 seqan3 io3 io3_mt io2 io2-copy bio direct extreme)
+type=$1
+
+methods=(seqan2 seqan3 io3 io3_mt io2 bio direct extreme)
 files=(data/illumina.fa data/illumina.fa.gz data/hg38.fa data/hg38.fa.gz)
 
 #methods=(seqan3 io3)
@@ -11,9 +13,10 @@ for file in ${files[@]}; do
     usedMeth=()
     speed=()
     memory=()
+    echo "file: $file"
     echo -e "method  \tcorrect \ttotal(MB)\tspeed(MB/s)\tmemory(MB)";
     for method in ${methods[@]}; do
-        line="$(./benchmark_read ${method} ${file} | tail -n +2)"
+        line="$(./benchmark_${type} ${method} ${file} | tail -n +2)"
         echo "$line"
         c=$(echo $line | awk '{print $2}')
         s=$(echo $line | awk '{print $4}')

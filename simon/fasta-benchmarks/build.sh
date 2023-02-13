@@ -2,6 +2,7 @@
 cd "$(dirname "$0")"
 
 FLAGS="-march=native -O3 -DNDEBUG -s -Wall"
+#FLAGS="-O0 -ggdb -Wall"
 #FLAGS="-O0 -ggdb -fsanitize=address -Wall"
 #FLAGS="-march=native -O3 -DNDEBUG -ggdb"
 #
