@@ -56,7 +56,7 @@ struct zlib_writer_impl {
                 return deflate(&stream, Z_NO_FLUSH);
             }
         }();
-        if (ret != Z_OK) {
+        if (ret != Z_OK && ret != Z_STREAM_END) {
             throw "error writting zlib";
         }
         file.write({&outBuffer[0], outBuffer.size() - stream.avail_out}, false);
