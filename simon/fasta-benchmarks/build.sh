@@ -13,18 +13,13 @@ INCLUDES="-I ../../io2/include \
 ARGS="-std=c++20 ${FLAGS} ${INCLUDES}"
 
 
-mkdir -p obj/io3/fasta obj/io3/bcf obj/io3/vcf obj/src
+mkdir -p obj/io3/fasta obj/io3/bcf obj/io3/vcf
 g++ ${ARGS} -c ../io3/fasta/reader.cpp -o obj/io3/fasta/reader.o
 g++ ${ARGS} -c ../io3/fasta/reader_mt.cpp -o obj/io3/fasta/reader_mt.o
 g++ ${ARGS} -c ../io3/fasta/writer.cpp -o obj/io3/fasta/writer.o
-g++ ${ARGS} -c src/main.cpp -o obj/src/main.o
-g++ ${ARGS} -c src/seqan2.cpp -o obj/src/seqan2.o
-g++ ${ARGS} -c src/seqan3.cpp -o obj/src/seqan3.o
-g++ ${ARGS} -c src/io2.cpp -o obj/src/io2.o
-g++ ${ARGS} -c src/bio.cpp -o obj/src/bio.o
-g++ ${ARGS} -c src/io3.cpp -o obj/src/io3.o
-g++ ${ARGS} -c src/io3_mt.cpp -o obj/src/io3_mt.o
-g++ ${ARGS} -c src/direct.cpp -o obj/src/direct.o
-g++ ${ARGS} -c src/extreme.cpp -o obj/src/extreme.o
 
-g++ $(find obj | grep \.o\$) -lz-ng -lz ${FLAGS} -o benchmark
+for f in $(find src/read | grep .cpp\$); do
+    mkdir -p $(dirname obj/$f)
+    g++ ${ARGS} -c $f -o obj/$f.o
+done
+g++ $(find obj/src/read | grep \.o\$) $(find obj/io3 | grep \.o\$) -lz-ng -lz ${FLAGS} -o benchmark_read
