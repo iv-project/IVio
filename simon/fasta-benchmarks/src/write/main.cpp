@@ -8,9 +8,10 @@
 #include <io3/fasta/reader.h>
 #include "../read/dna5_rank_view.h"
 
-
-void io3_bench(std::filesystem::path file, std::vector<std::tuple<std::string, std::vector<uint8_t>>> const& data);
+void seqan2_bench(std::filesystem::path file, std::vector<std::tuple<std::string, std::vector<uint8_t>>> const& data);
 void seqan3_bench(std::filesystem::path file, std::vector<std::tuple<std::string, std::vector<uint8_t>>> const& data);
+void io3_bench(std::filesystem::path file, std::vector<std::tuple<std::string, std::vector<uint8_t>>> const& data);
+
 
 
 using Data = std::vector<std::tuple<std::string, std::vector<uint8_t>>>;
@@ -63,7 +64,8 @@ int main(int argc, char** argv) {
         for (int i{}; i < maxNbrOfRuns; ++i) {
             auto start  = std::chrono::high_resolution_clock::now();
 
-            if (method == "seqan3") seqan3_bench(file, data);
+            if (method == "seqan2") seqan2_bench(file, data);
+            else if (method == "seqan3") seqan3_bench(file, data);
             else if (method == "io3") io3_bench(file, data);
             else throw std::runtime_error("unknown method");
 
