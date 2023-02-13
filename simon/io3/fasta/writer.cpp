@@ -7,76 +7,80 @@
 
 #include <cassert>
 
-namespace io3::fasta {
+namespace io3 {
 
-struct writer_pimpl {
+template <>
+struct writer_base<fasta::writer>::pimpl {
     using Writers = std::variant<file_writer,
                                  buffered_writer<zlib_file_writer>,
                                  stream_writer,
                                  buffered_writer<zlib_stream_writer>
                                  >;
 
-    writer_config config;
+    size_t contig_length;
     Writers writer;
     std::string buffer;
-    writer_pimpl(writer_config config)
-        : config{config}
+    pimpl(std::filesystem::path output, size_t contig_length, bool)
+        : contig_length{contig_length}
         , writer {[&]() -> Writers {
-            if (auto ptr = std::get_if<std::filesystem::path>(&config.output)) {
-                if (ptr->extension() == ".fa") {
-                    return file_writer{ptr->c_str()};
-                } else if (ptr->extension() == ".gz") {
-                    return buffered_writer{zlib_file_writer{file_writer{ptr->c_str()}}};
-                }
-            } else if (auto ptr = std::get_if<std::reference_wrapper<std::ostream>>(&config.output)) {
-                if (!config.compressed) {
-                    return stream_writer{*ptr};
-                } else {
-                    return buffered_writer{zlib_stream_writer{stream_writer{*ptr}}};
-                }
+            if (output.extension() == ".gz") {
+                return buffered_writer{zlib_file_writer{file_writer{output}}};
             }
+            return file_writer{output};
+        }()}
+    {}
 
-            throw std::runtime_error("unknown output type");
+    pimpl(std::ostream& output, size_t contig_length, bool compressed)
+        : contig_length{contig_length}
+        , writer {[&]() -> Writers {
+            if (compressed) {
+                return buffered_writer{zlib_stream_writer{stream_writer{output}}};
+            }
+            return stream_writer{output};
         }()}
     {}
 };
 
+}
 
-writer::writer(writer_config config)
-    : pimpl{std::make_unique<writer_pimpl>(config)}
+namespace io3::fasta {
+
+writer::writer(config config_)
+    : writer_base{std::visit([&](auto& p) {
+        return std::make_unique<pimpl>(p, config_.length, config_.compressed);
+    }, config_.output)}
 {
     assert(config.length > 0);
 }
 writer::~writer() {
-    if (pimpl) {
+    if (pimpl_) {
         std::visit([&](auto& writer) {
             writer.write({}, true);
-        }, pimpl->writer);
+        }, pimpl_->writer);
     }
 }
 
-
 void writer::write(record_view record) {
-    assert(pimpl);
+    assert(pimpl_);
     std::visit([&](auto& writer) {
-        auto const& config = pimpl->config;
-        auto& buffer = pimpl->buffer;
+        auto const& contig_length = pimpl_->contig_length;
+        auto& buffer = pimpl_->buffer;
         buffer.clear();
         buffer = '>';
         buffer += record.id;
         buffer += '\n';
         auto seq = record.seq;
-        while (seq.size() > config.length) {
-            buffer += seq.substr(0, config.length);
+        while (seq.size() > contig_length) {
+            buffer += seq.substr(0, contig_length);
             buffer += '\n';
-            seq = seq.substr(config.length);
+            seq = seq.substr(contig_length);
         }
         if (seq.size() > 0) {
             buffer += seq;
             buffer += '\n';
         }
         writer.write(buffer, false);
-    }, pimpl->writer);
+    }, pimpl_->writer);
 }
 
 }
