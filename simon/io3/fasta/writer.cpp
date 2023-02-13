@@ -50,7 +50,7 @@ writer::writer(config config_)
         return std::make_unique<pimpl>(p, config_.length, config_.compressed);
     }, config_.output)}
 {
-    assert(config.length > 0);
+    assert(config_.length > 0);
 }
 writer::~writer() {
     if (pimpl_) {
