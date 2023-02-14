@@ -1,7 +1,9 @@
 #!/usr/bin/bash
 cd "$(dirname "$0")"
 
-FLAGS="-march=native -O3 -DNDEBUG -s -Wall"
+set -e
+
+FLAGS="-march=native -O3 -DNDEBUG -s -fconcepts-diagnostics-depth=10 -Wall"
 #FLAGS="-O0 -ggdb -Wall"
 #FLAGS="-O0 -ggdb -fsanitize=address -Wall"
 #FLAGS="-march=native -O3 -DNDEBUG -ggdb"

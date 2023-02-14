@@ -11,6 +11,7 @@
 namespace io3::fasta {
 
 struct reader : public reader_base<reader> {
+    using record      = fasta::record;
     using record_view = fasta::record_view;
 
     struct config {
