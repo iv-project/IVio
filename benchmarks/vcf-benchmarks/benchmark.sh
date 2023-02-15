@@ -2,7 +2,7 @@
 cd "$(dirname "$0")"
 
 methods=(seqan2 bio io3)
-files=(data/sampled.vcf)
+files=(../data/sampled.vcf)
 
 for file in ${files[@]}; do
     usedMeth=()

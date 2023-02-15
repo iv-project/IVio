@@ -2,7 +2,7 @@
 cd "$(dirname "$0")"
 
 methods=(seqan2 seqan3 io2 io3)
-files=(data/sampled.bam)
+files=(../data/sampled.bam)
 
 #methods=(seqan3 io3)
 #files=(data/illumina.fa)

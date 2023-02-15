@@ -3,10 +3,10 @@ cd "$(dirname "$0")"
 
 type=$1
 
-methods=(seqan2 seqan3 io3 io3_mt io2 bio direct extreme)
-files=(data/illumina.fa data/illumina.fa.gz data/hg38.fa data/hg38.fa.gz)
+methods=(seqan2 seqan3 bio io2 io3 io3_mt direct extreme)
+files=(../data/illumina.fa ../data/illumina.fa.gz ../data/hg38.fa ../data/hg38.fa.gz)
 if [ "${type}" == "write" ]; then
-    files=(data/illumina.fa data/hg38.fa)
+    files=(../data/illumina.fa ../data/hg38.fa)
 fi
 
 #methods=(seqan3 io3)

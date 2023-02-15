@@ -2,7 +2,7 @@
 cd "$(dirname "$0")"
 
 methods=(bio io3)
-files=(data/sampled.bcf)
+files=(../data/sampled.bcf)
 
 for file in ${files[@]}; do
     usedMeth=()
