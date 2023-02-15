@@ -1,7 +1,7 @@
 #!/usr/bin/bash
 cd "$(dirname "$0")"
 
-methods=(seqan2 bio io3)
+methods=(seqan2 bio ivio)
 files=(../data/sampled.vcf)
 
 for file in ${files[@]}; do

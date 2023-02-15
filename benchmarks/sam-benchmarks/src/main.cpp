@@ -9,7 +9,7 @@
 auto seqan2_bench(std::string_view file) -> Result;
 auto seqan3_bench(std::string_view file) -> Result;
 auto io2_bench(std::string_view file) -> Result;
-auto io3_bench(std::string_view file) -> Result;
+auto ivio_bench(std::string_view file) -> Result;
 
 int main(int argc, char** argv) {
     try {
@@ -29,7 +29,7 @@ int main(int argc, char** argv) {
                     if (method == "seqan2")           return seqan2_bench(file);
                     if (method == "seqan3")           return seqan3_bench(file);
                     if (method == "io2")              return io2_bench(file);
-                    if (method == "io3")              return io3_bench(file);
+                    if (method == "ivio")             return ivio_bench(file);
                     throw std::runtime_error("unknown method: " + std::string{method});
                 }();
                 auto end  = std::chrono::high_resolution_clock::now();

@@ -1,11 +1,8 @@
 #!/usr/bin/bash
 cd "$(dirname "$0")"
 
-methods=(seqan2 seqan3 bio io3)
+methods=(seqan2 seqan3 bio ivio)
 files=(../data/reads.fq ../data/reads.fq.gz)
-
-#methods=(seqan3 io3)
-#files=(data/illumina.fa)
 
 for file in ${files[@]}; do
     usedMeth=()

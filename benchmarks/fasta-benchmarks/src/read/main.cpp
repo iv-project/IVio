@@ -10,8 +10,8 @@ auto seqan2_bench(std::filesystem::path file) -> Result;
 auto seqan3_bench(std::filesystem::path file) -> Result;
 auto io2_bench(std::filesystem::path file) -> Result;
 auto bio_bench(std::filesystem::path file) -> Result;
-auto io3_bench(std::filesystem::path file) -> Result;
-auto io3_mt_bench(std::filesystem::path file) -> Result;
+auto ivio_bench(std::filesystem::path file) -> Result;
+auto ivio_mt_bench(std::filesystem::path file) -> Result;
 auto direct_bench(std::filesystem::path path) -> Result;
 auto extreme_bench(std::filesystem::path path) -> Result;
 
@@ -45,8 +45,8 @@ int main(int argc, char** argv) {
                 if (method == "seqan3")           return seqan3_bench(file);
                 if (method == "io2")              return io2_bench(file);
                 if (method == "bio")              return bio_bench(file);
-                if (method == "io3_mt")           return io3_mt_bench(file);
-                if (method == "io3")              return io3_bench(file);
+                if (method == "ivio_mt")          return ivio_mt_bench(file);
+                if (method == "ivio")             return ivio_bench(file);
                 if (method == "direct")           return direct_bench(file);
                 if (method == "extreme")          return extreme_bench(file);
                 throw std::runtime_error("unknown method: " + std::string{method});
@@ -59,7 +59,7 @@ int main(int argc, char** argv) {
                 fastestRun = i;
             }
         }
-        auto groundTruth = io3_bench(file);
+        auto groundTruth = ivio_bench(file);
         // print results
         [&]() {
             auto const& result = bestResult;

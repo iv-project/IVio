@@ -8,7 +8,7 @@
 
 auto seqan2_bench(std::string_view file) -> Result;
 auto bio_bench(std::string_view file) -> Result;
-auto io3_bench(std::string_view file) -> Result;
+auto ivio_bench(std::string_view file) -> Result;
 
 int main(int argc, char** argv) {
     try {
@@ -27,7 +27,7 @@ int main(int argc, char** argv) {
                 auto r = [&]() {
                     if (method == "seqan2") return seqan2_bench(file);
                     if (method == "bio")    return bio_bench(file);
-                    if (method == "io3")    return io3_bench(file);
+                    if (method == "ivio")   return ivio_bench(file);
 
                     throw std::runtime_error("unknown method: " + std::string{method});
                 }();
@@ -42,7 +42,7 @@ int main(int argc, char** argv) {
         } catch(...){
             bestResult = Result{}; // reset results, will cause this to be incorrect
         }
-        auto groundTruth = io3_bench(file);
+        auto groundTruth = ivio_bench(file);
         // print results
         [&]() {
             auto const& result = bestResult;

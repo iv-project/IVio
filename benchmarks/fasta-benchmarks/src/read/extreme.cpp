@@ -1,9 +1,9 @@
 #include "Result.h"
 
-#include <io3/mmap_reader.h>
+#include <ivio/mmap_reader.h>
 
 auto extreme_bench(std::filesystem::path path) -> Result {
-    auto reader = io3::mmap_reader(path);
+    auto reader = ivio::mmap_reader(path);
 
     std::array<int, 256> ctChars{};
 

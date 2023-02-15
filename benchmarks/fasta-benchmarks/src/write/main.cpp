@@ -5,19 +5,19 @@
 #include <string_view>
 #include <vector>
 #include <sys/resource.h>
-#include <io3/fasta/reader.h>
+#include <ivio/fasta/reader.h>
 #include "../read/dna5_rank_view.h"
 
 void seqan2_bench(std::filesystem::path file, std::vector<std::tuple<std::string, std::vector<uint8_t>>> const& data);
 void seqan3_bench(std::filesystem::path file, std::vector<std::tuple<std::string, std::vector<uint8_t>>> const& data);
-void io3_bench(std::filesystem::path file, std::vector<std::tuple<std::string, std::vector<uint8_t>>> const& data);
+void ivio_bench(std::filesystem::path file, std::vector<std::tuple<std::string, std::vector<uint8_t>>> const& data);
 
 
 
 using Data = std::vector<std::tuple<std::string, std::vector<uint8_t>>>;
 static auto loadData(std::filesystem::path const& input_file, bool swap) -> Data {
     auto buffer = Data{};
-    for (auto record : io3::fasta::reader{{input_file}}) {
+    for (auto record : ivio::fasta::reader{{input_file}}) {
         auto seq_view = record.seq | dna5_rank_view;
         auto seq      = std::vector<uint8_t>{seq_view.begin(), seq_view.end()};
         buffer.emplace_back(std::string{record.id}, seq);
@@ -55,7 +55,7 @@ int main(int argc, char** argv) {
         }();
         auto data = loadData(input_file, swap);
 
-        auto file   = std::filesystem::path{"/tmp/io3_bench"} / input_file.filename();
+        auto file   = std::filesystem::path{"/tmp/ivio_bench"} / input_file.filename();
         std::filesystem::create_directories(file.parent_path());
 
         int fastestRun{};
@@ -64,9 +64,9 @@ int main(int argc, char** argv) {
         for (int i{}; i < maxNbrOfRuns; ++i) {
             auto start  = std::chrono::high_resolution_clock::now();
 
-            if (method == "seqan2") seqan2_bench(file, data);
+            if (method == "seqan2")      seqan2_bench(file, data);
             else if (method == "seqan3") seqan3_bench(file, data);
-            else if (method == "io3") io3_bench(file, data);
+            else if (method == "ivio")   ivio_bench(file, data);
             else throw std::runtime_error("unknown method");
 
             auto end  = std::chrono::high_resolution_clock::now();

@@ -15,8 +15,8 @@ INCLUDES="-I . -I ../../src/ \
 ARGS="-std=c++20 ${FLAGS} ${INCLUDES}"
 
 
-# Building io3 library
-for f in $(find ../../src/io3 | grep .cpp\$); do
+# Building ivio library
+for f in $(find ../../src/ivio | grep .cpp\$); do
     g=$(echo $f | cut -b 11-)
     mkdir -p $(dirname obj/$g)
     g++ ${ARGS} -c $f -o obj/$g.o
@@ -27,4 +27,4 @@ for f in $(find src | grep .cpp\$); do
     mkdir -p $(dirname obj/$f)
     g++ ${ARGS} -c $f -o obj/$f.o
 done
-g++ $(find obj/src | grep \.o\$) $(find obj/io3 | grep \.o\$) -lz-ng -lz ${FLAGS} -o benchmark
+g++ $(find obj/src | grep \\\.o\$) $(find obj/ivio | grep \\\.o\$) -lz-ng -lz ${FLAGS} -o benchmark

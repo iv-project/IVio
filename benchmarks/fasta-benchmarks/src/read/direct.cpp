@@ -1,6 +1,6 @@
 #include "Result.h"
 
-#include <io3/mmap_reader.h>
+#include <ivio/mmap_reader.h>
 
 constexpr static auto ccmap = []() {
     std::array<uint8_t, 256> c;
@@ -24,7 +24,7 @@ constexpr static auto ccmap = []() {
 }();
 
 auto direct_bench(std::filesystem::path path) -> Result {
-    auto reader = io3::mmap_reader(path.c_str());
+    auto reader = ivio::mmap_reader(path.c_str());
 
     std::array<int, 256> ctChars{};
 

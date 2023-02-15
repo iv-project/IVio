@@ -1,11 +1,11 @@
 #include "Result.h"
 
-#include <bio/seq_io/reader.hpp>
+#include <bio/io/seq/reader.hpp>
 
 auto bio_bench(std::filesystem::path file) -> Result {
     Result result;
 
-    auto fin  = bio::seq_io::reader{file};
+    auto fin  = bio::io::seq::reader{file};
     for (auto && [id, seq, qual] : fin) {
         for (auto c : seq) {
             result.ctChars[c.to_rank()] += 1;

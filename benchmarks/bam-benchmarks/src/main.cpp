@@ -9,7 +9,7 @@
 auto seqan2_bench(std::string_view file, size_t threadNbr) -> Result;
 auto seqan3_bench(std::string_view file, size_t threadNbr) -> Result;
 auto io2_bench(std::string_view file, size_t threadNbr) -> Result;
-auto io3_bench(std::string_view file, size_t threadNbr) -> Result;
+auto ivio_bench(std::string_view file, size_t threadNbr) -> Result;
 
 int main(int argc, char** argv) {
     try {
@@ -34,7 +34,7 @@ int main(int argc, char** argv) {
                     if (method == "seqan2")           return seqan2_bench(file, threadNbr);
                     if (method == "seqan3")           return seqan3_bench(file, threadNbr);
                     if (method == "io2")              return io2_bench(file, threadNbr);
-                    if (method == "io3")              return io3_bench(file, threadNbr);
+                    if (method == "ivio")             return ivio_bench(file, threadNbr);
                     throw std::runtime_error("unknown method: " + std::string{method});
                 }();
                 auto end  = std::chrono::high_resolution_clock::now();

@@ -1,7 +1,7 @@
 #!/usr/bin/bash
 cd "$(dirname "$0")"
 
-methods=(bio io3)
+methods=(bio ivio)
 files=(../data/sampled.bcf)
 
 for file in ${files[@]}; do

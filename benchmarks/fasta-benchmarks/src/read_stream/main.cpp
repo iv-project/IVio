@@ -11,7 +11,7 @@ auto seqan2_bench(std::ifstream& stream, bool compressed) -> Result;
 auto seqan3_bench(std::ifstream& stream, bool compressed) -> Result;
 auto io2_bench(std::ifstream& stream, bool compressed) -> Result;
 auto bio_bench(std::ifstream& stream, bool compressed) -> Result;
-auto io3_bench(std::ifstream& stream, bool compressed) -> Result;
+auto ivio_bench(std::ifstream& stream, bool compressed) -> Result;
 
 
 
@@ -46,7 +46,7 @@ int main(int argc, char** argv) {
                 if (method == "seqan3")           return seqan3_bench(ifs, compressed);
                 if (method == "io2")              return io2_bench(ifs, compressed);
                 if (method == "bio")              return bio_bench(ifs, compressed);
-                if (method == "io3")              return io3_bench(ifs, compressed);
+                if (method == "ivio")             return ivio_bench(ifs, compressed);
                 throw std::runtime_error("unknown method: " + std::string{method});
             }();
             auto end  = std::chrono::high_resolution_clock::now();
@@ -58,7 +58,7 @@ int main(int argc, char** argv) {
             }
         }
         auto ifs         = std::ifstream{file};
-        auto groundTruth = io3_bench(ifs, compressed);
+        auto groundTruth = ivio_bench(ifs, compressed);
         // print results
         [&]() {
             auto const& result = bestResult;
