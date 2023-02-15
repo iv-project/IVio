@@ -13,6 +13,7 @@
 namespace io3::bam {
 
 struct reader : public reader_base<reader> {
+    using record      = bam::record;
     using record_view = bam::record_view;
 
     std::string headerBuffer;

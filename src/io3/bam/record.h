@@ -5,6 +5,7 @@
 #include <ranges>
 #include <span>
 #include <string_view>
+#include <vector>
 
 namespace io3::bam {
 
@@ -62,6 +63,55 @@ struct record_view {
     std::span<uint8_t const>    cigar;
     compact_seq                 seq;
     std::span<uint8_t const>    qual;
+};
+
+struct record {
+    int32_t                     refID;
+    int32_t                     pos;
+    uint8_t                     mapq;
+    uint16_t                    bin;
+    uint16_t                    flag;
+    int32_t                     next_refID;
+    int32_t                     next_pos;
+    int32_t                     tlen;
+    std::string                 read_name;
+    std::vector<uint8_t>        cigar;
+    std::vector<uint8_t>        seq;
+    size_t                      seq_len;
+    std::vector<uint8_t>        qual;
+
+    record() = default;
+    record(record_view v)
+        : refID      {v.refID}
+        , pos        {v.pos}
+        , mapq       {v.mapq}
+        , bin        {v.bin}
+        , flag       {v.flag}
+        , next_refID {v.next_refID}
+        , next_pos   {v.next_pos}
+        , tlen       {v.tlen}
+        , read_name  {v.read_name}
+        , cigar      {begin(v.cigar), end(v.cigar)}
+        , seq        {begin(v.seq.data), end(v.seq.data)}
+        , seq_len    {v.seq.size}
+        , qual       {begin(v.qual), end(v.qual)}
+    {}
+    operator record_view() const {
+        return record_view {
+            refID,
+            pos,
+            mapq,
+            bin,
+            flag,
+            next_refID,
+            next_pos,
+            tlen,
+            read_name,
+            cigar,
+            {seq, seq_len},
+            qual,
+        };
+    }
 };
 
 }

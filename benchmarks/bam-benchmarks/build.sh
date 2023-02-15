@@ -6,7 +6,7 @@ FLAGS="-march=native -O3 -DNDEBUG -s -Wall"
 #FLAGS="-O0 -ggdb -fsanitize=address -Wall"
 #FLAGS="-march=native -O3 -DNDEBUG -ggdb"
 
-INCLUDES="-I ../../src/ \
+INCLUDES="-I . -I ../../src/ \
     -isystem../../lib/io2/include \
     -DSEQAN_HAS_ZLIB  -isystem../../lib/seqan/include \
     -DBIO_HAS_ZLIB -isystem../../lib/b.i.o./include \

@@ -1,5 +1,5 @@
+#include "../fasta-benchmarks/src/read/dna5_rank_view.h"
 #include "Result.h"
-#include "../../fasta-benchmarks/src/dna5_rank_view.h"
 
 #include <io3/bam/reader.h>
 
