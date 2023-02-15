@@ -9,6 +9,7 @@ struct record_view {
     std::string_view id;
     std::string_view seq;
 };
+
 struct record {
     std::string id;
     std::string seq;
@@ -18,6 +19,10 @@ struct record {
         : id{v.id}
         , seq{v.seq}
     {}
+
+    operator record_view() const {
+        return record_view{id, seq};
+    }
 };
 
 }
