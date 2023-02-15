@@ -6,6 +6,7 @@
 #include <cstdint>
 #include <cstring>
 #include <fcntl.h>
+#include <filesystem>
 #include <ranges>
 #include <string>
 #include <sys/mman.h>
@@ -20,9 +21,9 @@ protected:
     int fd{-1};
 
 public:
-    file_reader(char const* fname)
+    file_reader(std::filesystem::path path)
         : fd{[&]() {
-            auto r = ::open(fname, O_RDONLY);
+            auto r = ::open(path.c_str(), O_RDONLY); //!TODO Is this call safe?
             if (r == -1) {
                 throw "file not readable";
             }

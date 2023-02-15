@@ -3,7 +3,7 @@
 #include <io3/mmap_reader.h>
 
 auto extreme_bench(std::filesystem::path path) -> Result {
-    auto reader = io3::mmap_reader(path.c_str());
+    auto reader = io3::mmap_reader(path);
 
     std::array<int, 256> ctChars{};
 

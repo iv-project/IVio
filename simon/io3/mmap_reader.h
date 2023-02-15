@@ -15,9 +15,9 @@ protected:
     size_t inPos{};
 
 public:
-    mmap_reader(char const* fname)
-        : file_reader{fname}
-        , filesize{file_size(std::filesystem::path{fname})}
+    mmap_reader(std::filesystem::path path)
+        : file_reader{path}
+        , filesize{file_size(path)}
         , buffer{[&]() {
             auto ptr = (char const*)mmap(nullptr, filesize, PROT_READ, MAP_PRIVATE, fd, 0);
             return ptr;

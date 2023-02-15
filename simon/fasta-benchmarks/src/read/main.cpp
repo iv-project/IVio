@@ -6,13 +6,12 @@
 #include <string_view>
 #include <sys/resource.h>
 
-auto seqan2_bench(std::string_view file) -> Result;
-auto seqan3_bench(std::string_view file) -> Result;
-auto io2_bench(std::string_view file) -> Result;
-auto io2_copy_bench(std::string_view file) -> Result;
-auto bio_bench(std::string_view file) -> Result;
-auto io3_bench(std::string_view file, std::string_view method) -> Result;
-auto io3_mt_bench(std::string_view file, std::string_view method) -> Result;
+auto seqan2_bench(std::filesystem::path file) -> Result;
+auto seqan3_bench(std::filesystem::path file) -> Result;
+auto io2_bench(std::filesystem::path file) -> Result;
+auto bio_bench(std::filesystem::path file) -> Result;
+auto io3_bench(std::filesystem::path file) -> Result;
+auto io3_mt_bench(std::filesystem::path file) -> Result;
 auto direct_bench(std::filesystem::path path) -> Result;
 auto extreme_bench(std::filesystem::path path) -> Result;
 
@@ -32,7 +31,7 @@ int main(int argc, char** argv) {
     try {
         if (argc != 3) return 0;
         auto method = std::string_view{argv[1]};
-        auto file   = std::string_view{argv[2]};
+        auto file   = std::filesystem::path{argv[2]};
 
         Result bestResult;
         int fastestRun{};
@@ -45,10 +44,9 @@ int main(int argc, char** argv) {
                 if (method == "seqan2")           return seqan2_bench(file);
                 if (method == "seqan3")           return seqan3_bench(file);
                 if (method == "io2")              return io2_bench(file);
-                if (method == "io2-copy")         return io2_copy_bench(file);
                 if (method == "bio")              return bio_bench(file);
-                if (method.starts_with("io3_mt")) return io3_mt_bench(file, method);
-                if (method.starts_with("io3"))    return io3_bench(file, method);
+                if (method == "io3_mt")           return io3_mt_bench(file);
+                if (method == "io3")              return io3_bench(file);
                 if (method == "direct")           return direct_bench(file);
                 if (method == "extreme")          return extreme_bench(file);
                 throw std::runtime_error("unknown method: " + std::string{method});
@@ -61,7 +59,7 @@ int main(int argc, char** argv) {
                 fastestRun = i;
             }
         }
-        auto groundTruth = io3_bench(file, "io3");
+        auto groundTruth = io3_bench(file);
         // print results
         [&]() {
             auto const& result = bestResult;

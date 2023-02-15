@@ -1,14 +1,14 @@
 #include "Result.h"
 
+#include <filesystem>
 #include <seqan/seq_io.h>
 
 using namespace seqan;
 
-auto seqan2_bench(std::string_view _file) -> Result{
+auto seqan2_bench(std::filesystem::path file) -> Result{
     Result result;
 
-    auto file = std::string{_file};
-    SeqFileIn seqFileIn(toCString(file));
+    SeqFileIn seqFileIn(file.c_str());
 
     CharString id;
     Dna5String seq;
