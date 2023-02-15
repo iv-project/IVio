@@ -12,6 +12,7 @@
 namespace io3::sam {
 
 struct reader : public reader_base<reader> {
+    using record      = sam::record;
     using record_view = sam::record_view;
 
     struct config {
