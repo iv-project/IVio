@@ -11,6 +11,7 @@
 namespace io3::fastq {
 
 struct reader : public reader_base<reader> {
+    using record      = fastq::record;
     using record_view = fastq::record_view;
 
     struct config {
