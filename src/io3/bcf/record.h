@@ -4,6 +4,7 @@
 #include <optional>
 #include <span>
 #include <string_view>
+#include <vector>
 
 namespace io3::bcf {
 
@@ -21,5 +22,47 @@ struct record_view {
     std::string_view     format;
     string_view_list     samples;
 };
+
+struct record {
+    std::string              chrom;
+    int32_t                  pos;
+    std::string              id;
+    std::string              ref;
+    std::vector<std::string> alt;
+    std::optional<float>     qual;
+    std::vector<std::string> filter;
+    std::string              info;
+    std::string              format;
+    std::vector<std::string> samples;
+
+    record() = default;
+    record(record_view v)
+        : chrom  {v.chrom}
+        , pos    {v.pos}
+        , id     {v.id}
+        , ref    {v.ref}
+        , alt    {begin(v.alt), end(v.alt)}
+        , qual   {v.qual}
+        , filter {begin(v.filter), end(v.filter)}
+        , info   {v.info}
+        , format {v.format}
+        , samples{begin(v.samples), end(v.samples)}
+    {}
+    operator record_view() const {
+        return record_view {
+            chrom,
+            pos,
+            id,
+            ref,
+            {}, //!TODO
+            qual,
+            {}, //!TODO
+            info,
+            format,
+            {}, //!TODO
+        };
+    }
+};
+
 
 }

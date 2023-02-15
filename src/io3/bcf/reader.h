@@ -13,6 +13,7 @@
 namespace io3::bcf {
 
 struct reader : public reader_base<reader> {
+    using record      = bcf::record;
     using record_view = bcf::record_view;
 
     std::string headerBuffer;
