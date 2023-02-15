@@ -12,6 +12,7 @@
 namespace io3::vcf {
 
 struct reader : public reader_base<reader> {
+    using record      = vcf::record;
     using record_view = vcf::record_view;
 
     std::vector<std::tuple<std::string, std::string>> header;
