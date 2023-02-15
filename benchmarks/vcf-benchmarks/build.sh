@@ -9,7 +9,8 @@ FLAGS="-march=native -O3 -DNDEBUG -s -Wall"
 INCLUDES="-I . -I ../../src/ \
     -isystem../../lib/io2/include \
     -DSEQAN_HAS_ZLIB  -isystem../../lib/seqan/include \
-    -DBIO_HAS_ZLIB -isystem../../lib/b.i.o./include \
+    -DBIO_HAS_ZLIB -isystem../../lib/biocpp-io/include \
+                   -isystem../../lib/biocpp-core/include \
     -DSEQAN3_HAS_ZLIB -isystem../../lib/seqan3/include -isystem../../lib/submodules/sdsl-lite/include"
 ARGS="-std=c++20 ${FLAGS} ${INCLUDES}"
 

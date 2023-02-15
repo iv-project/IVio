@@ -1,6 +1,6 @@
 #include "Result.h"
 
-#include <bio/seq_io/reader.hpp>
+#include <bio/io/seq/reader.hpp>
 
 auto bio_bench(std::string_view _file) -> Result {
 
@@ -8,7 +8,7 @@ auto bio_bench(std::string_view _file) -> Result {
 
     Result result;
 
-    auto fin  = bio::seq_io::reader{fasta_file};
+    auto fin  = bio::io::seq::reader{fasta_file};
     for (auto && [id, seq, qual] : fin) {
         for (auto c : seq) {
             result.ctChars[c.to_rank()] += 1;
