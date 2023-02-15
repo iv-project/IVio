@@ -8,6 +8,8 @@
 #include "../zlib_mmap2_reader.h"
 #include "../zlib_ng_file_reader.h"
 
+static_assert(std::ranges::range<io3::fasta::reader>, "reader must be a range (unittest)");
+
 namespace io3 {
 
 template <>

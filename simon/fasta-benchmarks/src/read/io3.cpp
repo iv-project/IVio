@@ -9,6 +9,7 @@
 template <typename Reader>
 static auto benchmark_io3(Reader&& reader) -> Result {
     Result result;
+
     for (auto && [id, seq] : reader) {
         for (auto c : seq | dna5_rank_view) {
             result.ctChars[c] += 1;
