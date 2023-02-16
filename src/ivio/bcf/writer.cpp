@@ -78,6 +78,11 @@ struct bcf_buffer {
             }
         }
     };
+    void writeData(std::span<uint8_t const> data) {
+        auto oldSize = buffer.size();
+        buffer.resize(oldSize + data.size());
+        std::ranges::copy(data, begin(buffer) + oldSize);
+    }
 
 };
 
@@ -138,7 +143,7 @@ void writer::writeHeader(std::string_view v) {
 void writer::write(record_view record) {
     assert(pimpl);
 
-    auto const& [chrom, pos, id, ref, alt, qual, filters, info, format, samples] = record;
+    auto const& [chrom, pos, id, ref, n_allele, alts, qual, filters, info, format, samples] = record;
 
     auto& buffer = pimpl->buffer;
     buffer.clear();
@@ -158,7 +163,6 @@ void writer::write(record_view record) {
     buffer.pack<float>(qual.value_or(0b0111'1111'1000'0000'0000'0000'0001));
 
     auto n_info = 0;
-    auto n_allele = alt.size()+1;
     auto n_sample = 0;
     auto n_fmt = 0;
     buffer.pack<int16_t>(n_info);
@@ -169,12 +173,7 @@ void writer::write(record_view record) {
     buffer.writeString(id);
     buffer.writeString(ref);
 
-    //std::cout << "id: " << id.size() << "\n";
-    //std::cout << "ref: " << ref.size() << "\n";
-    for (auto const& a : alt) {
-    //    std::cout << "alt: " << a.size() << "\n";
-        buffer.writeString(a);
-    }
+    buffer.writeData(alts);
 
     if (filters.empty()) {
         buffer.writeString("."); // symbol for missing

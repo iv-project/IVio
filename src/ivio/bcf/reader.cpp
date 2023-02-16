@@ -32,9 +32,7 @@ struct reader_base<bcf::reader>::pimpl {
     std::vector<std::string_view>& filterMap = headerMap["filter"];
 
     struct {
-        std::vector<std::string_view> alts;
-        std::vector<std::string_view> filters;
-        std::vector<std::string_view> samples;
+        std::vector<int32_t> filters;
     } storage;
 
     pimpl(std::filesystem::path file, bool)
@@ -191,20 +189,23 @@ struct reader_base<bcf::reader>::pimpl {
             throw "chromId " + std::to_string(chromId) + " is missing in the header";
         }
 
-        storage.alts.clear();
+        //storage.alts.clear();
         if (n_allele < 0) {
             throw "n_allele is negative, not allowed";
         }
+        auto beginAlts = reinterpret_cast<uint8_t const*>(ptr2 + o3);
         for (size_t i{1}; i < size_t(n_allele); ++i) {
             auto [alt, o4] = readString(o3);
-            storage.alts.emplace_back(alt);
             o3 = o4;
         }
+        auto endAlts = reinterpret_cast<uint8_t const*>(ptr2 + o3);
+        auto alts = std::span{beginAlts, endAlts};
+
 
         auto [filters, o5] = readVector(o3);
         storage.filters.clear();
         for (auto f : filters) {
-            storage.filters.emplace_back(filterMap.at(f));
+            storage.filters.emplace_back(f);
         }
 
         auto info = [&]() {
@@ -219,16 +220,17 @@ struct reader_base<bcf::reader>::pimpl {
 
 
         return bcf::record_view {
-            .chrom   = contigMap[chromId],
-            .pos     = pos,
-            .id      = id,
-            .ref     = ref,
-            .alt     = storage.alts,
-            .qual    = qual,
-            .filter  = storage.filters,
-            .info    = info,
-            .format  = ureader.string_view(0, 0),
-            .samples = storage.samples,
+            .chrom    = contigMap[chromId],
+            .pos      = pos,
+            .id       = id,
+            .ref      = ref,
+            .n_allele = n_allele,
+            .alts     = alts,
+            .qual     = qual,
+            .filters  = storage.filters,
+            .info     = info,
+            .format   = ureader.string_view(0, 0), //!TODO
+            .samples  = ureader.string_view(0, 0), //!TODO
         };
     }
 };

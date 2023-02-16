@@ -11,16 +11,17 @@ namespace ivio::bcf {
 struct record_view {
     using string_view_list = std::span<std::string_view>;
 
-    std::string_view     chrom;
-    int32_t              pos;
-    std::string_view     id;
-    std::string_view     ref;
-    string_view_list     alt;
-    std::optional<float> qual;
-    string_view_list     filter;
-    std::string_view     info;
-    std::string_view     format;
-    string_view_list     samples;
+    std::string_view         chrom;
+    int32_t                  pos;
+    std::string_view         id;
+    std::string_view         ref;
+    int32_t                  n_allele;
+    std::span<uint8_t const> alts;
+    std::optional<float>     qual;
+    std::span<int32_t const> filters;
+    std::string_view         info;
+    std::string_view         format;
+    std::string_view         samples;
 };
 
 struct record {
@@ -28,25 +29,27 @@ struct record {
     int32_t                  pos;
     std::string              id;
     std::string              ref;
-    std::vector<std::string> alt;
+    int32_t                  n_allele;
+    std::vector<uint8_t>     alts;
     std::optional<float>     qual;
-    std::vector<std::string> filter;
+    std::vector<int32_t>     filters;
     std::string              info;
     std::string              format;
-    std::vector<std::string> samples;
+    std::string              samples;
 
     record() = default;
     record(record_view v)
-        : chrom  {v.chrom}
-        , pos    {v.pos}
-        , id     {v.id}
-        , ref    {v.ref}
-        , alt    {begin(v.alt), end(v.alt)}
-        , qual   {v.qual}
-        , filter {begin(v.filter), end(v.filter)}
-        , info   {v.info}
-        , format {v.format}
-        , samples{begin(v.samples), end(v.samples)}
+        : chrom   {v.chrom}
+        , pos     {v.pos}
+        , id      {v.id}
+        , ref     {v.ref}
+        , n_allele{v.n_allele}
+        , alts    {begin(v.alts), end(v.alts)}
+        , qual    {v.qual}
+        , filters {begin(v.filters), end(v.filters)}
+        , info    {v.info}
+        , format  {v.format}
+        , samples {v.samples}
     {}
     operator record_view() const {
         return record_view {
@@ -54,12 +57,13 @@ struct record {
             pos,
             id,
             ref,
-            {}, //!TODO
+            n_allele,
+            alts,
             qual,
-            {}, //!TODO
+            filters,
             info,
             format,
-            {}, //!TODO
+            samples,
         };
     }
 };
