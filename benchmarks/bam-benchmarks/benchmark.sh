@@ -10,7 +10,7 @@ for file in ${files[@]}; do
     memory=()
     echo -e "method  \tcorrect \ttotal(MB)\tspeed(MB/s)\tmemory(MB)";
     for method in ${methods[@]}; do
-        line="$(./benchmark ${method} ${file} 8 | tail -n +2)"
+        line="$(./benchmark_read ${method} ${file} 8 | tail -n +2)"
         echo "$line"
         c=$(echo $line | awk '{print $2}')
         s=$(echo $line | awk '{print $4}')
