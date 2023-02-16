@@ -99,21 +99,15 @@ void writer::write(record_view record) {
         pimpl->finishedHeader = true;
     }
 
-    auto const& [chrom, pos, id, ref, alt, qual, filters, infos, formats, samples] = record;
+    auto const& [chrom, pos, id, ref, alts, qual, filters, infos, formats, samples] = record;
     auto ss = std::string{};
+    ss.reserve(chrom.size() + id.size() + ref.size() + alts.size() + filters.size() + infos.size() + formats.size() + samples.size()
+                + 100); // some guessing....100 is completly random
     ss += chrom; ss += '\t';
     ss += std::to_string(pos); ss += '\t';
     ss += id; ss += '\t';
     ss += ref; ss += '\t';
-
-    if (!alt.empty()) {
-        ss += alt[0];
-        for (size_t i{1}; i < alt.size(); ++i) {
-            ss += ',';
-            ss += alt[i];
-        }
-    }
-    ss += '\t';
+    ss += alts; ss += '\t';
 
     if (qual) {
         auto oldSize = ss.size();
@@ -131,42 +125,12 @@ void writer::write(record_view record) {
     } else {
         ss += '*';
     }
-
     ss += '\t';
 
-    auto join = [&](auto const& vec, char d) {
-        if (!vec.empty()) {
-            ss += vec[0];
-            for (size_t i{1}; i < vec.size(); ++i) {
-                ss += d; ss += vec[i];
-            }
-        } else {
-            return false;
-        }
-        ss += '\t';
-        return true;
-    };
-
-    if (!join(filters, ';')) ss += ".\n";
-    join(infos, ';');
-    join(formats, ':');
-
-    if (!samples.empty()) {
-        auto join = [&](auto const& s) {
-            if (s.empty()) return;
-            ss += s[0];
-            for (auto i{1}; i < ssize(s); ++i) {
-                ss += ':';
-                ss += s[i];
-            }
-        };
-        join(samples[0]);
-        for (size_t i{1}; i < samples.size(); ++i) {
-            ss += '\t';
-            join(samples[i]);
-        }
-    }
-    ss += '\n';
+    ss += filters; ss += '\t';
+    ss += infos; ss += '\t';
+    ss += formats; ss += '\t';
+    ss += samples; ss += '\n';
 
 
     std::visit([&](auto& writer) {

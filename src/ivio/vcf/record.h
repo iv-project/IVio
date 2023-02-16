@@ -9,18 +9,16 @@
 namespace ivio::vcf {
 
 struct record_view {
-    using string_view_list = std::span<std::string_view>;
-
     std::string_view            chrom;
     int32_t                     pos;
     std::string_view            id;
     std::string_view            ref;
-    string_view_list            alt;
+    std::string_view            alts;
     std::optional<float>        qual;
-    string_view_list            filter;
-    string_view_list            info;
-    string_view_list            formats;
-    std::span<string_view_list> samples;
+    std::string_view            filters;
+    std::string_view            infos;
+    std::string_view            formats;
+    std::string_view            samples;
 };
 
 struct record {
@@ -28,25 +26,25 @@ struct record {
     int32_t                     pos;
     std::string                 id;
     std::string                 ref;
-    std::vector<std::string>    alt;
+    std::string                 alts;
     std::optional<float>        qual;
-    std::vector<std::string>    filter;
-    std::vector<std::string>    info;
-    std::vector<std::string>    formats;
-    std::vector<std::vector<std::string>> samples;
+    std::string                 filters;
+    std::string                 infos;
+    std::string                 formats;
+    std::string                 samples;
 
     record() = default;
     record(record_view v)
-        : chrom {v.chrom}
-        , pos   {v.pos}
-        , id    {v.id}
-        , ref   {v.ref}
-        , alt   {begin(v.alt), end(v.alt)}
-        , qual  {v.qual}
-        , filter{begin(v.filter), end(v.filter)}
-        , info  {begin(v.info), end(v.info)}
-        , formats{begin(v.info), end(v.info)}
-        , samples{} //!TODO
+        : chrom  {v.chrom}
+        , pos    {v.pos}
+        , id     {v.id}
+        , ref    {v.ref}
+        , alts   {v.alts}
+        , qual   {v.qual}
+        , filters{v.filters}
+        , infos  {v.infos}
+        , formats{v.formats}
+        , samples{v.samples}
     {}
     operator record_view() const {
         return record_view {
@@ -54,12 +52,12 @@ struct record {
             pos,
             id,
             ref,
-            {}, //!TODO alt
+            alts,
             qual,
-            {}, //!TODO filter
-            {}, //!TODO info
-            {}, //!TODO formats
-            {}, //!TODO samples
+            filters,
+            infos,
+            formats,
+            samples,
         };
     }
 };

@@ -36,15 +36,6 @@ struct reader_base<vcf::reader>::pimpl {
     std::vector<std::tuple<std::string, std::string>> header;
     std::vector<std::string> genotypes;
 
-    struct {
-        std::vector<std::string_view> alts;
-        std::vector<std::string_view> filters;
-        std::vector<std::string_view> infos;
-        std::vector<std::string_view> formats;
-        std::vector<std::string_view> samples_fields;
-        std::vector<std::span<std::string_view>> samples;
-    } storage;
-
     pimpl(std::filesystem::path file, bool)
         : ureader {[&]() -> VarBufferedReader {
             if (file.extension() == ".vcf") {
@@ -139,7 +130,6 @@ auto reader::next() -> std::optional<record_view> {
 
     auto& ureader  = pimpl_->ureader;
     auto& lastUsed = pimpl_->lastUsed;
-    auto& storage  = pimpl_->storage;
 
     if (ureader.eof(lastUsed)) return std::nullopt;
     ureader.dropUntil(lastUsed);
@@ -147,52 +137,19 @@ auto reader::next() -> std::optional<record_view> {
     auto res = pimpl_->readLine<10, '\t'>();
     if (!res) return std::nullopt;
 
-    auto [chrom, pos, id, ref, alt, qual, filters, infos, formats, samples] = *res;
-
-
-    auto clearAndSplit = [&](std::vector<std::string_view>& targetVec, std::string_view str, char d) {
-        targetVec.clear();
-        for (auto && v : std::views::split(str, d)) {
-            targetVec.emplace_back(v.begin(), v.end());
-        }
-    };
-
-    clearAndSplit(storage.alts, alt, ',');
-    clearAndSplit(storage.filters, filters, ';');
-    if (filters == ".") storage.filters.clear();
-
-    clearAndSplit(storage.infos, infos, ';');
-    if(infos == ".") storage.infos.clear();
-
-    clearAndSplit(storage.formats, formats, ':');
-
-    storage.samples_fields.clear();
-    auto field_groups = std::vector<size_t>{0};
-    for (auto v : std::views::split(samples, '\t')) {
-        for (auto v2 : std::views::split(v, ':')) {
-            storage.samples_fields.emplace_back(v2.begin(), v2.end());
-        }
-        field_groups.emplace_back(ssize(storage.samples_fields));
-    }
-
-    storage.samples.clear();
-    for (auto i{1}; i < ssize(field_groups); ++i) {
-        auto iter = begin(storage.samples_fields);
-        storage.samples.emplace_back(iter + field_groups[i-1], iter + field_groups[i]);
-    }
-
+    auto [chrom, pos, id, ref, alts, qual, filters, infos, formats, samples] = *res;
 
     return record_view {
         .chrom   = chrom,
         .pos     = convertTo<int32_t>(pos),
         .id      = id,
         .ref     = ref,
-        .alt     = storage.alts,
+        .alts    = alts,
         .qual    = convertTo<float>(qual),
-        .filter  = storage.filters,
-        .info    = storage.infos,
-        .formats = storage.formats,
-        .samples = storage.samples,
+        .filters = filters,
+        .infos   = infos,
+        .formats = formats,
+        .samples = samples,
     };
 }
 
