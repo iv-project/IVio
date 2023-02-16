@@ -1,34 +1,26 @@
 #pragma once
 
+#include "../writer_base.h"
 #include "reader.h"
 
 #include <filesystem>
-#include <functional>
 #include <ostream>
-#include <memory>
 #include <variant>
-#include <span>
 
 namespace ivio::vcf {
 
-struct writer_config {
-    // Source: file or stream
-    std::variant<std::filesystem::path, std::reference_wrapper<std::ostream>> output;
+struct writer : writer_base<writer> {
+    struct config {
+        // Source: file or stream
+        std::variant<std::filesystem::path, std::reference_wrapper<std::ostream>> output;
 
-    // This is only relevant if a stream is being used
-    bool compressed{};
-};
+        // This is only relevant if a stream is being used
+        bool compressed{};
+    };
 
-
-struct writer_pimpl;
-
-struct writer {
-private:
-    std::unique_ptr<writer_pimpl> pimpl;
-
-public:
-    writer(writer_config config);
+    writer(config config_);
     ~writer();
+
     void writeHeader(std::string_view key, std::string_view value);
     void addGenotype(std::string genotype);
     void write(record_view record);

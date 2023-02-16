@@ -8,36 +8,45 @@
 #include <cassert>
 #include <charconv>
 
-namespace ivio::vcf {
-
-struct writer_pimpl {
-    using Writers = std::variant<file_writer/*,
+template <>
+struct ivio::writer_base<ivio::vcf::writer>::pimpl {
+    using Writers = std::variant<file_writer,
                                  buffered_writer<zlib_file_writer>,
                                  stream_writer,
-                                 buffered_writer<zlib_stream_writer>*/
+                                 buffered_writer<zlib_stream_writer>
                                  >;
 
-    writer_config config;
+    ivio::vcf::writer::config config;
     Writers writer;
 
     bool finishedHeader{false};
     std::vector<std::string> genotype;
 
-    writer_pimpl(writer_config config)
-        : config{config}
-        , writer {[&]() -> Writers {
-            if (auto ptr = std::get_if<std::filesystem::path>(&config.output)) {
-                return file_writer{ptr->c_str()};
+    pimpl(std::filesystem::path output, bool)
+        : writer {[&]() -> Writers {
+            if (output.extension() == ".gz") {
+                return buffered_writer{zlib_file_writer{file_writer{output}}};
             }
-            throw std::runtime_error("unknown output type");
+            return file_writer{output};
         }()}
     {}
 
-
+    pimpl(std::ostream& output, bool compressed)
+        : writer {[&]() -> Writers {
+            if (compressed) {
+                return buffered_writer{zlib_stream_writer{stream_writer{output}}};
+            }
+            return stream_writer{output};
+        }()}
+    {}
 };
 
-writer::writer(writer_config config)
-    : pimpl{std::make_unique<writer_pimpl>(config)}
+namespace ivio::vcf {
+
+writer::writer(config config_)
+    : writer_base{std::visit([&](auto& p) {
+        return std::make_unique<pimpl>(p, config_.compressed);
+    }, config_.output)}
 {
     auto ss = std::string{
         "##fileformat=VCFv4.3\n"
@@ -45,20 +54,20 @@ writer::writer(writer_config config)
 
     std::visit([&](auto& writer) {
        writer.write(ss, false);
-    }, pimpl->writer);
+    }, pimpl_->writer);
 }
 
 writer::~writer() {
-    if (pimpl) {
+    if (pimpl_) {
         std::visit([&](auto& writer) {
             writer.write({}, true);
-        }, pimpl->writer);
+        }, pimpl_->writer);
     }
 }
 
 void writer::writeHeader(std::string_view key, std::string_view value) {
-    assert(pimpl);
-    if (pimpl->finishedHeader) {
+    assert(pimpl_);
+    if (pimpl_->finishedHeader) {
         throw std::runtime_error("vcf header can't be changed after a record was written");
     }
     if (key == "fileformat") { // ignore request to write file format
@@ -74,29 +83,29 @@ void writer::writeHeader(std::string_view key, std::string_view value) {
     ss += '\n';
     std::visit([&](auto& writer) {
        writer.write(ss, false);
-    }, pimpl->writer);
+    }, pimpl_->writer);
 }
 
 void writer::addGenotype(std::string genotype) {
     assert(pimpl);
-    pimpl->genotype.emplace_back(std::move(genotype));
+    pimpl_->genotype.emplace_back(std::move(genotype));
 }
 
 
 void writer::write(record_view record) {
-    assert(pimpl);
+    assert(pimpl_);
 
-    if (not pimpl->finishedHeader) {
+    if (not pimpl_->finishedHeader) {
         auto ss = std::string{"#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT"};
-        for (auto const& s : pimpl->genotype) {
+        for (auto const& s : pimpl_->genotype) {
             ss += '\t' + s;
         }
         ss += '\n';
         std::visit([&](auto& writer) {
             writer.write(ss, false);
-        }, pimpl->writer);
+        }, pimpl_->writer);
 
-        pimpl->finishedHeader = true;
+        pimpl_->finishedHeader = true;
     }
 
     auto const& [chrom, pos, id, ref, alts, qual, filters, infos, formats, samples] = record;
@@ -135,7 +144,7 @@ void writer::write(record_view record) {
 
     std::visit([&](auto& writer) {
        writer.write(ss, false);
-    }, pimpl->writer);
+    }, pimpl_->writer);
 }
 
 }
