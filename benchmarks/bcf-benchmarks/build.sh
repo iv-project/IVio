@@ -22,8 +22,8 @@ for f in $(find ../../src/ivio | grep .cpp\$); do
 done
 
 # Building benchmark
-for f in $(find src | grep .cpp\$); do
+for f in $(find src/read | grep .cpp\$); do
     mkdir -p $(dirname obj/$f)
     g++ ${ARGS} -c $f -o obj/$f.o
 done
-g++ $(find obj/src | grep \\\.o\$) $(find obj/ivio | grep \\\.o\$) -lz-ng -lz ${FLAGS} -o benchmark
+g++ $(find obj/src/read | grep \\\.o\$) $(find obj/ivio | grep \\\.o\$) -lz-ng -lz ${FLAGS} -o benchmark_read
