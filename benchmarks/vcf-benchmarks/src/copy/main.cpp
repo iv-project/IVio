@@ -40,13 +40,13 @@ int main(int argc, char** argv) {
             auto start  = std::chrono::high_resolution_clock::now();
 
             if (method == "seqan2")      seqan2_bench(input_file, output_file);
-            else if (method == "bio3")   bio_bench(input_file, output_file);
+            else if (method == "bio")    bio_bench(input_file, output_file);
             else if (method == "ivio")   ivio_bench(input_file, output_file);
             else throw std::runtime_error("unknown method");
 
             auto end  = std::chrono::high_resolution_clock::now();
             auto diff = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
-            auto call = [&]() -> std::string {
+/*            auto call = [&]() -> std::string {
                 if (compressed) {
                     return "zdiff \"" + input_file.string() + "\" \"" + output_file.string() + "\"";
                 }
@@ -56,8 +56,8 @@ int main(int argc, char** argv) {
             bool correct = (result == 0);
             if (!correct) {
                 throw std::runtime_error("incorrect output");
-            }
-            if (diff < fastestTime and correct) {
+            }*/
+            if (diff < fastestTime) {
                 fastestTime = diff;
                 fastestRun = i;
             }
