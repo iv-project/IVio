@@ -3,9 +3,7 @@
 
 #include <ivio/bcf/reader.h>
 
-auto ivio_bench(std::string_view _file) -> Result {
-    auto file = std::string{_file};
-
+auto ivio_bench(std::filesystem::path file) -> Result {
     Result result;
     for (auto && view : ivio::bcf::reader{{file}}) {
         result.l += 1;
