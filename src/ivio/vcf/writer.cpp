@@ -87,7 +87,7 @@ void writer::writeHeader(std::string_view key, std::string_view value) {
 }
 
 void writer::addGenotype(std::string genotype) {
-    assert(pimpl);
+    assert(pimpl_);
     pimpl_->genotype.emplace_back(std::move(genotype));
 }
 
