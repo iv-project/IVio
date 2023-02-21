@@ -4,9 +4,8 @@
 #include <cassert>
 #include <ivio/fastq/reader.h>
 
-auto ivio_bench(std::string_view _file) -> Result {
+auto ivio_bench(std::filesystem::path file) -> Result {
     Result result;
-    auto file   = std::string{_file};
 
     for (auto && record : ivio::fastq::reader{{.input = file}}) {
         for (auto c : record.seq | dna5_rank_view) {
