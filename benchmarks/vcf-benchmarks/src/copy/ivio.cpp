@@ -6,7 +6,7 @@ void ivio_bench(std::filesystem::path pathIn, std::filesystem::path pathOut) {
 
 
     auto writer = ivio::vcf::writer{{.output = pathOut,
-                                     /*.header = reader.header()*/ }};
+                                     .header = reader.header() }};
 
     for (auto record_view : reader) {
         writer.write(record_view);

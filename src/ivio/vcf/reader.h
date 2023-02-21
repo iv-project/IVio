@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../reader_base.h"
+#include "header.h"
 #include "record.h"
 
 #include <filesystem>
@@ -15,8 +16,7 @@ struct reader : public reader_base<reader> {
     using record      = vcf::record;
     using record_view = vcf::record_view;
 
-    std::vector<std::tuple<std::string, std::string>> header;
-    std::vector<std::string> genotypes;
+    vcf::header header_;
 
     struct config {
         // Source: file or stream
@@ -30,8 +30,7 @@ public:
     reader(config const& config_);
     ~reader();
 
-    bool readHeaderLine();
-    void readHeader();
+    auto header() const -> vcf::header const& { return header_; }
 
     auto next() -> std::optional<record_view>;
 };

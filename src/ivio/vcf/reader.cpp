@@ -118,8 +118,8 @@ reader::reader(config const& config_)
     }, config_.input)}
 {
     pimpl_->readHeader();
-    header    = std::move(pimpl_->header);
-    genotypes = std::move(pimpl_->genotypes);
+    header_.table     = std::move(pimpl_->header);
+    header_.genotypes = std::move(pimpl_->genotypes);
 }
 
 

@@ -19,9 +19,6 @@ struct ivio::writer_base<ivio::vcf::writer>::pimpl {
     ivio::vcf::writer::config config;
     Writers writer;
 
-    bool finishedHeader{false};
-    std::vector<std::string> genotype;
-
     pimpl(std::filesystem::path output, bool)
         : writer {[&]() -> Writers {
             if (output.extension() == ".gz") {
@@ -48,71 +45,47 @@ writer::writer(config config_)
         return std::make_unique<pimpl>(p, config_.compressed);
     }, config_.output)}
 {
-    auto ss = std::string{
-        "##fileformat=VCFv4.3\n"
-    };
-
+    // write header
     std::visit([&](auto& writer) {
-       writer.write(ss, false);
+        writer.write(std::string{"##fileformat=VCFv4.3\n"}, false); // write file format
+        // write leading table
+        auto ss = std::string{};
+        for (auto [key, value] : config_.header.table) {
+            if (key == "fileformat") continue; // ignore request to write file format
+            ss = "##";
+            ss += key;
+            ss += '=';
+            ss += value;
+            ss += '\n';
+            writer.write(ss, false);
+        }
+        // write heading of the body
+        {
+            auto ss = std::string{"#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT"};
+            for (auto const& s : config_.header.genotypes) {
+                ss += '\t' + s;
+            }
+            ss += '\n';
+            writer.write(ss, false);
+        }
     }, pimpl_->writer);
 }
 
 writer::~writer() {
     if (pimpl_) {
         std::visit([&](auto& writer) {
-            writer.write({}, true);
+            writer.write({}, true); // flush data
         }, pimpl_->writer);
     }
-}
-
-void writer::writeHeader(std::string_view key, std::string_view value) {
-    assert(pimpl_);
-    if (pimpl_->finishedHeader) {
-        throw std::runtime_error("vcf header can't be changed after a record was written");
-    }
-    if (key == "fileformat") { // ignore request to write file format
-        return;
-    }
-
-    auto ss = std::string{};
-    ss.reserve(4 + key.size() + value.size());
-    ss = "##";
-    ss += key;
-    ss += '=';
-    ss += value;
-    ss += '\n';
-    std::visit([&](auto& writer) {
-       writer.write(ss, false);
-    }, pimpl_->writer);
-}
-
-void writer::addGenotype(std::string genotype) {
-    assert(pimpl_);
-    pimpl_->genotype.emplace_back(std::move(genotype));
 }
 
 
 void writer::write(record_view record) {
     assert(pimpl_);
 
-    if (not pimpl_->finishedHeader) {
-        auto ss = std::string{"#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT"};
-        for (auto const& s : pimpl_->genotype) {
-            ss += '\t' + s;
-        }
-        ss += '\n';
-        std::visit([&](auto& writer) {
-            writer.write(ss, false);
-        }, pimpl_->writer);
-
-        pimpl_->finishedHeader = true;
-    }
-
     auto const& [chrom, pos, id, ref, alts, qual, filters, infos, formats, samples] = record;
-    auto ss = std::string{};
-    ss.reserve(chrom.size() + id.size() + ref.size() + alts.size() + filters.size() + infos.size() + formats.size() + samples.size()
-                + 100); // some guessing....100 is completly random
-    ss += chrom; ss += '\t';
+    static thread_local auto ss = std::string{};
+    ss = chrom; ss += '\t';
     ss += std::to_string(pos); ss += '\t';
     ss += id; ss += '\t';
     ss += ref; ss += '\t';

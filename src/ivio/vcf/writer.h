@@ -16,13 +16,14 @@ struct writer : writer_base<writer> {
 
         // This is only relevant if a stream is being used
         bool compressed{};
+
+        // Header
+        vcf::header header{};
     };
 
     writer(config config_);
     ~writer();
 
-    void writeHeader(std::string_view key, std::string_view value);
-    void addGenotype(std::string genotype);
     void write(record_view record);
 };
 
