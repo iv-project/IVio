@@ -27,9 +27,7 @@ static auto const ccmap2 = []() {
     return values;
 }();
 
-auto ivio_bench(std::string_view _file, size_t threadNbr) -> Result {
-    auto file = std::string{_file};
-
+auto ivio_bench(std::filesystem::path file, size_t threadNbr) -> Result {
     Result result;
     std::array<size_t, 16> ctChars{};
     for (auto record : ivio::bam::reader{{file, threadNbr}}) {

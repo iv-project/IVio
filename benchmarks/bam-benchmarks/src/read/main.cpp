@@ -6,10 +6,10 @@
 #include <string_view>
 #include <sys/resource.h>
 
-auto seqan2_bench(std::string_view file, size_t threadNbr) -> Result;
-auto seqan3_bench(std::string_view file, size_t threadNbr) -> Result;
-auto io2_bench(std::string_view file, size_t threadNbr) -> Result;
-auto ivio_bench(std::string_view file, size_t threadNbr) -> Result;
+auto seqan2_bench(std::filesystem::path file, size_t threadNbr) -> Result;
+auto seqan3_bench(std::filesystem::path file, size_t threadNbr) -> Result;
+auto io2_bench(std::filesystem::path file, size_t threadNbr) -> Result;
+auto ivio_bench(std::filesystem::path file, size_t threadNbr) -> Result;
 
 int main(int argc, char** argv) {
     try {

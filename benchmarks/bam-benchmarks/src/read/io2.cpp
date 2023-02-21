@@ -11,11 +11,11 @@
 #include <sstream>
 
 
-auto io2_bench(std::string_view _file, size_t threadNbr) -> Result {
+auto io2_bench(std::filesystem::path file, size_t threadNbr) -> Result {
     Result result;
 
     auto fin = io2::sam_io::reader{
-        .input = std::filesystem::path{_file},
+        .input = file,
     };
     for (auto && record : fin) {
         for (auto c : record.seq) {
