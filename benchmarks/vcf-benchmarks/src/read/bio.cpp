@@ -2,10 +2,9 @@
 
 #include <bio/io/var/reader.hpp>
 
-auto bio_bench(std::string_view _file) -> Result {
+auto bio_bench(std::filesystem::path file) -> Result {
     Result result;
 
-    std::filesystem::path file{_file};
     auto fin  = bio::io::var::reader{file};
     for (auto & r : fin) {
         result.l += 1;

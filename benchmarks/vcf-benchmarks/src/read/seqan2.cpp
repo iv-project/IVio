@@ -1,15 +1,15 @@
 #include "../fasta-benchmarks/src/read/dna5_rank_view.h"
 #include "Result.h"
 
+#include <filesystem>
 #include <seqan/vcf_io.h>
 
 using namespace seqan;
 
-auto seqan2_bench(std::string_view _file) -> Result {
+auto seqan2_bench(std::filesystem::path file) -> Result {
     Result result;
 
-    auto file = std::string{_file};
-    VcfFileIn fileIn(toCString(file));
+    VcfFileIn fileIn(file.c_str());
 
     VcfHeader header;
     readHeader(header, fileIn);
