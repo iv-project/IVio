@@ -6,16 +6,16 @@
 #include <string_view>
 #include <sys/resource.h>
 
-auto seqan2_bench(std::string_view file) -> Result;
-auto seqan3_bench(std::string_view file) -> Result;
-auto io2_bench(std::string_view file) -> Result;
-auto ivio_bench(std::string_view file) -> Result;
+auto seqan2_bench(std::filesystem::path file) -> Result;
+auto seqan3_bench(std::filesystem::path file) -> Result;
+auto io2_bench(std::filesystem::path file) -> Result;
+auto ivio_bench(std::filesystem::path file) -> Result;
 
 int main(int argc, char** argv) {
     try {
         if (argc != 3) return 0;
         auto method = std::string_view{argv[1]};
-        auto file   = std::string_view{argv[2]};
+        auto file   = std::filesystem::path{argv[2]};
 
         Result bestResult;
         int fastestRun{};

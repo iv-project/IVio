@@ -3,9 +3,7 @@
 
 #include <ivio/sam/reader.h>
 
-auto ivio_bench(std::string_view _file) -> Result {
-    auto file = std::string{_file};
-
+auto ivio_bench(std::filesystem::path file) -> Result {
     Result result;
     for (auto && record : ivio::sam::reader{{file}}) {
         for (auto c : record.seq | dna5_rank_view) {

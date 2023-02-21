@@ -4,10 +4,8 @@
 #include <seqan3/io/sam_file/input.hpp>
 #include <filesystem>
 
-auto seqan3_bench(std::string_view _file) -> Result {
+auto seqan3_bench(std::filesystem::path file) -> Result {
     Result result;
-
-    std::filesystem::path file{_file};
 
     auto fin = seqan3::sam_file_input{file};
     for (auto && record : fin) {
