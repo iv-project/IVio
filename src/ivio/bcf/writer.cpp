@@ -6,12 +6,10 @@
 #include <cstddef>
 #include <variant>
 
-namespace ivio::bcf {
-
 namespace {
 template <typename T>
 inline auto bgzfPack(T v, char* buffer) -> size_t {
-    return bgzf_writer::detail::bgzfPack(v, buffer);
+    return ivio::bgzf_writer::detail::bgzfPack(v, buffer);
 }
 
 struct bcf_buffer {
@@ -25,7 +23,7 @@ struct bcf_buffer {
     void pack(T v) {
         auto oldSize = buffer.size();
         buffer.resize(oldSize + sizeof(std::decay_t<T>));
-        bgzf_writer::detail::bgzfPack(v, buffer.data() + oldSize);
+        ivio::bgzf_writer::detail::bgzfPack(v, buffer.data() + oldSize);
     }
 
     template <std::integral T>
@@ -85,16 +83,40 @@ struct bcf_buffer {
     }
 
 };
-
 }
 
 
+template <>
+struct ivio::writer_base<ivio::bcf::writer>::pimpl {
+    //!TODO support other writers
+    using Writers = std::variant<bgzf_file_writer>;
 
-struct writer_pimpl {
-    using Writers = std::variant<bgzf_file_writer/*,
+
+    Writers writer;
+    bcf_buffer buffer;
+
+
+    pimpl(std::filesystem::path output)
+        : writer {[&]() -> Writers {
+            return bgzf_file_writer{output};
+        }()}
+    {}
+
+    pimpl(std::ostream& output)
+        : writer {[&]() -> Writers {
+            //!TODO
+            throw std::runtime_error("streams are currently not supported");
+        }()}
+    {}
+};
+
+
+namespace ivio::bcf {
+/*struct writer_pimpl {
+    using Writers = std::variant<bgzf_file_writer,
                                  buffered_writer<zlib_file_writer>,
                                  stream_writer,
-                                 buffered_writer<zlib_stream_writer>*/
+                                 buffered_writer<zlib_stream_writer>
                                  >;
 
     writer_config config;
@@ -117,12 +139,18 @@ struct writer_pimpl {
 writer::writer(writer_config config)
     : pimpl{std::make_unique<writer_pimpl>(config)}
 {
-}
+}*/
+writer::writer(config config_)
+    : writer_base{std::visit([&](auto& p) {
+        return std::make_unique<pimpl>(p);
+    }, config_.output)}
+{}
+
 writer::~writer() {
-    if (pimpl) {
+    if (pimpl_) {
         std::visit([&](auto& writer) {
             writer.write({}, true);
-        }, pimpl->writer);
+        }, pimpl_->writer);
     }
 }
 
@@ -132,20 +160,20 @@ void writer::writeHeader(std::string_view v) {
     bgzf_writer::detail::bgzfPack(static_cast<uint16_t>(v.size()), &buffer[5]);
     std::visit([&](auto& writer) {
        writer.write(buffer, false);
-    }, pimpl->writer);
+    }, pimpl_->writer);
     std::visit([&](auto& writer) {
        writer.write(v, false);
-    }, pimpl->writer);
+    }, pimpl_->writer);
 
 
 }
 
 void writer::write(record_view record) {
-    assert(pimpl);
+    assert(pimpl_);
 
-    auto const& [chrom, pos, id, ref, n_allele, alts, qual, filters, info, format, samples] = record;
+    auto const& [chromId, pos, id, ref, n_allele, alts, qual, filters, info, format, samples] = record;
 
-    auto& buffer = pimpl->buffer;
+    auto& buffer = pimpl_->buffer;
     buffer.clear();
 
 
@@ -155,9 +183,8 @@ void writer::write(record_view record) {
     buffer.pack<uint32_t>(l_shared);
     buffer.pack<uint32_t>(l_indiv);
 
-    auto chromId = contigMap.at(std::string{chrom}); //!TODO make it std::string_view compatible
     auto rlen = 0;
-    buffer.pack<uint32_t>(chromId);
+    buffer.pack<uint32_t>(0); // !TODO replace with chromId
     buffer.pack<uint32_t>(pos-1);
     buffer.pack<uint32_t>(rlen);
     buffer.pack<float>(qual.value_or(0b0111'1111'1000'0000'0000'0000'0001));
@@ -178,10 +205,12 @@ void writer::write(record_view record) {
     if (filters.empty()) {
         buffer.writeString("."); // symbol for missing
     } else {
+        buffer.writeString("."); // !TODO
+        /*
         auto filterIds = std::vector<int32_t>{};
         for (auto const& f : filters) {
             filterMap.at(std::string{f}); //!TODO make it std::string_view compatible
-        }
+        }*/
     }
 
     // copying the string into the buffer !TODO
@@ -206,7 +235,7 @@ void writer::write(record_view record) {
 
     std::visit([&](auto& writer) {
        writer.write(buffer.buffer, false);
-    }, pimpl->writer);
+    }, pimpl_->writer);
 }
 
 }

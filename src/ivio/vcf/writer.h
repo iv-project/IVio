@@ -1,7 +1,8 @@
 #pragma once
 
 #include "../writer_base.h"
-#include "reader.h"
+#include "header.h"
+#include "record.h"
 
 #include <filesystem>
 #include <ostream>
