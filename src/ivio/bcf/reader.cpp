@@ -30,21 +30,15 @@ struct reader_base<bcf::reader>::pimpl {
         std::vector<int32_t> filters;
     } storage;
 
-    pimpl(std::filesystem::path file, bool)
+    pimpl(std::filesystem::path file)
         : ureader {[&]() -> VarBufferedReader {
-            if (file.extension() == ".bcf") {
-                return buffered_reader{bgzf_mt_reader{mmap_reader{file.c_str()}}};
-            }
+            return buffered_reader{bgzf_mt_reader{mmap_reader{file.c_str()}}};
             throw std::runtime_error("unknown file extension");
         }()}
     {}
-    pimpl(std::istream& file, bool compressed)
+    pimpl(std::istream& file)
         : ureader {[&]() -> VarBufferedReader {
-            if (!compressed) {
-                return stream_reader{file};
-            } else {
-                return zlib_reader{stream_reader{file}};
-            }
+            return bgzf_mt_reader{stream_reader{file}};
         }()}
     {}
 
@@ -223,7 +217,7 @@ namespace ivio::bcf {
 
 reader::reader(config const& config_)
     : reader_base{std::visit([&](auto& p) {
-        return std::make_unique<pimpl>(p, config_.compressed);
+        return std::make_unique<pimpl>(p);
     }, config_.input)}
 {
     pimpl_->readHeader();
