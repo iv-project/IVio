@@ -11,7 +11,7 @@ namespace ivio::bcf {
 struct record_view {
     using string_view_list = std::span<std::string_view>;
 
-    std::string_view         chrom;
+    int32_t                  chromId;
     int32_t                  pos;
     std::string_view         id;
     std::string_view         ref;
@@ -25,7 +25,7 @@ struct record_view {
 };
 
 struct record {
-    std::string              chrom;
+    int32_t                  chromId;
     int32_t                  pos;
     std::string              id;
     std::string              ref;
@@ -39,7 +39,7 @@ struct record {
 
     record() = default;
     record(record_view v)
-        : chrom   {v.chrom}
+        : chromId {v.chromId}
         , pos     {v.pos}
         , id      {v.id}
         , ref     {v.ref}
@@ -53,7 +53,7 @@ struct record {
     {}
     operator record_view() const {
         return record_view {
-            chrom,
+            chromId,
             pos,
             id,
             ref,

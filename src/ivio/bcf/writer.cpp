@@ -112,39 +112,31 @@ struct ivio::writer_base<ivio::bcf::writer>::pimpl {
 
 
 namespace ivio::bcf {
-/*struct writer_pimpl {
-    using Writers = std::variant<bgzf_file_writer,
-                                 buffered_writer<zlib_file_writer>,
-                                 stream_writer,
-                                 buffered_writer<zlib_stream_writer>
-                                 >;
 
-    writer_config config;
-    Writers writer;
-    bcf_buffer buffer;
-
-    writer_pimpl(writer_config config)
-        : config{config}
-        , writer {[&]() -> Writers {
-            if (auto ptr = std::get_if<std::filesystem::path>(&config.output)) {
-                return file_writer{ptr->c_str()};
-            }
-            throw std::runtime_error("unknown output type");
-        }()}
-    {}
-
-
-};
-
-writer::writer(writer_config config)
-    : pimpl{std::make_unique<writer_pimpl>(config)}
-{
-}*/
 writer::writer(config config_)
     : writer_base{std::visit([&](auto& p) {
         return std::make_unique<pimpl>(p);
     }, config_.output)}
-{}
+{
+    // writing the header
+    std::visit([&](auto& writer) {
+        auto buffer = std::array<char, 9>{'B', 'C', 'F', 2, 2};
+        size_t s{};
+        for (auto const& [key, value] : config_.header.table) {
+            s += key.size() + value.size() + 4; // +4 for extra symbols
+        }
+        bgzf_writer::detail::bgzfPack(static_cast<uint16_t>(s), &buffer[5]);
+        writer.write(buffer, false);
+
+        for (auto const& [key, value] : config_.header.table) {
+            writer.write("##", false);
+            writer.write(key, false);
+            writer.write("=", false);
+            writer.write(value, false);
+            writer.write("\n", false);
+        }
+    }, pimpl_->writer);
+}
 
 writer::~writer() {
     if (pimpl_) {
@@ -152,20 +144,6 @@ writer::~writer() {
             writer.write({}, true);
         }, pimpl_->writer);
     }
-}
-
-void writer::writeHeader(std::string_view v) {
-    auto buffer = std::array<char, 9>{'B', 'C', 'F', 2, 2};
-
-    bgzf_writer::detail::bgzfPack(static_cast<uint16_t>(v.size()), &buffer[5]);
-    std::visit([&](auto& writer) {
-       writer.write(buffer, false);
-    }, pimpl_->writer);
-    std::visit([&](auto& writer) {
-       writer.write(v, false);
-    }, pimpl_->writer);
-
-
 }
 
 void writer::write(record_view record) {
@@ -184,7 +162,7 @@ void writer::write(record_view record) {
     buffer.pack<uint32_t>(l_indiv);
 
     auto rlen = 0;
-    buffer.pack<uint32_t>(0); // !TODO replace with chromId
+    buffer.pack<uint32_t>(chromId);
     buffer.pack<uint32_t>(pos-1);
     buffer.pack<uint32_t>(rlen);
     buffer.pack<float>(qual.value_or(0b0111'1111'1000'0000'0000'0000'0001));

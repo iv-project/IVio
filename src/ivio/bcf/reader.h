@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../reader_base.h"
+#include "header.h"
 #include "record.h"
 
 #include <filesystem>
@@ -16,13 +17,7 @@ struct reader : public reader_base<reader> {
     using record      = bcf::record;
     using record_view = bcf::record_view;
 
-    std::string headerBuffer;
-    std::vector<std::string_view> header;
-    std::string_view              tableHeader;
-    std::unordered_map<std::string_view, std::vector<std::string_view>> headerMap;
-
-    std::vector<std::string_view>& contigMap = headerMap["contig"];
-    std::vector<std::string_view>& filterMap = headerMap["filter"];
+    bcf::header header_;
 
     struct config {
         // Source: file or stream
@@ -35,6 +30,8 @@ struct reader : public reader_base<reader> {
 public:
     reader(config const& config_);
     ~reader();
+
+    auto header() const -> bcf::header const& { return header_; }
 
     auto next() -> std::optional<record_view>;
 };
