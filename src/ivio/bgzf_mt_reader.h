@@ -105,8 +105,8 @@ struct bgzf_mt_reader {
     std::mutex ureaderMutex;
     VarBufferedReader reader;
 
-    std::vector<std::jthread> threads;
     bgzf_mt::job_queue<Job>  jobs;
+    std::vector<std::jthread> threads;
 
     void work(bgzf_mt::job_queue<Job>::WrappedJob* job) {
         auto& range   = job->job.range;
@@ -123,10 +123,10 @@ struct bgzf_mt_reader {
             if (avail_in < 18) throw "failed reading (1)";
 
             size_t compressedLen = bgzfUnpack<uint16_t>(ptr + 16) + 1u;
-            auto [ptr2, avail_in2] = reader.read(compressedLen);
-            if (avail_in2 < compressedLen) throw "failed reading (2)";
+            std::tie(ptr, avail_in) = reader.read(compressedLen);
+            if (avail_in < compressedLen) throw "failed reading (2)";
             buffer.resize(compressedLen-18);
-            std::memcpy(buffer.data(), ptr2+18, compressedLen-18);
+            std::memcpy(buffer.data(), ptr+18, compressedLen-18);
 
             reader.dropUntil(compressedLen);
         }
@@ -172,7 +172,9 @@ struct bgzf_mt_reader {
     auto operator=(bgzf_mt_reader&&) -> bgzf_mt_reader& = delete;
 
 
-    ~bgzf_mt_reader() = default;
+    ~bgzf_mt_reader() {
+        jobs.finish();
+    }
 
     size_t read(std::ranges::sized_range auto&& range) {
         auto next = jobs.begin();

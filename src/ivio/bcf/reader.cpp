@@ -32,8 +32,7 @@ struct reader_base<bcf::reader>::pimpl {
 
     pimpl(std::filesystem::path file)
         : ureader {[&]() -> VarBufferedReader {
-            return buffered_reader{bgzf_mt_reader{mmap_reader{file.c_str()}}};
-            throw std::runtime_error("unknown file extension");
+            return bgzf_mt_reader{mmap_reader{file}};
         }()}
     {}
     pimpl(std::istream& file)
