@@ -220,6 +220,8 @@ reader::reader(config const& config_)
     }, config_.input)}
 {
     pimpl_->readHeader();
+    header_.table     = std::move(pimpl_->header);
+    header_.genotypes = std::move(pimpl_->genotypes);
 }
 
 reader::~reader() = default;

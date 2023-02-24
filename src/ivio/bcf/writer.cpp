@@ -6,6 +6,8 @@
 #include <cstddef>
 #include <variant>
 
+#include <iostream>
+
 namespace {
 template <typename T>
 inline auto bgzfPack(T v, char* buffer) -> size_t {
@@ -120,21 +122,31 @@ writer::writer(config config_)
 {
     // writing the header
     std::visit([&](auto& writer) {
-        auto buffer = std::array<char, 9>{'B', 'C', 'F', 2, 2};
-        size_t s{};
-        for (auto const& [key, value] : config_.header.table) {
-            s += key.size() + value.size() + 4; // +4 for extra symbols
-        }
-        bgzf_writer::detail::bgzfPack(static_cast<uint16_t>(s), &buffer[5]);
-        writer.write(buffer, false);
+        // write leading table
+        auto ss = std::string{};
+        ss = "##fileformat=VCFv4.3\n";
 
-        for (auto const& [key, value] : config_.header.table) {
-            writer.write("##", false);
-            writer.write(key, false);
-            writer.write("=", false);
-            writer.write(value, false);
-            writer.write("\n", false);
+        for (auto [key, value] : config_.header.table) {
+            if (key == "fileformat") continue; // ignore request to write file format
+            ss += "##";
+            ss += key;
+            ss += '=';
+            ss += value;
+            ss += '\n';
         }
+        // write heading of the body
+        {
+            ss += std::string{"#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT"};
+            for (auto const& s : config_.header.genotypes) {
+                ss += '\t' + s;
+            }
+            ss += '\n';
+        }
+
+        auto buffer = std::array<char, 9>{'B', 'C', 'F', 2, 2};
+        bgzf_writer::detail::bgzfPack(static_cast<uint16_t>(ss.size()), &buffer[5]);
+        writer.write(buffer, false);
+        writer.write(ss, false);
     }, pimpl_->writer);
 }
 
@@ -180,16 +192,13 @@ void writer::write(record_view record) {
 
     buffer.writeData(alts);
 
-    if (filters.empty()) {
-        buffer.writeString("."); // symbol for missing
-    } else {
-        buffer.writeString("."); // !TODO
+
+    buffer.writeVector({}); //!TODO
         /*
         auto filterIds = std::vector<int32_t>{};
         for (auto const& f : filters) {
             filterMap.at(std::string{f}); //!TODO make it std::string_view compatible
         }*/
-    }
 
     // copying the string into the buffer !TODO
     {
