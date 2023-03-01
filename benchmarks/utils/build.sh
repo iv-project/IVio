@@ -20,7 +20,7 @@ fi
 INCLUDES="-I . -I ../../src/ \
     -isystem../../lib/io2/include \
     -DSEQAN_HAS_ZLIB  -isystem../../lib/seqan/include \
-    -DBIO_HAS_ZLIB -isystem../../lib/biocpp-io/include \
+    -DBIOCPP_IO_HAS_ZLIB -isystem../../lib/biocpp-io/include \
                    -isystem../../lib/biocpp-core/include \
     -DSEQAN3_HAS_ZLIB -isystem../../lib/seqan3/include -isystem../../lib/submodules/sdsl-lite/include"
 ARGS="-std=c++20 ${FLAGS} ${INCLUDES}"
