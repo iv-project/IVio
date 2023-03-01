@@ -23,15 +23,9 @@ struct reader_base<bam::reader>::pimpl {
     VarBufferedReader ureader;
     size_t lastUsed{};
 
-    std::string headerBuffer;
-    std::vector<std::string_view> header;
-    std::string_view              tableHeader;
-    std::unordered_map<std::string_view, std::vector<std::string_view>> headerMap;
+    bam::header header;
 
-    std::vector<std::string_view>& contigMap = headerMap["contig"];
-    std::vector<std::string_view>& filterMap = headerMap["filter"];
-
-    pimpl(std::filesystem::path file, bool, size_t threadNbr)
+    pimpl(std::filesystem::path file, size_t threadNbr)
         : ureader {[&]() -> VarBufferedReader {
             if (threadNbr == 0) {
                 return buffered_reader<1<<16>{bgzf_reader{mmap_reader{file.c_str()}}};
@@ -39,83 +33,38 @@ struct reader_base<bam::reader>::pimpl {
             return bgzf_mt_reader{mmap_reader{file.c_str()}, threadNbr};
         }()}
     {}
-    pimpl(std::istream& file, bool compressed, size_t threadNbr)
+    pimpl(std::istream& file, size_t threadNbr)
         : ureader {[&]() -> VarBufferedReader {
-            if (!compressed) {
-                return stream_reader{file};
-            } else if (threadNbr == 0) {
+            if (threadNbr == 0) {
                 return buffered_reader<1<<16>{bgzf_reader{stream_reader{file}}};
             }
             return bgzf_mt_reader{stream_reader{file}, threadNbr};
         }()}
     {}
 
-
-
-    auto parseHeaderLine(size_t pos) -> std::tuple<bool, size_t> {
-        if (headerBuffer.size() >= pos + 2 && headerBuffer[pos + 0] == '#' && headerBuffer[pos + 1] == '#') {
-            auto start = pos + 2;
-            auto end   = headerBuffer.find('\n', start);
-            if (end == std::string::npos) end = headerBuffer.size();
-            header.emplace_back(headerBuffer.data()+start, headerBuffer.data()+end);
-            {
-                auto v = header.back();
-                auto p = v.find('=');
-                if (p == std::string::npos) throw "error parsing BAM Header";
-                auto key   = std::string_view{v.data(), v.data()+p};
-                auto value = std::string_view{v.data()+p+1, v.data()+v.size()};
-                headerMap[key].push_back(value);
-            }
-            if (end == headerBuffer.size()) return {false, end};
-            return {true, end+1};
-        }
-        return {false, pos};
-    }
-
-    void parseHeader() {
-        size_t pos{};
-        bool cont;
-        do {
-            std::tie(cont, pos) = parseHeaderLine(pos);
-        } while (cont);
-
-        if (pos < headerBuffer.size() and headerBuffer[pos] == '#') {
-            auto start = pos + 1;
-            auto end = headerBuffer.find('\n', start);
-            if (end == std::string::npos) end = headerBuffer.size();
-            tableHeader = {headerBuffer.data() + start, headerBuffer.data() + end};
-        }
-        for (auto v : headerMap["FILTER"]) {
-            auto pos = v.find("IDX=");
-            if (pos == std::string_view::npos) throw "unexpected formating";
-            auto pos2 = v.find('>', pos+4); // !TODO might also be a ","
-            if (pos2 == std::string_view::npos) throw "unexpected formatting (2)";
-            auto v2 = v.substr(pos+4, pos2);
-            auto idx = size_t(std::stoi(std::string{v2})); //!TODO from_chars is faster
-            headerMap["filter"].resize(std::max(headerMap["filter"].size(), idx+1));
-            headerMap["filter"][idx] = v;
-        }
-
-    }
-
     void readHeader() {
         auto [ptr, size] = ureader.read(12);
 
-        if (size < 12) throw "something went wrong reading bam file (1)";
+        if (size < 12) throw std::runtime_error{"something went wrong reading bam file (1)"};
 
         size_t l_text = ivio::bgzfUnpack<uint32_t>(ptr + 4);
-        ureader.read(12 + l_text); // read complete header !TODO safe header for future processing
-        // !TODO copy header somewhere required
+        std::tie(ptr, size) = ureader.read(12 + l_text + 8); // read complete header
+        if (size < 12 + l_text + 8) throw std::runtime_error{"couldn't read header of bam file (1a)"};
+
+        header.buffer.resize(l_text);
+        memcpy(header.buffer.data(), ptr + 12, l_text);
+
         auto n_ref = ivio::bgzfUnpack<uint32_t>(ptr + 8 + l_text);
         ureader.dropUntil(12 + l_text);
 
         // read list of references
         for (size_t i{0}; i < n_ref; ++i) {
-            auto [ptr, size] = ureader.read(9);
-            if (size < 9) throw " something went wrong reading bam file (1b)";
+            std::tie(ptr, size) = ureader.read(9);
+            if (size < 9) throw std::runtime_error{"something went wrong reading bam file (1b)"};
             auto l_name = ivio::bgzfUnpack<uint32_t>(ptr);
-            auto [ptr2, size2] = ureader.read(8 + l_name); // !TODO this is not safe
-            auto l_ref  = ivio::bgzfUnpack<uint32_t>(ptr2+4+l_name);
+            std::tie(ptr, size) = ureader.read(8 + l_name);
+            if (size < 8 + l_name) throw std::runtime_error{"error reading entry " + std::to_string(i)};
+            auto l_ref  = ivio::bgzfUnpack<uint32_t>(ptr+4+l_name);
             //!TODO read name and save it somewhere
             ureader.dropUntil(8+l_name);
         }
@@ -173,10 +122,11 @@ namespace ivio::bam {
 
 reader::reader(config const& config_)
     : reader_base{std::visit([&](auto& p) {
-        return std::make_unique<pimpl>(p, config_.compressed, config_.threadNbr);
+        return std::make_unique<pimpl>(p, config_.threadNbr);
     }, config_.input)}
 {
     pimpl_->readHeader();
+    header_ = std::move(pimpl_->header);
 }
 
 reader::~reader() = default;
