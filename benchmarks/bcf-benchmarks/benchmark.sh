@@ -4,4 +4,4 @@ cd "$(dirname "$0")"
 methods=(bio ivio)
 files=(../data/sampled.bcf)
 
-source ../utils/benchmark.sh
+source ../utils/benchmark.sh "$@"

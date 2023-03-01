@@ -1,5 +1,6 @@
 #!/bin/bash
 type=$1
+shift
 
 if [ -z "${type}" ]; then
     echo 'please select type "read", "read_stream", "write", etc....'
@@ -13,7 +14,7 @@ for file in ${files[@]}; do
     echo "file: $file"
     echo -e "method  \tcorrect \ttotal(MB)\tspeed(MB/s)\tmemory(MB)";
     for method in ${methods[@]}; do
-        line="$(./benchmark_${type} ${method} ${file} | tail -n +2)"
+        line="$(./benchmark_${type} ${method} ${file} "$@"| tail -n +2)"
         echo "$line"
         c=$(echo $line | awk '{print $2}')
         s=$(echo $line | awk '{print $4}')
