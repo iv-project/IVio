@@ -46,7 +46,7 @@ int main(int argc, char** argv) {
         } catch(...){
             bestResult = Result{}; // reset results, will cause this to be incorrect
         }
-        auto groundTruth = ivio_bench(file, std::max(threadNbr, size_t{8}));
+        auto groundTruth = bio_bench(file, std::max(threadNbr, size_t{8}));
         // print results
         [&]() {
             auto const& result = bestResult;
