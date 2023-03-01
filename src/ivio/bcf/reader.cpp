@@ -18,6 +18,137 @@
 
 namespace ivio {
 
+namespace {
+// helper type for the visitor #4
+template<class... Ts> struct overloaded : Ts... { using Ts::operator()...; };
+
+struct bcf_buffer {
+    char const* iter{};
+    char const* end{};
+
+    auto readDescriptor() -> std::tuple<uint8_t, uint8_t>  {
+        auto v = ivio::bgzfUnpack<uint8_t>(iter);
+        iter += 1;
+        auto l = uint8_t(v >> 4);
+        auto t = uint8_t(v & 0x0f);
+        return std::make_tuple(t, l);
+    }
+
+    static auto bcf_type(int t) -> std::string {
+        if (t == 0) return "MISSING";
+        if (t == 1) return "Integer [8 bit]";
+        if (t == 2) return "Integer [16 bit]";
+        if (t == 3) return "Integer [32 bit]";
+        if (t == 5) return "Float [32 bit]";
+        if (t == 7) return "Character";
+        throw std::runtime_error("unknown type: " + std::to_string(t));
+    }
+
+    template <typename T>
+    auto readIntOfType() -> T {
+        static_assert(std::same_as<int8_t, T> or std::same_as<int16_t, T> or std::same_as<int32_t, T>
+                      or std::same_as<uint8_t, T> or std::same_as<uint16_t, T> or std::same_as<uint32_t, T>,
+                      "Can only read (usigned) ints of 8, 16 and 32 bit length");
+        auto value = ivio::bgzfUnpack<T>(iter);
+        iter += sizeof(T);
+        return value;
+    }
+
+    auto readIntOfType(int t) -> int32_t {
+        if (t == 1) return readIntOfType<int8_t>();
+        if (t == 2) return readIntOfType<int16_t>();
+        if (t == 3) return readIntOfType<int32_t>();
+        throw std::runtime_error{"BCF error, expected an int, but got " + bcf_type(t)};
+    }
+    auto readInt() -> int32_t {
+        auto [t, l] = readDescriptor();
+        if (l != 1) throw std::runtime_error{"BCF error, expected length 1"};
+        return readIntOfType(t);
+    }
+
+    auto readFloat() -> std::optional<float> {
+       auto q     = ivio::bgzfUnpack<float>(iter);
+       iter += 4;
+       if (q == 0b0111'1111'1000'0000'0000'0000'0001) return std::nullopt;
+       return {q};
+    }
+
+    auto readString() -> std::string_view {
+        auto [t, l] = readDescriptor();
+        if (t != 7) {
+            throw std::runtime_error("BCF error: unexpected type: " + bcf_type(t));
+        }
+        if (l == 15) {
+           l = readInt();
+        }
+        auto value = std::string_view{iter, iter+l};
+        iter += l;
+        return value;
+    }
+
+    auto readVectorOfInt() -> std::vector<int32_t> {
+        auto [t, l] = readDescriptor();
+        if (t != 1 and t != 2 and t != 3) {
+            throw std::runtime_error("BCF error: unexpected type: " + bcf_type(t));
+        }
+        if (l == 15) {
+            l = readInt();
+        }
+        auto res = std::vector<int32_t>{};
+        res.resize(l);
+        for (auto& v : res) {
+            v = readIntOfType(t);
+        }
+        return res;
+    }
+
+    auto readVectorOfFloat() -> std::vector<float> {
+        auto [t, l] = readDescriptor();
+        if (t != 5) {
+            throw std::runtime_error("BCF error: unexpected type: " + bcf_type(t));
+        }
+        if (l == 15) {
+            l = readInt();
+        }
+        auto res = std::vector<float>{};
+        res.resize(l);
+        for (auto& v : res) {
+            v = readFloat().value();
+        }
+        return res;
+    }
+
+    auto readAny() -> std::variant<nullptr_t, int32_t, float, char, std::string_view, std::vector<int32_t>, std::vector<float>> {
+        auto [t, l] = readDescriptor();
+        if (t == 0) return nullptr;
+        if (l == 1 && 0 < t and t < 4) return readIntOfType(t);
+        if (l == 1 && t == 5) return readFloat().value();
+        if (l == 1 && t == 7) return readIntOfType(1);
+        if (l > 1 && 0 < t and t < 4) {
+            iter -= 1;
+            return readVectorOfInt();
+        }
+        if (l > 1 && t == 5) {
+            iter -= 1;
+            return readVectorOfFloat();
+        }
+        if (l > 1 && t == 7) {
+            iter -= 1;
+            return readString();
+        }
+        throw std::runtime_error{"BCF error: unknown type/length combination - " + bcf_type(t) + "/" + std::to_string(l)};
+    }
+
+    template <typename CB>
+    auto capture(CB cb) -> std::span<uint8_t const> {
+        auto begin = iter;
+        cb();
+        return {reinterpret_cast<uint8_t const*>(begin), reinterpret_cast<uint8_t const*>(iter)};
+    }
+};
+}
+
+
 template <>
 struct reader_base<bcf::reader>::pimpl {
     VarBufferedReader ureader;
@@ -25,10 +156,6 @@ struct reader_base<bcf::reader>::pimpl {
 
     std::vector<std::tuple<std::string, std::string>> header;
     std::vector<std::string> genotypes;
-
-    struct {
-        std::vector<int32_t> filters;
-    } storage;
 
     pimpl(std::filesystem::path file)
         : ureader {[&]() -> VarBufferedReader {
@@ -101,113 +228,79 @@ struct reader_base<bcf::reader>::pimpl {
         std::tie(ptr, size) = ureader.read(flen);
         if (size < flen) throw "something went wrong reading bcf file (3)";
         if (size < 32+3) throw "something went worng reading bcf file (4)";
-        auto chromId  = ivio::bgzfUnpack<int32_t>(ptr + 8);
-        auto pos      = ivio::bgzfUnpack<int32_t>(ptr + 12);
-        //auto rlen     = ivio::bgzfUnpack<int32_t>(ptr + 16);
-        auto qual     = [&]() -> std::optional<float> {
-            auto q     = ivio::bgzfUnpack<float>(ptr + 20);
-            if (q == 0b0111'1111'1000'0000'0000'0000'0001) return std::nullopt;
-            return q;
-        }();
-        //auto n_info   = ivio::bgzfUnpack<int16_t>(ptr + 24);
-        auto n_allele = ivio::bgzfUnpack<int16_t>(ptr + 26);
-        //auto n_sample = ivio::bgzfUnpack<int32_t>(ptr + 28) & 0x00ffffff;
-        //auto n_fmt    = ivio::bgzfUnpack<uint8_t>(ptr + 31);
 
-        auto readInt = [&](size_t o) -> std::tuple<int32_t, size_t> {
-            auto v = ivio::bgzfUnpack<uint8_t>(ptr + o);
-            auto t = v & 0x0f;
-            if (t == 1) {
-                return {ivio::bgzfUnpack<int8_t>(ptr + o + 1), o+2};
-            } else if (t == 2) {
-                return {ivio::bgzfUnpack<int16_t>(ptr + o + 1), o+3};
-            } else if (t == 3) {
-                return {ivio::bgzfUnpack<int32_t>(ptr + o + 1), o+5};
-            } else {
-                throw "BCF error, expected an int";
+        auto buffer = bcf_buffer{ptr+8, ptr+flen};
+
+        auto chromId = buffer.readIntOfType<int32_t>();
+        if (chromId < 0) throw "chromId is invalid, negative values not allowed";
+
+        auto pos      = buffer.readIntOfType<int32_t>();
+        auto rlen     = buffer.readIntOfType<int32_t>();
+        auto qual     = buffer.readFloat();
+        auto n_info   = buffer.readIntOfType<uint16_t>();
+        auto n_allele = buffer.readIntOfType<uint16_t>();
+        if (n_allele < 0) throw "n_allele is negative, not allowed";
+        if (n_allele == 0) throw "n_allele is zero, it must be at least 1";
+        auto n_sample = ivio::bgzfUnpack<uint32_t>(buffer.iter) & 0x00ffffff;
+        auto n_fmt    = ivio::bgzfUnpack<uint8_t>(buffer.iter+3);
+        buffer.iter += 4;
+
+        auto id       = buffer.readString();
+        auto ref      = buffer.readString();
+
+        auto alt = buffer.capture([&]() {
+            for (size_t i{1}; i < size_t(n_allele); ++i) {
+                buffer.readString();
             }
-        };
-        auto readString = [&](size_t o) -> std::tuple<std::string_view, size_t> {
-            auto v = ivio::bgzfUnpack<uint8_t>(ptr + o);
-            //auto t = v & 0x0f;
-            auto l = v >> 4;
-            if (l == 15) {
-                auto [i, o2] = readInt(o+1);
-                return {{ptr+o2, ptr+o2+i}, o2+i};
+        });
+
+        auto filter = buffer.capture([&]() {
+            buffer.readVectorOfInt();
+        });
+
+        auto info = buffer.capture([&]() {
+            for (size_t i{0}; i < size_t{n_info}; ++i) {
+                auto id = buffer.readInt();
+                auto a = buffer.readAny();
+                std::visit(overloaded{
+                    [](nullptr_t) {},
+                    [](int32_t v) {},
+                    [](float v) {},
+                    [](char v) {},
+                    [](std::vector<int32_t> const& v) {},
+                    [](std::vector<float> const& v) {},
+                    [](std::string_view v) {}
+                }, a);
             }
-            return {{ptr+o+1, ptr+o+1+l}, o+1+l};
-        };
-
-        auto readVector = [&](size_t o) -> std::tuple<std::vector<int32_t>, size_t> {
-            auto v = ivio::bgzfUnpack<uint8_t>(ptr + o);
-            //auto t = v & 0x0f;
-            auto l = v >> 4;
-            if (l == 15) {
-                auto [i, o2] = readInt(o+1);
-                l = i;
-                o = o2;
+        });
+        auto format = buffer.capture([&]() {
+            for (size_t i{0}; i < size_t{n_fmt}; ++i) {
+                auto id = buffer.readInt();
+                auto [t, l] = buffer.readDescriptor();
+                buffer.iter += l*t*n_sample; // Jump over the data
             }
-            auto res = std::vector<int32_t>{};
-            res.resize(l);
-            for (auto& v : res) {
-                std::tie(v, o) = readInt(o);
-            }
-            return {res, o};
-        };
+        });
 
-        auto [id, o2] = readString(32);
-        auto [ref, o3] = readString(o2);
-
-        if (chromId < 0) {
-            throw "chromId is invalid, negative values not allowed";
-        }
-        /*if (contigMap.size() <= size_t(chromId)) {
-            throw "chromId " + std::to_string(chromId) + " is missing in the header";
-        }*/
-
-        //storage.alts.clear();
-        if (n_allele < 0) {
-            throw "n_allele is negative, not allowed";
-        }
-        auto beginAlts = reinterpret_cast<uint8_t const*>(ptr + o3);
-        for (size_t i{1}; i < size_t(n_allele); ++i) {
-            auto [alt, o4] = readString(o3);
-            o3 = o4;
-        }
-        auto endAlts = reinterpret_cast<uint8_t const*>(ptr + o3);
-        auto alts = std::span{beginAlts, endAlts};
-
-
-        auto [filters, o5] = readVector(o3);
-        storage.filters.clear();
-        for (auto f : filters) {
-            storage.filters.emplace_back(f);
-        }
-
-        auto info = [&]() {
-            assert(o5 <= l_shared+8);
-
-            //auto p1 = o5;
-            //auto p2 = l_shared+8;
-            return std::string_view{ptr + o5, ptr + l_shared+8};
-        }();
-
+        assert(buffer.iter == buffer.end);
         lastUsed = l_shared + l_indiv + 8;
 
-
-        return bcf::record_view {
-            .chromId  = chromId,
-            .pos      = pos,
-            .id       = id,
-            .ref      = ref,
-            .n_allele = n_allele,
-            .alts     = alts,
-            .qual     = qual,
-            .filters  = storage.filters,
-            .info     = info,
-            .format   = ureader.string_view(0, 0), //!TODO
-            .samples  = ureader.string_view(0, 0), //!TODO
+        auto r = bcf::record_view {
+            .chromId    = chromId,
+            .pos        = pos,
+            .rlen       = rlen,
+            .qual       = qual,
+            .n_info     = n_info,
+            .n_allele   = n_allele,
+            .n_sample   = n_sample,
+            .n_fmt      = n_fmt,
+            .id         = id,
+            .ref        = ref,
+            .alt        = alt,
+            .filter     = filter,
+            .info       = info,
+            .format     = format,
         };
+        return r;
     }
 };
 }

@@ -158,14 +158,11 @@ writer::~writer() {
     }
 }
 
-void writer::write(record_view record) {
+void writer::write(record_view r) {
     assert(pimpl_);
-
-    auto const& [chromId, pos, id, ref, n_allele, alts, qual, filters, info, format, samples] = record;
 
     auto& buffer = pimpl_->buffer;
     buffer.clear();
-
 
     auto l_shared = 0;
     auto l_indiv = 0;
@@ -173,43 +170,28 @@ void writer::write(record_view record) {
     buffer.pack<uint32_t>(l_shared);
     buffer.pack<uint32_t>(l_indiv);
 
-    auto rlen = 0;
-    buffer.pack<uint32_t>(chromId);
-    buffer.pack<uint32_t>(pos-1);
-    buffer.pack<uint32_t>(rlen);
-    buffer.pack<float>(qual.value_or(0b0111'1111'1000'0000'0000'0000'0001));
+    buffer.pack<int32_t>(r.chromId);
+    buffer.pack<int32_t>(r.pos);
+    buffer.pack<uint32_t>(r.rlen);
+    buffer.pack<float>(r.qual.value_or(0b0111'1111'1000'0000'0000'0000'0001));
 
-    auto n_info = 0;
-    auto n_sample = 0;
-    auto n_fmt = 0;
-    buffer.pack<int16_t>(n_info);
-    buffer.pack<int16_t>(n_allele);
-    buffer.pack<int32_t>(n_sample); // should actually just be 24bit
-    bgzfPack<int8_t>(n_fmt, &buffer.buffer.back()); // overwrite last byte
+    buffer.pack<int16_t>(r.n_info);
+    buffer.pack<int16_t>(r.n_allele);
+    buffer.pack<int32_t>(r.n_sample); // should actually just be 24bit
+    bgzfPack<int8_t>(r.n_fmt, &buffer.buffer.back()); // overwrite last byte
 
-    buffer.writeString(id);
-    buffer.writeString(ref);
-
-    buffer.writeData(alts);
-
-
-    buffer.writeVector({}); //!TODO
-        /*
-        auto filterIds = std::vector<int32_t>{};
-        for (auto const& f : filters) {
-            filterMap.at(std::string{f}); //!TODO make it std::string_view compatible
-        }*/
-
-    // copying the string into the buffer !TODO
-    {
-        auto oldSize = buffer.buffer.size();
-        buffer.buffer.resize(buffer.buffer.size() + info.size());
-        std::memcpy(buffer.buffer.data() + oldSize, info.data(), info.size());
-    }
-
-    // overwrite l_shared with actuall correct data
+    buffer.writeString(r.id);
+    buffer.writeString(r.ref);
+    buffer.writeData(r.alt);
+    buffer.writeData(r.filter);
+    buffer.writeData(r.info);
     l_shared = buffer.buffer.size() - 8;
+    buffer.writeData(r.format);
+    l_indiv = buffer.buffer.size() - l_shared - 8;
+
+    // overwrite l_shared with correct data
     bgzfPack<uint32_t>(l_shared, buffer.buffer.data());
+    bgzfPack<uint32_t>(l_indiv,  buffer.buffer.data()+4);
 
     //std::cout << "write: " << l_shared << " " << l_indiv << " " << chromId << " " << pos << " " << rlen << " " << qual.value_or(-1.f) << " " << n_info << " " << n_allele << " " << n_sample << " " << (int)n_fmt << "\n";
 
