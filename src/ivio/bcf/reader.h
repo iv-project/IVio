@@ -22,6 +22,9 @@ struct reader : public reader_base<reader> {
     struct config {
         // Source: file or stream
         std::variant<std::filesystem::path, std::reference_wrapper<std::istream>> input;
+
+        // Value of 0 will run with a sequential implementation, other values will spawn new threads
+        size_t threadNbr = 0;
     };
 
 public:

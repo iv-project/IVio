@@ -6,14 +6,20 @@
 #include <string_view>
 #include <sys/resource.h>
 
-auto bio_bench(std::filesystem::path file) -> Result;
-auto ivio_bench(std::filesystem::path file) -> Result;
+auto bio_bench(std::filesystem::path file, size_t threadNbr) -> Result;
+auto ivio_bench(std::filesystem::path file, size_t threadNbr) -> Result;
 
 int main(int argc, char** argv) {
     try {
-        if (argc != 3) return 0;
+        if (argc < 3) return 0;
         auto method = std::string_view{argv[1]};
         auto file   = std::filesystem::path{argv[2]};
+        auto threadNbr = [&]() -> size_t {
+            if (argc > 3) return std::stoull(argv[3]);
+            return 0;
+        }();
+        if (argc > 4) return 0;
+
 
         Result bestResult;
         int fastestRun{};
@@ -24,8 +30,8 @@ int main(int argc, char** argv) {
                 auto start  = std::chrono::high_resolution_clock::now();
 
                 auto r = [&]() {
-                    if (method == "bio")    return bio_bench(file);
-                    if (method == "ivio")   return ivio_bench(file);
+                    if (method == "bio")    return bio_bench(file, threadNbr);
+                    if (method == "ivio")   return ivio_bench(file, threadNbr);
 
                     throw std::runtime_error("unknown method: " + std::string{method});
                 }();
@@ -40,7 +46,7 @@ int main(int argc, char** argv) {
         } catch(...){
             bestResult = Result{}; // reset results, will cause this to be incorrect
         }
-        auto groundTruth = ivio_bench(file);
+        auto groundTruth = ivio_bench(file, std::max(threadNbr, size_t{8}));
         // print results
         [&]() {
             auto const& result = bestResult;

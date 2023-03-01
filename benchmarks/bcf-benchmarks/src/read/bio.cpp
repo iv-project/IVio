@@ -2,8 +2,12 @@
 
 #include <bio/io/var/reader.hpp>
 
-auto bio_bench(std::filesystem::path file) -> Result {
+auto bio_bench(std::filesystem::path file, size_t threadNbr) -> Result {
     Result result;
+
+    //!Note: this line is very fragile since bgzf_thread_count works on per
+    //translation unit (error in bio, that is fixed in seqan3)
+    bio::io::contrib::bgzf_thread_count = threadNbr;
 
     auto fin  = bio::io::var::reader{file};
     for (auto & r : fin) {

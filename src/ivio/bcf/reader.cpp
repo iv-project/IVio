@@ -157,14 +157,20 @@ struct reader_base<bcf::reader>::pimpl {
     std::vector<std::tuple<std::string, std::string>> header;
     std::vector<std::string> genotypes;
 
-    pimpl(std::filesystem::path file)
+    pimpl(std::filesystem::path file, size_t threadNbr)
         : ureader {[&]() -> VarBufferedReader {
-            return bgzf_mt_reader{mmap_reader{file}};
+            if (threadNbr == 0) {
+                return buffered_reader<1<<16>{bgzf_reader{mmap_reader{file}}};
+            }
+            return bgzf_mt_reader{mmap_reader{file}, threadNbr};
         }()}
     {}
-    pimpl(std::istream& file)
+    pimpl(std::istream& file, size_t threadNbr)
         : ureader {[&]() -> VarBufferedReader {
-            return bgzf_mt_reader{stream_reader{file}};
+            if (threadNbr == 0) {
+                return buffered_reader<1<<16>{bgzf_reader{stream_reader{file}}};
+            }
+            return bgzf_mt_reader{stream_reader{file}, threadNbr};
         }()}
     {}
 
@@ -309,7 +315,7 @@ namespace ivio::bcf {
 
 reader::reader(config const& config_)
     : reader_base{std::visit([&](auto& p) {
-        return std::make_unique<pimpl>(p);
+        return std::make_unique<pimpl>(p, config_.threadNbr);
     }, config_.input)}
 {
     pimpl_->readHeader();
