@@ -10,14 +10,21 @@
 namespace ivio {
 
 namespace bgzf_mt {
+
 template <typename Job>
 struct job_queue {
     struct WrappedJob {
         Job job;
         std::mutex mutex;
         std::condition_variable cv;
-        bool processing{};
-        bool doneflag{};
+        std::atomic_bool processing{};
+        std::atomic_bool doneflag{};
+
+        void reset() {
+            auto g = std::unique_lock{mutex};
+            processing = false;
+            doneflag = false;
+        }
 
         void done() {
             auto g = std::unique_lock{mutex};
@@ -30,22 +37,34 @@ struct job_queue {
             cv.wait(g);
         }
     };
+
+
     std::mutex mutex;
-    std::list<WrappedJob> jobs;
-    bool terminate{};
+    std::list<std::unique_ptr<WrappedJob>> jobs;
+    std::atomic_bool terminate{};
     std::condition_variable cv;
 
     job_queue() = default;
     job_queue(job_queue const&) = delete;
     job_queue(job_queue&& _other) {
-        _other.finish();
+        auto g1 = std::unique_lock(mutex);
+        auto g2 = std::unique_lock(_other.mutex);
+
         jobs = std::move(_other.jobs);
     }
     auto operator=(job_queue const&) -> job_queue& = delete;
     auto operator=(job_queue&& _other) -> job_queue& {
-        _other.finish();
+        auto g1 = std::unique_lock(mutex);
+        auto g2 = std::unique_lock(_other.mutex);
+
         jobs = std::move(_other.jobs);
         return *this;
+    }
+
+    void init_jobs(size_t nbr) {
+        for (size_t i{0}; i < nbr; ++i) {
+            jobs.emplace_back(std::make_unique<WrappedJob>());
+        }
     }
 
     ~job_queue() {
@@ -61,44 +80,40 @@ struct job_queue {
     auto begin() -> WrappedJob* {
         auto g = std::unique_lock(mutex);
         if (jobs.empty()) return nullptr;
-        return &jobs.front();
+        return jobs.front().get();
     }
 
-    void pop_front() {
+    void recycle() {
         auto g = std::unique_lock(mutex);
+        auto ptr = std::move(jobs.front());
         jobs.pop_front();
-    }
-
-    auto add_job(Job job) -> WrappedJob& {
-        auto g = std::unique_lock(mutex);
-        jobs.emplace_back(std::move(job));
+        ptr->reset();
+        jobs.emplace_back(std::move(ptr));
         cv.notify_one();
-        return jobs.back();
     }
 
     auto process_job() -> WrappedJob* {
-        while (!terminate) {
+        while (true) {
             auto g = std::unique_lock(mutex);
             for (auto& job : jobs) {
-                auto g2 = std::unique_lock{job.mutex};
-                if (job.processing == false) {
-                    job.processing = true;
-                    return &job;
+                auto g2 = std::unique_lock{job->mutex};
+                if (job->processing == false) {
+                    job->processing = true;
+                    return job.get();
                 }
             }
-            if(terminate) break;
+            if(terminate) return nullptr;
             cv.wait(g);
         }
-        return nullptr;
     }
 };
 }
 
 struct bgzf_mt_reader {
     struct Job {
-        std::string                  range{std::string(1<<16, '\0')};
-        std::string_view             range_view{};
-        std::string                  buffer;
+        std::string                  decompressedOutput{std::string(1<<16, '\0')};
+        std::string_view             output_view{};
+        std::string                  compressedInput;
         std::unique_ptr<ZlibContext> zlibCtx{std::make_unique<ZlibContext>()};
     };
 
@@ -108,37 +123,46 @@ struct bgzf_mt_reader {
     bgzf_mt::job_queue<Job>  jobs;
     std::vector<std::jthread> threads;
 
-    void work(bgzf_mt::job_queue<Job>::WrappedJob& job) {
-        auto& range   = job.job.range;
-        auto& buffer  = job.job.buffer;
-        auto& zlibCtx = job.job.zlibCtx;
+    // returns if should be aborted
+    bool work() {
+        auto g = std::unique_lock{ureaderMutex};
+        auto job = jobs.process_job();
+        if (!job) return true;
+
+        auto& input  = job->job.compressedInput;
         {
-            auto g = std::unique_lock{ureaderMutex};
+            // copy from underlying buffer (locked)
+            // into the Job buffer
             auto [ptr, avail_in] = reader.read(18);
-            if (avail_in == 0) return; // End of processing
+            if (avail_in == 0) return false; // End of processing
             if (avail_in < 18) throw std::runtime_error{"failed reading (1)"};
 
             size_t compressedLen = bgzfUnpack<uint16_t>(ptr + 16) + 1u;
             std::tie(ptr, avail_in) = reader.read(compressedLen);
             if (avail_in < compressedLen) throw std::runtime_error{"failed reading (2)"};
-            buffer.resize(compressedLen-18);
-            std::memcpy(buffer.data(), ptr+18, compressedLen-18);
+            input.resize(compressedLen-18);
+            std::memcpy(input.data(), ptr+18, compressedLen-18);
 
             reader.dropUntil(compressedLen);
+            g.unlock();
         }
 
-        size_t size = zlibCtx->decompressBlock({buffer.begin(), buffer.size()}, {range.data(), range.size()});
-        job.job.range_view = {range.begin(), range.begin() + size};
+        auto& output      = job->job.decompressedOutput;
+        auto& zlibCtx     = job->job.zlibCtx;
+        auto& output_view = job->job.output_view;
+
+        size_t size = zlibCtx->decompressBlock({input.begin(), input.size()}, {output.data(), output.size()});
+        output_view = {output.begin(), output.begin() + size};
+        job->done();
+        return false;
     }
 
+    std::mutex gMutex;
     void startThread(size_t threadNbr) {
         while (threads.size() < threadNbr) {
             threads.emplace_back(std::jthread{[this](std::stop_token stoken) {
                 while(!stoken.stop_requested()) {
-                    auto job = jobs.process_job();
-                    if (!job) return;
-                    work(*job);
-                    job->done();
+                    if (work()) return;
                 }
             }});
         }
@@ -148,16 +172,15 @@ struct bgzf_mt_reader {
         : reader{std::move(reader_)}
     {
         startThread(threadNbr);
-        for (size_t i{0}; i < threadNbr+1; ++i) {
-            jobs.add_job(Job{});
-        }
+        jobs.init_jobs(threadNbr+1);
     }
 
     bgzf_mt_reader(bgzf_mt_reader const&) = delete;
     bgzf_mt_reader(bgzf_mt_reader&& _other) {
         auto threadNbr = _other.threads.size();
-        jobs   = std::move(_other.jobs);
+        _other.jobs.finish();
         _other.threads.clear();
+        jobs   = std::move(_other.jobs);
         reader = std::move(_other.reader);
         startThread(threadNbr);
     }
@@ -172,15 +195,16 @@ struct bgzf_mt_reader {
 
     size_t read(std::ranges::sized_range auto&& range) {
         auto next = jobs.begin();
-        if (!next) return 0; // abort, nothing anymore todo
+        if (!next) return 0; // abort, nothing todo, finished everything
         next->await();
-        size_t size = std::min(range.size(), next->job.range_view.size());
-        std::memcpy(range.data(), next->job.range_view.data(), size);
-        if (size == next->job.range_view.size()) {
-            jobs.add_job(std::move(next->job));
-            jobs.pop_front();
-        } else {
-            next->job.range_view = {next->job.range_view.data()+size, next->job.range_view.size() - size};
+
+        auto& output_view = next->job.output_view;
+
+        size_t size = std::min(range.size(), output_view.size());
+        std::memcpy(range.data(), output_view.data(), size);
+        output_view = output_view.substr(size);
+        if (output_view.empty()) {
+            jobs.recycle();
         }
         return size;
     }
