@@ -28,9 +28,9 @@ struct reader_base<bam::reader>::pimpl {
     pimpl(std::filesystem::path file, size_t threadNbr)
         : ureader {[&]() -> VarBufferedReader {
             if (threadNbr == 0) {
-                return buffered_reader<1<<16>{bgzf_reader{mmap_reader{file.c_str()}}};
+                return buffered_reader<1<<16>{bgzf_reader{mmap_reader{file}}};
             }
-            return bgzf_mt_reader{mmap_reader{file.c_str()}, threadNbr};
+            return bgzf_mt_reader{mmap_reader{file}, threadNbr};
         }()}
     {}
     pimpl(std::istream& file, size_t threadNbr)

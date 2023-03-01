@@ -97,7 +97,7 @@ struct job_queue {
 struct bgzf_mt_reader {
     struct Job {
         std::string                  range{std::string(1<<16, '\0')};
-        std::string_view             range_view{range};
+        std::string_view             range_view{};
         std::string                  buffer;
         std::unique_ptr<ZlibContext> zlibCtx{std::make_unique<ZlibContext>()};
     };
@@ -108,23 +108,19 @@ struct bgzf_mt_reader {
     bgzf_mt::job_queue<Job>  jobs;
     std::vector<std::jthread> threads;
 
-    void work(bgzf_mt::job_queue<Job>::WrappedJob* job) {
-        auto& range   = job->job.range;
-        auto& buffer  = job->job.buffer;
-        auto& zlibCtx = job->job.zlibCtx;
-
+    void work(bgzf_mt::job_queue<Job>::WrappedJob& job) {
+        auto& range   = job.job.range;
+        auto& buffer  = job.job.buffer;
+        auto& zlibCtx = job.job.zlibCtx;
         {
             auto g = std::unique_lock{ureaderMutex};
             auto [ptr, avail_in] = reader.read(18);
-            if (avail_in == 0) {
-                job->done();
-                return;
-            }
-            if (avail_in < 18) throw "failed reading (1)";
+            if (avail_in == 0) return; // End of processing
+            if (avail_in < 18) throw std::runtime_error{"failed reading (1)"};
 
             size_t compressedLen = bgzfUnpack<uint16_t>(ptr + 16) + 1u;
             std::tie(ptr, avail_in) = reader.read(compressedLen);
-            if (avail_in < compressedLen) throw "failed reading (2)";
+            if (avail_in < compressedLen) throw std::runtime_error{"failed reading (2)"};
             buffer.resize(compressedLen-18);
             std::memcpy(buffer.data(), ptr+18, compressedLen-18);
 
@@ -132,10 +128,7 @@ struct bgzf_mt_reader {
         }
 
         size_t size = zlibCtx->decompressBlock({buffer.begin(), buffer.size()}, {range.data(), range.size()});
-        job->job.range_view = {range.begin(), range.begin() + size};
-
-        // end of reading
-        job->done();
+        job.job.range_view = {range.begin(), range.begin() + size};
     }
 
     void startThread(size_t threadNbr) {
@@ -144,7 +137,8 @@ struct bgzf_mt_reader {
                 while(!stoken.stop_requested()) {
                     auto job = jobs.process_job();
                     if (!job) return;
-                    work(job);
+                    work(*job);
+                    job->done();
                 }
             }});
         }

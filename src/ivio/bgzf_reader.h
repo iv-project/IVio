@@ -153,15 +153,15 @@ struct bgzf_reader {
         while(true) {
             auto [ptr, avail_in] = reader.read(18);
             if (avail_in == 0) return 0;
-            if (avail_in < 18) throw "failed reading (1)";
+            if (avail_in < 18) throw std::runtime_error{"failed reading (1)"};
 
             size_t compressedLen = bgzfUnpack<uint16_t>(ptr + 16) + 1u;
-            auto [ptr2, avail_in2] = reader.read(compressedLen);
-            if (avail_in2 < compressedLen) throw "failed reading (2)";
+            std::tie(ptr, avail_in) = reader.read(compressedLen);
+            if (avail_in < compressedLen) throw std::runtime_error{"failed reading (2)"};
 
             assert(range.size() >= (1<<16));
 
-            size_t size = zlibCtx.decompressBlock({ptr2+18, compressedLen-18}, {range.data(), range.size()});
+            size_t size = zlibCtx.decompressBlock({ptr+18, compressedLen-18}, {range.data(), range.size()});
             reader.dropUntil(compressedLen);
             return size;
         }
