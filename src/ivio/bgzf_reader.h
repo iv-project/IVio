@@ -62,7 +62,7 @@ struct ZlibContext {
         constexpr auto GzipWindowBits = -15; // no zlib header
         auto status = inflateInit2(&strm, GzipWindowBits);
         if (status != Z_OK) {
-            throw "BGZF inflateInit2() failed";
+            throw std::runtime_error{"BGZF inflateInit2() failed"};
         }
     }
 
@@ -74,7 +74,7 @@ struct ZlibContext {
         if (status != Z_OK) {
             #pragma GCC diagnostic push
             #pragma GCC diagnostic ignored "-Wterminate"
-            throw "BGZF inflateEnd() failed";
+            throw std::runtime_error{"BGZF inflateEnd() failed"};
             #pragma GCC diagnostic pop
         }
     }
@@ -86,7 +86,7 @@ struct ZlibContext {
     void reset() {
         auto status = inflateReset(&strm);
         if (status != Z_OK) {
-            throw "BGZF inflateReset() failed";
+            throw std::runtime_error{"BGZF inflateReset() failed"};
         }
     }
 
@@ -98,7 +98,7 @@ struct ZlibContext {
         reset();
 
         if (in.size() < BlockFooterLength) {
-            throw "BGZF block too short. " + std::to_string(in.size());
+            throw std::runtime_error{"BGZF block too short. " + std::to_string(in.size())};
         }
 
 //        if (!detail::bgzf_compression::validate_header(std::span{srcBegin, srcLength})) {
@@ -111,19 +111,19 @@ struct ZlibContext {
 
         auto status = inflate(&strm, Z_FINISH);
         if (status != Z_STREAM_END) {
-            throw "Inflation failed. Decompressed BGZF data is too big. " + std::to_string(strm.avail_in) + " " + std::to_string(strm.avail_out);
+            throw std::runtime_error{"Inflation failed. Decompressed BGZF data is too big. " + std::to_string(strm.avail_in) + " " + std::to_string(strm.avail_out)};
         }
 
         // Compute and check checksum
         unsigned crc = crc32(crc32(0, nullptr, 0), (Bytef *)out.data(), out.size() - strm.avail_out);
         unsigned ecrc = bgzfUnpack<uint32_t>(in.data() + in.size() - 8);
         if (ecrc != crc)
-            throw "BGZF wrong checksum." + std::to_string(ecrc) + " " + std::to_string(crc);
+            throw std::runtime_error{"BGZF wrong checksum." + std::to_string(ecrc) + " " + std::to_string(crc)};
 
         // Check uncompressed data length
         auto dlen = bgzfUnpack<uint32_t>(in.data() + in.size() - 4);
         if (dlen != out.size() - strm.avail_out)
-            throw "BGZF size mismatch.";
+            throw std::runtime_error{"BGZF size mismatch."};
 
         return out.size() - strm.avail_out;
 

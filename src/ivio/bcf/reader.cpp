@@ -192,7 +192,7 @@ struct reader_base<bcf::reader>::pimpl {
     void readHeader() {
         auto [ptr, size] = ureader.read(9);
 
-        if (size < 9) throw "something went wrong reading bcf file (1)";
+        if (size < 9) throw std::runtime_error{"something went wrong reading bcf file (1)"};
 
         size_t txt_len = ivio::bgzfUnpack<uint32_t>(ptr + 5);
         ureader.dropUntil(9);
@@ -226,27 +226,26 @@ struct reader_base<bcf::reader>::pimpl {
         ureader.dropUntil(lastUsed);
         auto [ptr, size] = ureader.read(8);
         if (size == 0) return std::nullopt;
-        if (size < 8) throw "something went wrong reading bcf file (2)";
+        if (size < 8) throw std::runtime_error{"something went wrong reading bcf file (2)"};
 
         auto l_shared = ivio::bgzfUnpack<uint32_t>(ptr+0);
         auto l_indiv  = ivio::bgzfUnpack<uint32_t>(ptr+4);
         auto flen = l_shared + l_indiv + 8;
         std::tie(ptr, size) = ureader.read(flen);
-        if (size < flen) throw "something went wrong reading bcf file (3)";
-        if (size < 32+3) throw "something went worng reading bcf file (4)";
+        if (size < flen) throw std::runtime_error{"something went wrong reading bcf file (3)"};
+        if (size < 32+3) throw std::runtime_error{"something went worng reading bcf file (4)"};
 
         auto buffer = bcf_buffer{ptr+8, ptr+flen};
 
         auto chromId = buffer.readIntOfType<int32_t>();
-        if (chromId < 0) throw "chromId is invalid, negative values not allowed";
+        if (chromId < 0) throw std::runtime_error{"chromId is invalid, negative values not allowed"};
 
         auto pos      = buffer.readIntOfType<int32_t>();
         auto rlen     = buffer.readIntOfType<int32_t>();
         auto qual     = buffer.readFloat();
         auto n_info   = buffer.readIntOfType<uint16_t>();
         auto n_allele = buffer.readIntOfType<uint16_t>();
-        if (n_allele < 0) throw "n_allele is negative, not allowed";
-        if (n_allele == 0) throw "n_allele is zero, it must be at least 1";
+        if (n_allele == 0) throw std::runtime_error{"n_allele is zero, it must be at least 1"};
         auto n_sample = ivio::bgzfUnpack<uint32_t>(buffer.iter) & 0x00ffffff;
         auto n_fmt    = ivio::bgzfUnpack<uint8_t>(buffer.iter+3);
         buffer.iter += 4;

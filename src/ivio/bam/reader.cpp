@@ -74,7 +74,7 @@ struct reader_base<bam::reader>::pimpl {
         ureader.dropUntil(lastUsed);
         auto [ptr, size] = ureader.read(40);
         if (size == 0) return std::nullopt;
-        if (size < 40) throw "something went wrong reading bam file (2)";
+        if (size < 40) throw std::runtime_error{"something went wrong reading bam file (2)"};
 
         auto block_size  = ivio::bgzfUnpack<uint32_t>(ptr+0);
 

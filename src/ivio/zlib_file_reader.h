@@ -26,14 +26,14 @@ struct zlib_reader {
         : reader{std::move(reader)}
     {
         if (inflateInit2(&stream, 16 + MAX_WBITS) != Z_OK) {
-            throw "error";
+            throw std::runtime_error{"error"};
         }
     }
     zlib_reader(zlib_reader&& _other)
         : reader{std::move(_other.reader)}
     {
         if (inflateInit2(&stream, 16 + MAX_WBITS) != Z_OK) {
-            throw "error";
+            throw std::runtime_error{"error"};
         }
     }
 

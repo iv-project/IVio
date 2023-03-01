@@ -34,11 +34,11 @@ struct bcf_buffer {
             if constexpr (std::same_as<T, int8_t>) return 1;
             if constexpr (std::same_as<T, int16_t>) return 2;
             if constexpr (std::same_as<T, int32_t>) return 3;
-            throw "BCF error, expected an int(2)";
+            throw std::runtime_error{"BCF error, expected an int(2)"};
         }();
         pack<uint8_t>(type);
         pack(v);
-    };
+    }
 
     void writeString(std::string_view v) {
         if (v.size() < 15) { // No overflow
@@ -47,7 +47,7 @@ struct bcf_buffer {
         } else { // overflow
             pack<uint8_t>(0xf7);
             if (v.size() > 127) {
-                throw "BCF: string to long";
+                throw std::runtime_error{"BCF: string to long"};
             }
             writeInt<int8_t>(v.size());
         }
@@ -64,7 +64,7 @@ struct bcf_buffer {
         } else { // overflow
             pack<uint8_t>(0xf7);
             if (v.size() > 127) {
-                throw "BCF: string to long";
+                throw std::runtime_error{"BCF: string to long"};
             }
             writeInt<int8_t>(v.size());
         }
