@@ -3,30 +3,6 @@
 
 #include <ivio/bam/reader.h>
 
-#include <cassert>
-#include <thread>
-#include <chrono>
-constexpr static auto ccmap = std::string_view{"=ACMGRSVTWYHKDBN"};
-static auto const ccmap2 = []() {
-    auto values = std::array<std::tuple<char, char>, 256>{};
-
-    auto dna5_rank_view = [](char v) {
-        if (v == 'A') return 0;
-        if (v == 'C') return 1;
-        if (v == 'G') return 2;
-        if (v == 'T') return 3;
-        if (v == 'N') return 4;
-        return 0xff;
-    };
-
-    for (size_t i{0}; i < ccmap.size(); ++i) {
-        for (size_t j{0}; j < ccmap.size(); ++j) {
-            values[j+i*16] = {dna5_rank_view(ccmap[i]), dna5_rank_view(ccmap[j])};
-        }
-    }
-    return values;
-}();
-
 auto ivio_bench(std::filesystem::path file, size_t threadNbr) -> Result {
     Result result;
     std::array<size_t, 16> ctChars{};
