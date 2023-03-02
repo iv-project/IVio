@@ -23,7 +23,9 @@ struct writer : writer_base<writer> {
 
     writer(config config);
     ~writer();
+
     void write(record_view record);
+    void close();
 };
 
 }

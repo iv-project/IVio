@@ -136,6 +136,10 @@ auto reader::next() -> std::optional<record_view> {
     return pimpl_->next();
 }
 
+void reader::close() {
+    pimpl_.reset();
+}
+
 static_assert(record_reader_c<reader>);
 
 }

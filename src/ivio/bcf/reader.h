@@ -32,8 +32,8 @@ public:
     ~reader();
 
     auto header() const -> bcf::header const& { return header_; }
-
     auto next() -> std::optional<record_view>;
+    void close();
 };
 
 }

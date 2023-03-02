@@ -27,6 +27,7 @@ struct writer : writer_base<writer> {
 
 //    void writeHeader(std::string_view v);
     void write(record_view record);
+    void close();
 };
 
 }

@@ -40,6 +40,7 @@ concept BufferedReadable = requires(T t) {
 template <typename T>
 concept record_reader_c = requires(T t) {
     { t.next() };
+    { t.close() };
 };
 
 
@@ -47,6 +48,12 @@ template <typename T>
 concept writer_c = requires(T t) {
     { t.write(std::declval<std::span<char>>(), true) };
 //    { t.write(std::declval<char const*>()) };
+};
+
+template <typename T>
+concept record_writer_c = requires(T t) {
+    { t.write({}) };
+    { t.close() };
 };
 
 }

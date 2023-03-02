@@ -206,4 +206,10 @@ void writer::write(record_view r) {
     }, pimpl_->writer);
 }
 
+void writer::close() {
+    pimpl_.reset();
+}
+
+static_assert(record_writer_c<writer>);
+
 }
