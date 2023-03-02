@@ -38,3 +38,7 @@ for (auto record_view : reader) {
     std::cout << "seq: " << record_view.seq << "\n";
 }
 ```
+
+
+## Reference
+  - [fasta Record/Reader/Writer](doc/fasta.md)
