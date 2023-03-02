@@ -33,8 +33,8 @@
 ## Usage Example
 ```c++
 auto reader = ivio::fasta::reader{{file}};
-for (auto record : reader) {
-    std::cout << "id: " << record.id << "\n";
-    std::cout << "seq: " << record.seq << "\n";
+for (auto record_view : reader) {
+    std::cout << "id: " << record_view.id << "\n";
+    std::cout << "seq: " << record_view.seq << "\n";
 }
 ```
