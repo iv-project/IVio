@@ -3,7 +3,8 @@
 
 using namespace seqan;
 
-void seqan2_bench(std::filesystem::path pathIn, std::filesystem::path pathOut) {
+void seqan2_bench(std::filesystem::path pathIn, std::filesystem::path pathOut, size_t threadNbr) {
+    //!TODO don't know how to set threadNbr properly
     VcfFileIn  fileIn(pathIn.c_str());
     VcfFileOut fileOut(pathOut.c_str());
 

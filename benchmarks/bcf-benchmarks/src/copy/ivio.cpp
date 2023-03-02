@@ -1,8 +1,9 @@
 #include <ivio/bcf/reader.h>
 #include <ivio/bcf/writer.h>
 
-void ivio_bench(std::filesystem::path pathIn, std::filesystem::path pathOut) {
-    auto reader = ivio::bcf::reader{{.input = pathIn}};
+void ivio_bench(std::filesystem::path pathIn, std::filesystem::path pathOut, size_t threadNbr) {
+    auto reader = ivio::bcf::reader{{.input     = pathIn,
+                                     .threadNbr = threadNbr}};
     auto writer = ivio::bcf::writer{{.output = pathOut,
                                      .header = reader.header() }};
 

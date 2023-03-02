@@ -140,7 +140,6 @@ writer::writer(config config_)
             for (auto const& s : config_.header.genotypes) {
                 ss += '\t' + s;
             }
-            ss += '\n';
         }
 
         auto buffer = std::array<char, 9>{'B', 'C', 'F', 2, 2};

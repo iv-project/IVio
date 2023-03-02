@@ -6,11 +6,10 @@
 #include <string_view>
 #include <vector>
 #include <sys/resource.h>
-#include <ivio/vcf/reader.h>
 
-void seqan2_bench(std::filesystem::path pathIn, std::filesystem::path pathOut);
-void bio_bench(std::filesystem::path pathIn, std::filesystem::path pathOut);
-void ivio_bench(std::filesystem::path pathIn, std::filesystem::path pathOut);
+void seqan2_bench(std::filesystem::path pathIn, std::filesystem::path pathOut, size_t threadNbr);
+void bio_bench(std::filesystem::path pathIn, std::filesystem::path pathOut, size_t threadNbr);
+void ivio_bench(std::filesystem::path pathIn, std::filesystem::path pathOut, size_t threadNbr);
 
 int main(int argc, char** argv) {
     auto p = [](auto v, size_t w) {
@@ -24,9 +23,14 @@ int main(int argc, char** argv) {
     };
 
     try {
-        if (argc != 3) return 0;
+        if (argc < 3) return 0;
         auto method     = std::string_view{argv[1]};
         auto input_file = std::filesystem::path{argv[2]};
+        auto threadNbr  = [&]() -> size_t {
+            if (argc > 3) return std::stoull(argv[3]);
+            return 0;
+        }();
+        if (argc > 4) return 0;
 
         auto output_file   = std::filesystem::path{"/tmp/ivio_bench"} / input_file.filename();
         std::filesystem::create_directories(output_file.parent_path());
@@ -34,32 +38,32 @@ int main(int argc, char** argv) {
         int fastestRun{};
         auto fastestTime = std::numeric_limits<int>::max();
         int maxNbrOfRuns{5};
+
         for (int i{}; i < maxNbrOfRuns; ++i) {
             auto start  = std::chrono::high_resolution_clock::now();
 
-            if (method == "seqan2")      seqan2_bench(input_file, output_file);
-            else if (method == "bio")    bio_bench(input_file, output_file);
-            else if (method == "ivio")   ivio_bench(input_file, output_file);
+            if (method == "seqan2")      seqan2_bench(input_file, output_file, threadNbr);
+            else if (method == "bio")    bio_bench(input_file, output_file, threadNbr);
+            else if (method == "ivio")   ivio_bench(input_file, output_file, threadNbr);
             else throw std::runtime_error("unknown method");
 
             auto end  = std::chrono::high_resolution_clock::now();
             auto diff = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
-/*            auto call = [&]() -> std::string {
-                if (compressed) {
-                    return "zdiff \"" + input_file.string() + "\" \"" + output_file.string() + "\"";
-                }
-                return "diff \"" + input_file.string() + "\" \"" + output_file.string() + "\"";
-            }();
-            int result = system(call.c_str());
-            bool correct = (result == 0);
-            if (!correct) {
-                throw std::runtime_error("incorrect output");
-            }*/
+
             if (diff < fastestTime) {
                 fastestTime = diff;
                 fastestRun = i;
             }
         }
+        // check correctness of file (doesn't work for bio since it reorders the header)
+        if (method != "bio") {
+            int result = system(("test $(sha256sum -b " + input_file.string() + " | cut -f 1 -d ' ')"
+                             " ==  $(sha256sum -b " + output_file.string() + " | cut -f 1 -d ' ')").c_str());
+            if (result) {
+                throw std::runtime_error("incorrect output");
+            }
+        }
+
         // print results
         [&]() {
 
