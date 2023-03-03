@@ -120,4 +120,11 @@ void writer::write(record_view record) {
     }, pimpl_->writer);
 }
 
+void writer::close() {
+    pimpl_.reset();
+}
+
+static_assert(record_writer_c<writer>);
+
+
 }

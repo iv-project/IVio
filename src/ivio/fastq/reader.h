@@ -27,6 +27,7 @@ public:
     ~reader();
 
     auto next() -> std::optional<record_view>;
+    void close();
 };
 
 }
