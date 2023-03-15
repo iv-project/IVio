@@ -7,7 +7,8 @@ VCF provides 5 classes:
  - `reader`, `writer`
  - `record` and `record_view`
 
- ### Example
+
+### Example
 ```cpp
 {!snippets/read_vcf.cpp!}
 ```
