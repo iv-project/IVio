@@ -7,6 +7,9 @@
 
 (legend - rw: read/write, ro: read-only)
 
+## Documentation/API Reference
+Checkout the [documentation](https://sgssgene.github.io/IVio/) for more information.
+
 ## Benchmark
 |        format           | |  seqan2 |  seqan3 | io2     | bio     | ivio        | direct       |
 |:------------------------|-|--------:|:-------:|:-------:|:-------:|:-----------:|:------------:|
