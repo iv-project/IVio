@@ -10,9 +10,9 @@ VCF provides 5 classes:
 
 ### Example
 ```cpp
-{!snippets/read_vcf.cpp!}
+{% include-markdown "snippets/read_vcf.cpp" %}
 ```
 ### Output
-```bash
-{!snippets/read_vcf.cpp.out!}
+```sh
+{% include-markdown "snippets/read_vcf.cpp.out" %}
 ```

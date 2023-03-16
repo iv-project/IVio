@@ -1,4 +1,4 @@
-# Home
+# Introduction
 
 A c++20 library for **bioinformatics**. It provides functions to load and save typical
 file formats.
@@ -24,14 +24,9 @@ target_link_library(your_project ivio::ivio)
 ```
 
 You can now happily use IVio
-```
-#include <ivio/ivio.h>
 
-int main() {
-    auto reader = ivio::fasta::reader{{file}};
-    for (auto record_view : reader) {
-        std::cout << "id: " << record_view.id << "\n";
-        std::cout << "seq: " << record_view.seq << "\n";
-    }
-}
+
+**Code**
+```c++
+{% include-markdown "snippets/simple_example.cpp" %}
 ```

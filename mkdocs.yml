@@ -1,28 +1,25 @@
 site_name: IVio
-repo_url: https://github.com/SGSSGene/IVio
 docs_dir: docs
 nav:
   - index.md
   - C++ API-Reference:
     - formats.md
-
 use_directory_urls: false
 theme:
-  custom_dir: docs/readthedocs-customization
   name: readthedocs
+  custom_dir: docs/readthedocs-customization
   highlightjs: true
-#  hljs_languages:
-#    - cmake
   collapse_navigation: false
   locale: en
   prev_next_buttons_location: none
 extra_javascript:
   - extra-highlights.js
-plugins: []
+plugins:
+  - include-markdown:
+      comments: false
+      trailing_newlines: false
 markdown_extensions:
   - tables
-  - markdown_include.include:
-      base_path: .
 #  - admonition
 #  - codehilite:
 #      use_pygments: true

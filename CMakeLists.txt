@@ -21,10 +21,10 @@ project(IVio)
 add_subdirectory(src/ivio)
 
 if (${ROOT_PROJECT})
-#    find_package (fmt REQUIRED)
+    find_package (fmt REQUIRED)
 
 #    add_subdirectory(lib/Catch2)
     enable_testing()
 
-    add_subdirectory(snippets)
+    add_subdirectory(docs/snippets)
 endif()
