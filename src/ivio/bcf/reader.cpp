@@ -9,12 +9,32 @@
 #include "../zlib_file_reader.h"
 #include "../zlib_mmap2_reader.h"
 
-#include <bit>
 #include <cassert>
 #include <charconv>
 #include <functional>
 #include <optional>
 #include <ranges>
+
+// Implementation taken from cpp reference and adjusted: https://en.cppreference.com/w/cpp/numeric/bit_cast
+template <class To, class From>
+std::enable_if_t<
+    sizeof(To) == sizeof(From) &&
+    std::is_trivially_copyable_v<From> &&
+    std::is_trivially_copyable_v<To>,
+    To>
+// constexpr support needs compiler magic
+bit_cast(const From& src) noexcept {
+#if __GNUC__ == 10 //!WORKAROUND missing bit_cast in g++10
+    static_assert(std::is_trivially_constructible_v<To>,
+        "This implementation additionally requires "
+        "destination type to be trivially constructible");
+    To dst;
+    std::memcpy(&dst, &src, sizeof(To));
+    return dst;
+#else
+    return std::bit_cast<To>(src);
+#endif
+}
 
 namespace ivio {
 
@@ -71,7 +91,7 @@ struct bcf_buffer {
     auto readFloat() -> std::optional<float> {
        auto q     = ivio::bgzfUnpack<float>(iter);
        iter += 4;
-       if (q == std::bit_cast<float>(uint32_t{0b0111'1111'1000'0000'0000'0000'0001})) return std::nullopt;
+       if (q == bit_cast<float>(uint32_t{0b0111'1111'1000'0000'0000'0000'0001})) return std::nullopt;
        return {q};
     }
 
@@ -225,7 +245,7 @@ struct reader_base<bcf::reader>::pimpl {
         }
 #else
         for (auto v : std::views::split(tableHeader, '\t')) {
-    #if __GNUC__ == 11  // !WORKAROUND for gcc11
+    #if __GNUC__ == 11  || __GNUC__ == 10 // !WORKAROUND for gcc11 and gcc10
                 auto cv = std::ranges::common_view{v};
                 genotypes.emplace_back(cv.begin(), cv.end());
     #else

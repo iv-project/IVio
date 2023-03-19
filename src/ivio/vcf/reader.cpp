@@ -17,10 +17,16 @@ namespace {
 template <typename T>
 auto convertTo(std::string_view view) {
     T value{}; //!Should not be initialized with {}, but gcc warns...
+#if __GNUC__ == 10 //!WORKAROUND missing std::from_chars in g++10
+    std::stringstream ss;
+    ss << view;
+    ss >> value;
+#else
     auto result = std::from_chars(begin(view), end(view), value);
     if (result.ec == std::errc::invalid_argument) {
-        throw "can't convert to int";
+        throw std::runtime_error{"can't convert to int"};
     }
+#endif
     return value;
 }
 }
@@ -89,7 +95,7 @@ struct reader_base<vcf::reader>::pimpl {
         }
 #else
         for (auto v : std::views::split(tableHeader, '\t')) {
-    #if __GNUC__ == 11  // !WORKAROUND for gcc11
+    #if __GNUC__ == 11  || __GNUC__ == 10 // !WORKAROUND for gcc11 and gcc10
                 auto cv = std::ranges::common_view{v};
                 genotypes.emplace_back(cv.begin(), cv.end());
     #else
