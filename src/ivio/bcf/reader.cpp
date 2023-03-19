@@ -68,7 +68,7 @@ struct bcf_buffer {
     auto readFloat() -> std::optional<float> {
        auto q     = ivio::bgzfUnpack<float>(iter);
        iter += 4;
-       if (q == 0b0111'1111'1000'0000'0000'0000'0001) return std::nullopt;
+       if (q == std::bit_cast<float>(uint32_t{0b0111'1111'1000'0000'0000'0000'0001})) return std::nullopt;
        return {q};
     }
 
