@@ -66,13 +66,10 @@ struct ZlibContext {
         }
     }
 
-    ~ZlibContext() noexcept {
+    ~ZlibContext() noexcept(false) {
         auto status = deflateEnd(&stream);
         if (status != Z_OK) {
-            #pragma GCC diagnostic push
-            #pragma GCC diagnostic ignored "-Wterminate"
             throw "BGZF inflateEnd() failed";
-            #pragma GCC diagnostic pop
         }
 
     }

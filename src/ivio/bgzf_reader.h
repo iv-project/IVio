@@ -69,13 +69,10 @@ struct ZlibContext {
     ZlibContext(ZlibContext const&) = delete;
     ZlibContext(ZlibContext&&) = delete;
 
-    ~ZlibContext() noexcept {
+    ~ZlibContext() noexcept(false) {
         auto status = inflateEnd(&strm);
         if (status != Z_OK) {
-            #pragma GCC diagnostic push
-            #pragma GCC diagnostic ignored "-Wterminate"
             throw std::runtime_error{"BGZF inflateEnd() failed"};
-            #pragma GCC diagnostic pop
         }
     }
 
