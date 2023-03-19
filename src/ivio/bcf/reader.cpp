@@ -213,10 +213,26 @@ struct reader_base<bcf::reader>::pimpl {
         }
 
         auto tableHeader = std::string_view{ptr, txt_len-s};
-        for (auto v : std::views::split(tableHeader, '\t')) {
-            auto cv = std::ranges::common_view{v}; // !WORKAROUND this conversion is for gcc10 and gcc11
-            genotypes.emplace_back(cv.begin(), cv.end());
+#if __clang__ //!WORKAROUND for at least clang15, std::views::split is not working
+        {
+            size_t start = 0;
+            size_t pos = 0;
+            while ((pos = tableHeader.find('\t', start)) != std::string::npos) {
+                genotypes.emplace_back(tableHeader.begin() + start, tableHeader.begin() + pos);
+                start = pos+1;
+            }
+            genotypes.emplace_back(tableHeader.begin() + start);
         }
+#else
+        for (auto v : std::views::split(tableHeader, '\t')) {
+    #if __GNUC__ == 11  // !WORKAROUND for gcc11
+                auto cv = std::ranges::common_view{v};
+                genotypes.emplace_back(cv.begin(), cv.end());
+    #else
+                genotypes.emplace_back(v.begin(), v.end());
+    #endif
+        }
+#endif
         if (genotypes.size() < 9) {
             throw std::runtime_error("Header description line is invalid");
         }
