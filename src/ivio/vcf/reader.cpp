@@ -6,7 +6,6 @@
 #include "../stream_reader.h"
 #include "../zlib_file_reader.h"
 #include "../zlib_mmap2_reader.h"
-#include "../zlib_ng_file_reader.h"
 
 #include <cassert>
 #include <charconv>
@@ -18,10 +17,16 @@ namespace {
 template <typename T>
 auto convertTo(std::string_view view) {
     T value{}; //!Should not be initialized with {}, but gcc warns...
+#if __GNUC__ == 10 //!WORKAROUND missing std::from_chars in g++10
+    std::stringstream ss;
+    ss << view;
+    ss >> value;
+#else
     auto result = std::from_chars(begin(view), end(view), value);
     if (result.ec == std::errc::invalid_argument) {
-        throw "can't convert to int";
+        throw std::runtime_error{"can't convert to int"};
     }
+#endif
     return value;
 }
 }
@@ -78,9 +83,26 @@ struct reader_base<vcf::reader>::pimpl {
             auto start = 1;
             auto end = ureader.readUntil('\n', start);
             auto tableHeader = ureader.string_view(start, end);
-            for (auto v : std::views::split(tableHeader, '\t')) {
-                genotypes.emplace_back(v.begin(), v.end());
+#if __clang__ //!WORKAROUND for at least clang15, std::views::split is not working
+        {
+            size_t start = 0;
+            size_t pos = 0;
+            while ((pos = tableHeader.find('\t', start)) != std::string::npos) {
+                genotypes.emplace_back(tableHeader.begin() + start, tableHeader.begin() + pos);
+                start = pos+1;
             }
+            genotypes.emplace_back(tableHeader.begin() + start);
+        }
+#else
+        for (auto v : std::views::split(tableHeader, '\t')) {
+    #if __GNUC__ == 11  || __GNUC__ == 10 // !WORKAROUND for gcc11 and gcc10
+                auto cv = std::ranges::common_view{v};
+                genotypes.emplace_back(cv.begin(), cv.end());
+    #else
+                genotypes.emplace_back(v.begin(), v.end());
+    #endif
+        }
+#endif
             if (genotypes.size() < 9) {
                 throw std::runtime_error("Header description line is invalid");
             }
@@ -89,25 +111,25 @@ struct reader_base<vcf::reader>::pimpl {
             if (!ureader.eof(end)) ureader.dropUntil(1);
         }
     }
-
-    template <size_t ct, char sep>
-    auto readLine() -> std::optional<std::array<std::string_view, ct>> {
-        auto res = std::array<std::string_view, ct>{};
-        size_t start{};
-        for (size_t i{}; i < ct-1; ++i) {
-            auto end = ureader.readUntil(sep, start);
-            if (ureader.eof(end)) return std::nullopt;
-            res[i] = ureader.string_view(start, end);
-            start = end+1;
-        }
-        auto end = ureader.readUntil('\n', start);
-        if (ureader.eof(end)) return std::nullopt;
-        res.back() = ureader.string_view(start, end);
-        lastUsed = end;
-        if (!ureader.eof(lastUsed)) lastUsed += 1;
-        return res;
-    }
 };
+}
+//!WORKAROUND clang crashes if this is a member function of pimpl, see https://github.com/llvm/llvm-project/issues/61159
+template <size_t ct, char sep>
+static auto readLine(ivio::reader_base<ivio::vcf::reader>::pimpl& self) -> std::optional<std::array<std::string_view, ct>> {
+    auto res = std::array<std::string_view, ct>{};
+    size_t start{};
+    for (size_t i{}; i < ct-1; ++i) {
+        auto end = self.ureader.readUntil(sep, start);
+        if (self.ureader.eof(end)) return std::nullopt;
+        res[i] = self.ureader.string_view(start, end);
+        start = end+1;
+    }
+    auto end = self.ureader.readUntil('\n', start);
+    if (self.ureader.eof(end)) return std::nullopt;
+    res.back() = self.ureader.string_view(start, end);
+    self.lastUsed = end;
+    if (!self.ureader.eof(self.lastUsed)) self.lastUsed += 1;
+    return res;
 }
 
 namespace ivio::vcf {
@@ -134,7 +156,7 @@ auto reader::next() -> std::optional<record_view> {
     if (ureader.eof(lastUsed)) return std::nullopt;
     ureader.dropUntil(lastUsed);
 
-    auto res = pimpl_->readLine<10, '\t'>();
+    auto res = readLine<10, '\t'>(*pimpl_);
     if (!res) return std::nullopt;
 
     auto [chrom, pos, id, ref, alts, qual, filters, infos, formats, samples] = *res;

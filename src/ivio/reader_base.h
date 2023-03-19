@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cassert>
 #include <memory>
 #include <optional>
 
@@ -30,17 +31,16 @@ struct reader_base {
             nextItem = reader_->next();
             return currentItem;
         }
-        auto operator==(iter const&) const {
+        auto operator==(iter const& _other) const {
+            assert(reader_);
+            assert(_other.reader_ == nullptr);
             return !nextItem.has_value();
         }
-        auto operator!=(iter const&) const {
-            return nextItem.has_value();
-        }
-
     };
 
+    struct pimpl; //!WORKAROUND, this should be protected, but clang15 fails, see readLine
 protected:
-    struct pimpl;
+
     std::unique_ptr<pimpl> pimpl_;
 public:
     reader_base(std::unique_ptr<pimpl> pimpl_)

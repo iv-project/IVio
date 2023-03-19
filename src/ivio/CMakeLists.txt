@@ -20,9 +20,7 @@ target_include_directories(${PROJECT_NAME}
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${CMAKE_CURRENT_SOURCE_DIR}/..
 )
-
 target_link_libraries(${PROJECT_NAME}
-    PUBLIC
+#//!TODO must have a better way to link against z library
     z
 )
-

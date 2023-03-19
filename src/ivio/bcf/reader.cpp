@@ -8,7 +8,6 @@
 #include "../stream_reader.h"
 #include "../zlib_file_reader.h"
 #include "../zlib_mmap2_reader.h"
-#include "../zlib_ng_file_reader.h"
 
 #include <cassert>
 #include <charconv>
@@ -16,11 +15,34 @@
 #include <optional>
 #include <ranges>
 
+// Implementation taken from cpp reference and adjusted: https://en.cppreference.com/w/cpp/numeric/bit_cast
+template <class To, class From>
+std::enable_if_t<
+    sizeof(To) == sizeof(From) &&
+    std::is_trivially_copyable_v<From> &&
+    std::is_trivially_copyable_v<To>,
+    To>
+// constexpr support needs compiler magic
+bit_cast(const From& src) noexcept {
+#if __GNUC__ == 10 //!WORKAROUND missing bit_cast in g++10
+    static_assert(std::is_trivially_constructible_v<To>,
+        "This implementation additionally requires "
+        "destination type to be trivially constructible");
+    To dst;
+    std::memcpy(&dst, &src, sizeof(To));
+    return dst;
+#else
+    return std::bit_cast<To>(src);
+#endif
+}
+
 namespace ivio {
 
 namespace {
 // helper type for the visitor #4
 template<class... Ts> struct overloaded : Ts... { using Ts::operator()...; };
+// explicit deduction guide (not needed as of C++20) //!WORKAROUND but at least clang15 needs it
+template<class... Ts> overloaded(Ts...) -> overloaded<Ts...>;
 
 struct bcf_buffer {
     char const* iter{};
@@ -69,7 +91,7 @@ struct bcf_buffer {
     auto readFloat() -> std::optional<float> {
        auto q     = ivio::bgzfUnpack<float>(iter);
        iter += 4;
-       if (q == 0b0111'1111'1000'0000'0000'0000'0001) return std::nullopt;
+       if (q == bit_cast<float>(uint32_t{0b0111'1111'1000'0000'0000'0000'0001})) return std::nullopt;
        return {q};
     }
 
@@ -118,7 +140,7 @@ struct bcf_buffer {
         return res;
     }
 
-    auto readAny() -> std::variant<nullptr_t, int32_t, float, char, std::string_view, std::vector<int32_t>, std::vector<float>> {
+    auto readAny() -> std::variant<std::nullptr_t, int32_t, float, char, std::string_view, std::vector<int32_t>, std::vector<float>> {
         auto [t, l] = readDescriptor();
         if (t == 0) return nullptr;
         if (l == 1 && 0 < t and t < 4) return readIntOfType(t);
@@ -211,9 +233,26 @@ struct reader_base<bcf::reader>::pimpl {
         }
 
         auto tableHeader = std::string_view{ptr, txt_len-s};
-        for (auto v : std::views::split(tableHeader, '\t')) {
-            genotypes.emplace_back(v.begin(), v.end());
+#if __clang__ //!WORKAROUND for at least clang15, std::views::split is not working
+        {
+            size_t start = 0;
+            size_t pos = 0;
+            while ((pos = tableHeader.find('\t', start)) != std::string::npos) {
+                genotypes.emplace_back(tableHeader.begin() + start, tableHeader.begin() + pos);
+                start = pos+1;
+            }
+            genotypes.emplace_back(tableHeader.begin() + start);
         }
+#else
+        for (auto v : std::views::split(tableHeader, '\t')) {
+    #if __GNUC__ == 11  || __GNUC__ == 10 // !WORKAROUND for gcc11 and gcc10
+                auto cv = std::ranges::common_view{v};
+                genotypes.emplace_back(cv.begin(), cv.end());
+    #else
+                genotypes.emplace_back(v.begin(), v.end());
+    #endif
+        }
+#endif
         if (genotypes.size() < 9) {
             throw std::runtime_error("Header description line is invalid");
         }
@@ -265,10 +304,10 @@ struct reader_base<bcf::reader>::pimpl {
 
         auto info = buffer.capture([&]() {
             for (size_t i{0}; i < size_t{n_info}; ++i) {
-                auto id = buffer.readInt();
+                /*auto id = */buffer.readInt();
                 auto a = buffer.readAny();
                 std::visit(overloaded{
-                    [](nullptr_t) {},
+                    [](std::nullptr_t) {},
                     [](int32_t v) {},
                     [](float v) {},
                     [](char v) {},
@@ -280,7 +319,7 @@ struct reader_base<bcf::reader>::pimpl {
         });
         auto format = buffer.capture([&]() {
             for (size_t i{0}; i < size_t{n_fmt}; ++i) {
-                auto id = buffer.readInt();
+                /*auto id = */buffer.readInt();
                 auto [t, l] = buffer.readDescriptor();
                 buffer.iter += l*t*n_sample; // Jump over the data
             }

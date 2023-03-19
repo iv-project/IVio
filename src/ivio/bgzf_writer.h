@@ -26,7 +26,7 @@ auto host_to_little_endian(std::integral auto const in) noexcept {
     } else if constexpr (sizeof(in) == 8) {
         return htole64(in);
     } else {
-        [flag=false]() {
+        []<bool flag=false>() {
             static_assert(flag, "Conversion only for 1, 2, 4 and 8 byte types possible");
         }();
     }
@@ -66,13 +66,10 @@ struct ZlibContext {
         }
     }
 
-    ~ZlibContext() noexcept {
+    ~ZlibContext() noexcept(false) {
         auto status = deflateEnd(&stream);
         if (status != Z_OK) {
-            #pragma GCC diagnostic push
-            #pragma GCC diagnostic ignored "-Wterminate"
             throw "BGZF inflateEnd() failed";
-            #pragma GCC diagnostic pop
         }
 
     }
