@@ -105,25 +105,25 @@ struct reader_base<vcf::reader>::pimpl {
             if (!ureader.eof(end)) ureader.dropUntil(1);
         }
     }
-
-    template <size_t ct, char sep>
-    auto readLine() -> std::optional<std::array<std::string_view, ct>> {
-        auto res = std::array<std::string_view, ct>{};
-        size_t start{};
-        for (size_t i{}; i < ct-1; ++i) {
-            auto end = ureader.readUntil(sep, start);
-            if (ureader.eof(end)) return std::nullopt;
-            res[i] = ureader.string_view(start, end);
-            start = end+1;
-        }
-        auto end = ureader.readUntil('\n', start);
-        if (ureader.eof(end)) return std::nullopt;
-        res.back() = ureader.string_view(start, end);
-        lastUsed = end;
-        if (!ureader.eof(lastUsed)) lastUsed += 1;
-        return res;
-    }
 };
+}
+//!WORKAROUND clang crashes if this is a member function of pimpl, see https://github.com/llvm/llvm-project/issues/61159
+template <size_t ct, char sep>
+static auto readLine(ivio::reader_base<ivio::vcf::reader>::pimpl& self) -> std::optional<std::array<std::string_view, ct>> {
+    auto res = std::array<std::string_view, ct>{};
+    size_t start{};
+    for (size_t i{}; i < ct-1; ++i) {
+        auto end = self.ureader.readUntil(sep, start);
+        if (self.ureader.eof(end)) return std::nullopt;
+        res[i] = self.ureader.string_view(start, end);
+        start = end+1;
+    }
+    auto end = self.ureader.readUntil('\n', start);
+    if (self.ureader.eof(end)) return std::nullopt;
+    res.back() = self.ureader.string_view(start, end);
+    self.lastUsed = end;
+    if (!self.ureader.eof(self.lastUsed)) self.lastUsed += 1;
+    return res;
 }
 
 namespace ivio::vcf {
@@ -150,7 +150,7 @@ auto reader::next() -> std::optional<record_view> {
     if (ureader.eof(lastUsed)) return std::nullopt;
     ureader.dropUntil(lastUsed);
 
-    auto res = pimpl_->readLine<10, '\t'>();
+    auto res = readLine<10, '\t'>(*pimpl_);
     if (!res) return std::nullopt;
 
     auto [chrom, pos, id, ref, alts, qual, filters, infos, formats, samples] = *res;
