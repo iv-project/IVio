@@ -23,8 +23,8 @@ if (${ROOT_PROJECT})
     find_package (fmt REQUIRED)
 
     add_subdirectory(lib/Catch2)
-    add_subdirectory(docs/snippets)
 
     enable_testing()
+    add_subdirectory(docs/snippets)
     add_subdirectory(src/test_ivio)
 endif()
