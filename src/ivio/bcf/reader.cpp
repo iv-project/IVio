@@ -117,7 +117,7 @@ struct bcf_buffer {
         return res;
     }
 
-    auto readAny() -> std::variant<nullptr_t, int32_t, float, char, std::string_view, std::vector<int32_t>, std::vector<float>> {
+    auto readAny() -> std::variant<std::nullptr_t, int32_t, float, char, std::string_view, std::vector<int32_t>, std::vector<float>> {
         auto [t, l] = readDescriptor();
         if (t == 0) return nullptr;
         if (l == 1 && 0 < t and t < 4) return readIntOfType(t);
@@ -268,7 +268,7 @@ struct reader_base<bcf::reader>::pimpl {
                 /*auto id = */buffer.readInt();
                 auto a = buffer.readAny();
                 std::visit(overloaded{
-                    [](nullptr_t) {},
+                    [](std::nullptr_t) {},
                     [](int32_t v) {},
                     [](float v) {},
                     [](char v) {},
