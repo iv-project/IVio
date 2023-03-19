@@ -10,9 +10,6 @@
 [submodule "lib/submodules/sdsl-lite"]
 	path = lib/submodules/sdsl-lite
 	url = https://github.com/xxsds/sdsl-lite
-[submodule "lib/b.i.o."]
-	path = lib/b.i.o.
-	url = https://github.com/eseiler/b.i.o..git
 [submodule "lib/biocpp-core"]
 	path = lib/biocpp-core
 	url = https://github.com/biocpp/biocpp-core.git
