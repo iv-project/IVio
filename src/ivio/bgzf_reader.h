@@ -24,7 +24,7 @@ auto little_endian_to_host(std::integral auto const in) noexcept {
     } else if constexpr (sizeof(in) == 8) {
         return le64toh(in);
     } else {
-        [flag=false]() {
+        []<bool flag=false>() {
             static_assert(flag, "Conversion only for 1, 2, 4 and 8 byte types possible");
         }();
     }
