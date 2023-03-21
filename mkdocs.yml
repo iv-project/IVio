@@ -2,6 +2,7 @@ site_name: IVio
 docs_dir: docs
 nav:
   - index.md
+  - python-bindings.md
   - C++ API-Reference:
     - formats.md
 use_directory_urls: false
