@@ -16,3 +16,7 @@
 [submodule "lib/biocpp-io"]
 	path = lib/biocpp-io
 	url = https://github.com/biocpp/biocpp-io.git
+[submodule "lib/pybind11"]
+	path = lib/pybind11
+	url = https://github.com/pybind/pybind11.git
+	branch = v2.10.4
