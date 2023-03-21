@@ -24,7 +24,6 @@ jobs:
       matrix:
         osname: ["Ubuntu 22.04"]
         compiler: ["gcc12 (c++20)", "gcc11 (c++20)", "gcc10 (c++20)", "gcc12 (c++20, Debug)", "clang15"]
-
         include:
           - osname: "Ubuntu 22.04"
             os: ubuntu-22.04
@@ -71,11 +70,10 @@ jobs:
         run: |
           NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
           echo 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"' >> ${HOME}/.activate_brew
-          echo 'export LIBRARY_PATH=/home/linuxbrew/.linuxbrew/lib' >> ${HOME}/.activate_brew
           eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
           sudo apt-get update -y
-          sudo apt-get install -y build-essential
-          brew install --force-bottle fmt zlib boost cmake ${{ matrix.brew_pkgs }} pkg-config
+          sudo apt-get install -y build-essential libfmt-dev
+          brew install --force-bottle zlib boost cmake ${{ matrix.brew_pkgs }} pkg-config
           ${{ matrix.cxx }} --version
 
       - name: Tool versions

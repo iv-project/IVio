@@ -32,16 +32,3 @@ Checkout the [documentation](https://sgssgene.github.io/IVio/) for more informat
 * **bio**: based on biocpp-core v0.6.0 nad biocpp-io
 * **ivio**: implemented in this repo
 * **direct**: skipping certain parsing step in ivio ("maximum speed" for this task)
-
-## Usage Example
-```c++
-auto reader = ivio::fasta::reader{{file}};
-for (auto record_view : reader) {
-    std::cout << "id: " << record_view.id << "\n";
-    std::cout << "seq: " << record_view.seq << "\n";
-}
-```
-
-
-## Reference
-  - [fasta Record/Reader/Writer](doc/fasta.md)
