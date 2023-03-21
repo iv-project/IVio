@@ -1,11 +1,21 @@
 # Introduction
 
-A c++20 library for **bioinformatics**. It provides functions to load and save typical
-file formats.
+**IVio**, pronounced **for you** aka **io4**. 
+A c++20 library for **bioinformatics**. Providing functions for reading and writing different file formats.
+
+## Support
+
+ - **fasta** (rw) + **gzip** (rw)
+ - **fastq** (ro) + **gzip** (ro)
+ - **vcf** (ro) / **bcf** (ro)
+ - **sam** (ro) / **bam** (ro)
+
+(description - rw: read/write, ro: read-only)
+
 
 ## Basic concepts
 
-Each file type consist of four parts. Here we discuss it for the fasta format.
+Each file type consist of different parts. Here we discuss it for the fasta format.
 
  - `fasta::reader`
  - `fasta::writer`
@@ -30,3 +40,7 @@ You can now happily use IVio
 ```c++
 {% include-markdown "snippets/simple_example.cpp" %}
 ```
+
+## Usage Python
+We also offer a subset of functions for python. For
+this use the package **iviopy**. See [Python API-Reference](python-bindings.html) for more information.
