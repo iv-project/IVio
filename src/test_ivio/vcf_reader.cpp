@@ -15,6 +15,30 @@ TEST_CASE("reading vcf files", "[vcf][reader]") {
         ivio::vcf::record{.chrom = "20", .pos = 1234567, .id = "microsat1", .ref = "GTC", .alts = "G,GTCT", .qual = 50.f, .filters = "PASS", .infos = "NS=3;DP=9;AA=G",                    .formats = "GT:GQ:DP",    .samples = "0/1:35:4	0/2:17:2	1/1:40:3"},
     };
 
+    auto expected_header = ivio::vcf::header {
+        .table = {
+            {R"(fileformat)", R"(VCFv4.3)"},
+            {R"(fileDate)", R"(20090805)"},
+            {R"(source)", R"(myImputationProgramV3.1)"},
+            {R"(reference)", R"(file:///seq/references/1000GenomesPilot-NCBI36.fasta)"},
+            {R"(contig)", R"(<ID=20,length=62435964,assembly=B36,md5=f126cdf8a6e0c7f379d618ff66beb2da,species="Homo sapiens",taxonomy=x>)"},
+            {R"(phasing)", R"(partial)"},
+            {R"(INFO)", R"(<ID=NS,Number=1,Type=Integer,Description="Number of Samples With Data">)"},
+            {R"(INFO)", R"(<ID=DP,Number=1,Type=Integer,Description="Total Depth">)"},
+            {R"(INFO)", R"(<ID=AF,Number=A,Type=Float,Description="Allele Frequency">)"},
+            {R"(INFO)", R"(<ID=AA,Number=1,Type=String,Description="Ancestral Allele">)"},
+            {R"(INFO)", R"(<ID=DB,Number=0,Type=Flag,Description="dbSNP membership, build 129">)"},
+            {R"(INFO)", R"(<ID=H2,Number=0,Type=Flag,Description="HapMap2 membership">)"},
+            {R"(FILTER)", R"(<ID=q10,Description="Quality below 10">)"},
+            {R"(FILTER)", R"(<ID=s50,Description="Less than 50% of samples have data">)"},
+            {R"(FORMAT)", R"(<ID=GT,Number=1,Type=String,Description="Genotype">)"},
+            {R"(FORMAT)", R"(<ID=GQ,Number=1,Type=Integer,Description="Genotype Quality">)"},
+            {R"(FORMAT)", R"(<ID=DP,Number=1,Type=Integer,Description="Read Depth">)"},
+            {R"(FORMAT)", R"(<ID=HQ,Number=2,Type=Integer,Description="Haplotype Quality">)"},
+        },
+        .genotypes = {"NA00001", "NA00002", "NA00003"},
+    };
+
     auto test_data = std::string {
         R"(##fileformat=VCFv4.3)""\n"
         R"(##fileDate=20090805)""\n"
@@ -49,9 +73,11 @@ TEST_CASE("reading vcf files", "[vcf][reader]") {
 
     SECTION("Read from std::filesystem::path") {
         auto reader = ivio::vcf::reader{{tmp / "file.vcf"}};
+        CHECK(reader.header().table == expected_header.table);
+        CHECK(reader.header().genotypes == expected_header.genotypes);
         auto vec = std::vector(begin(reader), end(reader));
         static_assert(std::same_as<decltype(vec), decltype(expected)>, "vec and expected should have the exact same type");
-        CHECK(expected == vec);
+        CHECK(vec == expected);
     }
 
     SECTION("Read from std::ifstream") {
@@ -59,7 +85,7 @@ TEST_CASE("reading vcf files", "[vcf][reader]") {
         auto reader = ivio::vcf::reader{{ifs}};
         auto vec = std::vector(begin(reader), end(reader));
         static_assert(std::same_as<decltype(vec), decltype(expected)>, "vec and expected should have the exact same type");
-        CHECK(expected == vec);
+        CHECK(vec == expected);
     }
 
     SECTION("Read from std::stringstream") {
@@ -67,7 +93,7 @@ TEST_CASE("reading vcf files", "[vcf][reader]") {
         auto reader = ivio::vcf::reader{{ss}};
         auto vec = std::vector(begin(reader), end(reader));
         static_assert(std::same_as<decltype(vec), decltype(expected)>, "vec and expected should have the exact same type");
-        CHECK(expected == vec);
+        CHECK(vec == expected);
     }
 
     SECTION("cleanup - deleting temp folder") {
