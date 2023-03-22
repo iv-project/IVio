@@ -105,10 +105,10 @@ auto reader::next() -> std::optional<record_view> {
     if (ureader.eof(lastUsed)) return std::nullopt;
     ureader.dropUntil(lastUsed);
 
-    auto res = readLine<11, '\t'>(*pimpl_);
+    auto res = readLine<12, '\t'>(*pimpl_);
     if (!res) return std::nullopt;
 
-    auto [qname, flag, rname, pos, mapq, cigar, rnext, pnext, tlen, seq, qual] = *res;
+    auto [qname, flag, rname, pos, mapq, cigar, rnext, pnext, tlen, seq, qual, tags] = *res;
 
     return record_view {.qname = qname,
                         .flag  = convertTo<int32_t>(flag),
@@ -121,6 +121,7 @@ auto reader::next() -> std::optional<record_view> {
                         .tlen  = convertTo<int32_t>(tlen),
                         .seq   = seq,
                         .qual  = qual,
+                        .tags  = tags,
                       };
 }
 

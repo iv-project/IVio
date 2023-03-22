@@ -20,6 +20,7 @@ struct record_view {
     int32_t                     tlen;
     std::string_view            seq;
     std::string_view            qual;
+    std::string_view            tags;
 
     operator record() const;
     auto operator<=>(record_view const&) const = default;
@@ -37,6 +38,7 @@ struct record {
     int32_t                tlen;
     std::string            seq;
     std::string            qual;
+    std::string            tags;
 
     operator record_view() const&;
     auto operator<=>(record const&) const = default;
@@ -56,6 +58,7 @@ inline record_view::operator record() const {
         .tlen    = tlen,
         .seq     = std::string{seq},
         .qual    = std::string{qual},
+        .tags    = std::string{tags},
     };
 }
 inline record::operator record_view() const& {
@@ -71,6 +74,7 @@ inline record::operator record_view() const& {
         .tlen    = tlen,
         .seq     = seq,
         .qual    = qual,
+        .tags    = tags,
     };
 }
 
