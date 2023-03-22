@@ -47,7 +47,7 @@ writer::writer(config config_)
 {
     // write header
     std::visit([&](auto& writer) {
-        writer.write(std::string{"##fileformat=VCFv4.3\n"}, false); // write file format
+        writer.write(std::string{"##fileformat=VCFv4.3\n"}); // write file format
         // write leading table
         auto ss = std::string{};
         for (auto [key, value] : config_.header.table) {
@@ -57,7 +57,7 @@ writer::writer(config config_)
             ss += '=';
             ss += value;
             ss += '\n';
-            writer.write(ss, false);
+            writer.write(ss);
         }
         // write heading of the body
         {
@@ -66,19 +66,12 @@ writer::writer(config config_)
                 ss += '\t' + s;
             }
             ss += '\n';
-            writer.write(ss, false);
+            writer.write(ss);
         }
     }, pimpl_->writer);
 }
 
-writer::~writer() {
-    if (pimpl_) {
-        std::visit([&](auto& writer) {
-            writer.write({}, true); // flush data
-        }, pimpl_->writer);
-    }
-}
-
+writer::~writer() = default;
 
 void writer::write(record_view record) {
     assert(pimpl_);
@@ -119,7 +112,7 @@ void writer::write(record_view record) {
 
 
     std::visit([&](auto& writer) {
-       writer.write(ss, false);
+       writer.write(ss);
     }, pimpl_->writer);
 }
 

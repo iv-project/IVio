@@ -38,10 +38,10 @@ struct zlib_writer_impl {
     }
 
     ~zlib_writer_impl() {
-        deflateEnd(&stream);
+        close();
     }
 
-    auto write(std::span<char> buffer, bool finish) -> size_t {
+    auto write(std::span<char> buffer) -> size_t {
         auto outBuffer = std::array<char, 2<<16>{};
 
         stream.next_in = (unsigned char*)buffer.data();
@@ -49,18 +49,29 @@ struct zlib_writer_impl {
         stream.next_out  = (unsigned char*)&outBuffer[0];
         stream.avail_out = outBuffer.size();
 
-        auto ret = [&]() {
-            if (finish) {
-                return deflate(&stream, Z_FINISH);
-            } else {
-                return deflate(&stream, Z_NO_FLUSH);
-            }
-        }();
+        auto ret = deflate(&stream, Z_NO_FLUSH);
         if (ret != Z_OK && ret != Z_STREAM_END) {
             throw "error writting zlib";
         }
-        file.write({&outBuffer[0], outBuffer.size() - stream.avail_out}, false);
+        file.write({&outBuffer[0], outBuffer.size() - stream.avail_out});
         return buffer.size() - stream.avail_in;
+    }
+
+    void close() {
+        auto outBuffer = std::array<char, 2<<16>{};
+
+        do {
+            stream.next_out  = (unsigned char*)&outBuffer[0];
+            stream.avail_out = outBuffer.size();
+
+            auto ret = deflate(&stream, Z_FINISH);
+            if (ret != Z_OK && ret != Z_STREAM_END) {
+                throw "error writting zlib";
+            }
+            file.write({&outBuffer[0], outBuffer.size() - stream.avail_out});
+        } while (stream.avail_in);
+        file.close();
+        deflateEnd(&stream);
     }
 };
 

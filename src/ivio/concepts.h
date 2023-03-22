@@ -46,7 +46,8 @@ concept record_reader_c = requires(T t) {
 
 template <typename T>
 concept writer_c = requires(T t) {
-    { t.write(std::declval<std::span<char>>(), true) };
+    { t.write(std::declval<std::span<char>>()) } -> std::same_as<size_t>;
+    { t.close() };
 //    { t.write(std::declval<char const*>()) };
 };
 

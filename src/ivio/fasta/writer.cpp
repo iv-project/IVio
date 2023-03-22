@@ -52,13 +52,8 @@ writer::writer(config config_)
 {
     assert(config_.length > 0);
 }
-writer::~writer() {
-    if (pimpl_) {
-        std::visit([&](auto& writer) {
-            writer.write({}, true);
-        }, pimpl_->writer);
-    }
-}
+
+writer::~writer() = default;
 
 void writer::write(record_view record) {
     assert(pimpl_);
@@ -79,7 +74,7 @@ void writer::write(record_view record) {
             buffer += seq;
             buffer += '\n';
         }
-        writer.write(buffer, false);
+        writer.write(buffer);
     }, pimpl_->writer);
 }
 

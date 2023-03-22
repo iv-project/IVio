@@ -48,15 +48,13 @@ writer::writer(config config_)
     // write header
     std::visit([&](auto& writer) {
         for (auto const& value : config_.header) {
-            writer.write(value, false);
-            writer.write(std::string_view{"\n"}, false);
+            writer.write(value);
+            writer.write(std::string_view{"\n"});
         }
     }, pimpl_->writer);
 }
 
-writer::~writer() {
-    close();
-}
+writer::~writer() = default;
 
 void writer::write(record_view record) {
     assert(pimpl_);
@@ -76,16 +74,11 @@ void writer::write(record_view record) {
     ss += record.tags; ss += '\n';
 
     std::visit([&](auto& writer) {
-       writer.write(ss, false);
+       writer.write(ss);
     }, pimpl_->writer);
 }
 
 void writer::close() {
-    if (pimpl_) {
-        std::visit([&](auto& writer) {
-            writer.write({}, true); // flush data
-        }, pimpl_->writer);
-    }
     pimpl_.reset();
 }
 
