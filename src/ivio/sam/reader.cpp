@@ -90,6 +90,7 @@ reader::reader(config const& config_)
     }, config_.input)}
 {
     pimpl_->readHeader();
+    header = std::move(pimpl_->header);
 }
 
 

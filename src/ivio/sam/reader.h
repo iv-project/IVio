@@ -24,6 +24,8 @@ public:
     reader(config const& config_);
     ~reader();
 
+    std::vector<std::string> header;
+
     auto next() -> std::optional<record_view>;
     void close();
 };
