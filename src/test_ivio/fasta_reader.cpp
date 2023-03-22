@@ -1,7 +1,7 @@
 #include <catch2/catch.hpp>
 #include <filesystem>
 #include <fstream>
-#include <ivio/fasta/reader.h>
+#include <ivio/ivio.h>
 
 TEST_CASE("reading fasta files", "[fasta][reader]") {
     auto tmp = std::filesystem::temp_directory_path() / "ivio_test";

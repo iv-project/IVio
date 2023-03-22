@@ -7,6 +7,7 @@
 #include "zlib_mmap2_reader.h"
 
 #include "fasta/reader.h"
+#include "fasta/writer.h"
 #include "vcf/reader.h"
 #include "vcf/writer.h"
 #include "bcf/reader.h"
