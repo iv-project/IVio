@@ -24,8 +24,6 @@ public:
     reader(config const& config_);
     ~reader();
 
-    bool readHeaderLine();
-    void readHeader();
     auto next() -> std::optional<record_view>;
     void close();
 };
