@@ -34,7 +34,7 @@ inline record_view::operator record() const {
 inline record::operator record_view() const {
     return {
         .id  = id,
-        .seq = seq
+        .seq = seq,
     };
 }
 

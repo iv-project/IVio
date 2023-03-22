@@ -20,7 +20,7 @@ TEST_CASE("writing fasta files", "[fasta][writer]") {
         ivio::fasta::record{.id = "Weird multiline data", .seq = "AGgagatAGagagAGAJKNNNN"},
     };
 
-    auto expected = std::string{
+    auto expected = std::string {
         ">I am genomic data\n"
         "ACGTACGTACGTACGT\n"
         ">Some other data\n"

@@ -13,7 +13,7 @@ TEST_CASE("reading fasta files", "[fasta][reader]") {
         ivio::fasta::record{.id = "Weird multiline data", .seq = "AGgagatAGagagAGAJKNNNN"},
     };
 
-    auto test_data = std::string{
+    auto test_data = std::string {
         ">I am genomic data\n"
         "ACGTACGTACGTACGT\n"
         ">Some other data\n"
