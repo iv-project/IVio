@@ -49,7 +49,8 @@ struct reader_base<sam::reader>::pimpl {
         auto [buffer, size] = ureader.read(1);
         if (size >= 1 and buffer[0] == '@') {
             auto end = ureader.readUntil('\n', 0);
-            if (ureader.eof(end)) return false;
+            if (ureader.eof(end)) throw std::runtime_error{"invalid sam header"};
+            header.emplace_back(ureader.string_view(0, end));
             ureader.dropUntil(end+1);
             return true;
         }
