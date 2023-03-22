@@ -19,7 +19,7 @@ auto convertTo(std::string_view view) {
     T value{}; //!Should not be initialized with {}, but gcc warns...
     auto result = std::from_chars(begin(view), end(view), value);
     if (result.ec == std::errc::invalid_argument) {
-        throw "can't convert to int";
+        throw std::runtime_error{"can't convert to int"};
     }
     return value;
 }
