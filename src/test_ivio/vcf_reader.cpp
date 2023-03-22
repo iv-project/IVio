@@ -83,6 +83,8 @@ TEST_CASE("reading vcf files", "[vcf][reader]") {
     SECTION("Read from std::ifstream") {
         auto ifs = std::ifstream{tmp / "file.vcf"};
         auto reader = ivio::vcf::reader{{ifs}};
+        CHECK(reader.header().table == expected_header.table);
+        CHECK(reader.header().genotypes == expected_header.genotypes);
         auto vec = std::vector(begin(reader), end(reader));
         static_assert(std::same_as<decltype(vec), decltype(expected)>, "vec and expected should have the exact same type");
         CHECK(vec == expected);
@@ -91,6 +93,8 @@ TEST_CASE("reading vcf files", "[vcf][reader]") {
     SECTION("Read from std::stringstream") {
         auto ss = std::stringstream{test_data};
         auto reader = ivio::vcf::reader{{ss}};
+        CHECK(reader.header().table == expected_header.table);
+        CHECK(reader.header().genotypes == expected_header.genotypes);
         auto vec = std::vector(begin(reader), end(reader));
         static_assert(std::same_as<decltype(vec), decltype(expected)>, "vec and expected should have the exact same type");
         CHECK(vec == expected);

@@ -9,6 +9,7 @@ add_executable(${PROJECT_NAME}
     fasta_writer.cpp
     vcf_reader.cpp
     vcf_writer.cpp
+    sam_reader.cpp
 )
 target_link_libraries(${PROJECT_NAME}
     Catch2::Catch2
