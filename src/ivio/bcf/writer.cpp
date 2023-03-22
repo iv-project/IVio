@@ -87,7 +87,6 @@ struct bcf_buffer {
 };
 }
 
-
 template <>
 struct ivio::writer_base<ivio::bcf::writer>::pimpl {
     //!TODO support other writers
@@ -144,18 +143,12 @@ writer::writer(config config_)
 
         auto buffer = std::array<char, 9>{'B', 'C', 'F', 2, 2};
         bgzf_writer::detail::bgzfPack(static_cast<uint16_t>(ss.size()), &buffer[5]);
-        writer.write(buffer, false);
-        writer.write(ss, false);
+        writer.write(buffer);
+        writer.write(ss);
     }, pimpl_->writer);
 }
 
-writer::~writer() {
-    if (pimpl_) {
-        std::visit([&](auto& writer) {
-            writer.write({}, true);
-        }, pimpl_->writer);
-    }
-}
+writer::~writer() = default;
 
 void writer::write(record_view r) {
     assert(pimpl_);
@@ -202,7 +195,7 @@ void writer::write(record_view r) {
 
 
     std::visit([&](auto& writer) {
-       writer.write(buffer.buffer, false);
+       writer.write(buffer.buffer);
     }, pimpl_->writer);
 }
 

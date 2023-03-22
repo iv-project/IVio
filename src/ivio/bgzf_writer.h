@@ -2,6 +2,7 @@
 
 #include "file_writer.h"
 
+#include <cassert>
 #include <fstream>
 #include <iostream>
 #include <cstring>
@@ -148,22 +149,23 @@ struct bgzf_writer_impl {
         : file{std::move(_other.file)}
     {}
 
-    ~bgzf_writer_impl() = default;
+    ~bgzf_writer_impl() {
+        close();
+    }
 
-    void write(std::span<char const> out, bool finish) {
+    static constexpr auto fullLength = 65280;
+    auto write(std::span<char const> out) -> size_t {
         auto oldSize = buffer.size();
         buffer.resize(buffer.size() + out.size());
         std::ranges::copy(out, buffer.data() + oldSize);
 
-        constexpr auto fullLength = 65280;
         auto writeData = [&](std::span<char const> v) {
             outBuffer.resize(fullLength);
             auto length = zlibCtx.compressBlock(v, outBuffer);
             outBuffer.resize(length);
 
             // write to file
-            file.write(outBuffer, false);
-
+            file.write(outBuffer);
         };
 
         while (buffer.size() >= fullLength) {
@@ -173,13 +175,22 @@ struct bgzf_writer_impl {
             std::memcpy(buffer.data(), buffer.data() + fullLength, buffer.size() - fullLength);//!TODO maybe with ranges::copy?
             buffer.resize(buffer.size() - fullLength);
         }
-        if (finish and !buffer.empty()) {
-            writeData(buffer);
+        return out.size();
+    }
+
+    void close() {
+        assert(buffer.size() < fullLength);
+        if (!buffer.empty()) {
+            outBuffer.resize(fullLength);
+            auto length = zlibCtx.compressBlock({buffer.data(), buffer.size()}, outBuffer);
+            outBuffer.resize(length);
+
+            // write to file
+            file.write(outBuffer);
+
             buffer.clear();
         }
-        if (finish) {
-            writeData({});
-        }
+        file.close();
     }
 };
 

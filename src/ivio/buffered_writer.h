@@ -22,19 +22,35 @@ public:
     {}
     buffered_writer(buffered_writer const&) = delete;
     buffered_writer(buffered_writer&& _other) = default;
+    ~buffered_writer() {
+        close();
+    }
 
-
-    void write(std::span<char const> _buffer, bool finish) {
+    auto write(std::span<char const> _buffer) -> size_t {
         auto oldSize = buffer.size();
         buffer.resize(oldSize + _buffer.size());
         std::ranges::copy(_buffer, buffer.begin()+oldSize);
-        if (buffer.size() > minV || finish) {
-            auto writtenBytes = writer.write(buffer, finish);
+        if (buffer.size() > minV) {
+            auto writtenBytes = writer.write(buffer);
             if (writtenBytes > 0) {
                 std::copy(buffer.begin()+writtenBytes, buffer.end(), buffer.begin());
                 buffer.resize(buffer.size() - writtenBytes);
             }
         }
+        return _buffer.size();
+    }
+
+    void close() {
+        while (buffer.size()) {
+            auto writtenBytes = writer.write(buffer);
+            if (writtenBytes > 0) {
+                std::copy(buffer.begin()+writtenBytes, buffer.end(), buffer.begin());
+                buffer.resize(buffer.size() - writtenBytes);
+            } else {
+                buffer.clear();
+            }
+        }
+        writer.close();
     }
 
 };

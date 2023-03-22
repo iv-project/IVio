@@ -19,7 +19,7 @@ auto convertTo(std::string_view view) {
     T value{}; //!Should not be initialized with {}, but gcc warns...
     auto result = std::from_chars(begin(view), end(view), value);
     if (result.ec == std::errc::invalid_argument) {
-        throw "can't convert to int";
+        throw std::runtime_error{"can't convert to int"};
     }
     return value;
 }
@@ -49,7 +49,8 @@ struct reader_base<sam::reader>::pimpl {
         auto [buffer, size] = ureader.read(1);
         if (size >= 1 and buffer[0] == '@') {
             auto end = ureader.readUntil('\n', 0);
-            if (ureader.eof(end)) return false;
+            if (ureader.eof(end)) throw std::runtime_error{"invalid sam header"};
+            header.emplace_back(ureader.string_view(0, end));
             ureader.dropUntil(end+1);
             return true;
         }
@@ -90,6 +91,7 @@ reader::reader(config const& config_)
     }, config_.input)}
 {
     pimpl_->readHeader();
+    header = std::move(pimpl_->header);
 }
 
 
@@ -104,10 +106,10 @@ auto reader::next() -> std::optional<record_view> {
     if (ureader.eof(lastUsed)) return std::nullopt;
     ureader.dropUntil(lastUsed);
 
-    auto res = readLine<11, '\t'>(*pimpl_);
+    auto res = readLine<12, '\t'>(*pimpl_);
     if (!res) return std::nullopt;
 
-    auto [qname, flag, rname, pos, mapq, cigar, rnext, pnext, tlen, seq, qual] = *res;
+    auto [qname, flag, rname, pos, mapq, cigar, rnext, pnext, tlen, seq, qual, tags] = *res;
 
     return record_view {.qname = qname,
                         .flag  = convertTo<int32_t>(flag),
@@ -120,6 +122,7 @@ auto reader::next() -> std::optional<record_view> {
                         .tlen  = convertTo<int32_t>(tlen),
                         .seq   = seq,
                         .qual  = qual,
+                        .tags  = tags,
                       };
 }
 

@@ -7,8 +7,8 @@ A c++20 library for **bioinformatics**. Providing functions for reading and writ
 
  - **fasta** (rw) + **gzip** (rw)
  - **fastq** (ro) + **gzip** (ro)
- - **vcf** (ro) / **bcf** (ro)
- - **sam** (ro) / **bam** (ro)
+ - **vcf** (rw) / **bcf** (ro)
+ - **sam** (rw) / **bam** (ro)
 
 (description - rw: read/write, ro: read-only)
 

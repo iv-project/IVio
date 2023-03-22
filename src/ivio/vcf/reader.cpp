@@ -91,7 +91,7 @@ struct reader_base<vcf::reader>::pimpl {
                 genotypes.emplace_back(tableHeader.begin() + start, tableHeader.begin() + pos);
                 start = pos+1;
             }
-            genotypes.emplace_back(tableHeader.begin() + start);
+            genotypes.emplace_back(tableHeader.begin() + start, tableHeader.size() - start);
         }
 #else
         for (auto v : std::views::split(tableHeader, '\t')) {

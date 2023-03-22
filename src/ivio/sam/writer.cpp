@@ -6,23 +6,21 @@
 #include "../zlib_file_writer.h"
 
 #include <cassert>
-
-namespace ivio {
+#include <charconv>
 
 template <>
-struct writer_base<fasta::writer>::pimpl {
+struct ivio::writer_base<ivio::sam::writer>::pimpl {
     using Writers = std::variant<file_writer,
                                  buffered_writer<zlib_file_writer>,
                                  stream_writer,
                                  buffered_writer<zlib_stream_writer>
                                  >;
 
-    size_t contig_length;
+    ivio::sam::writer::config config;
     Writers writer;
-    std::string buffer;
-    pimpl(std::filesystem::path output, size_t contig_length, bool)
-        : contig_length{contig_length}
-        , writer {[&]() -> Writers {
+
+    pimpl(std::filesystem::path output, bool)
+        : writer {[&]() -> Writers {
             if (output.extension() == ".gz") {
                 return buffered_writer{zlib_file_writer{file_writer{output}}};
             }
@@ -30,9 +28,8 @@ struct writer_base<fasta::writer>::pimpl {
         }()}
     {}
 
-    pimpl(std::ostream& output, size_t contig_length, bool compressed)
-        : contig_length{contig_length}
-        , writer {[&]() -> Writers {
+    pimpl(std::ostream& output, bool compressed)
+        : writer {[&]() -> Writers {
             if (compressed) {
                 return buffered_writer{zlib_stream_writer{stream_writer{output}}};
             }
@@ -41,40 +38,43 @@ struct writer_base<fasta::writer>::pimpl {
     {}
 };
 
-}
-
-namespace ivio::fasta {
+namespace ivio::sam {
 
 writer::writer(config config_)
     : writer_base{std::visit([&](auto& p) {
-        return std::make_unique<pimpl>(p, config_.length, config_.compressed);
+        return std::make_unique<pimpl>(p, config_.compressed);
     }, config_.output)}
 {
-    assert(config_.length > 0);
+    // write header
+    std::visit([&](auto& writer) {
+        for (auto const& value : config_.header) {
+            writer.write(value);
+            writer.write(std::string_view{"\n"});
+        }
+    }, pimpl_->writer);
 }
 
 writer::~writer() = default;
 
 void writer::write(record_view record) {
     assert(pimpl_);
+
+    static thread_local auto ss = std::string{};
+    ss = record.qname; ss += '\t';
+    ss += std::to_string(record.flag); ss += '\t';
+    ss += record.rname; ss += '\t';
+    ss += std::to_string(record.pos); ss += '\t';
+    ss += std::to_string(record.mapq); ss += '\t';
+    ss += record.cigar; ss += '\t';
+    ss += record.rnext; ss += '\t';
+    ss += std::to_string(record.pnext); ss += '\t';
+    ss += std::to_string(record.tlen); ss += '\t';
+    ss += record.seq; ss += '\t';
+    ss += record.qual; ss += '\t';
+    ss += record.tags; ss += '\n';
+
     std::visit([&](auto& writer) {
-        auto const& contig_length = pimpl_->contig_length;
-        auto& buffer = pimpl_->buffer;
-        buffer.clear();
-        buffer = '>';
-        buffer += record.id;
-        buffer += '\n';
-        auto seq = record.seq;
-        while (seq.size() > contig_length) {
-            buffer += seq.substr(0, contig_length);
-            buffer += '\n';
-            seq = seq.substr(contig_length);
-        }
-        if (seq.size() > 0) {
-            buffer += seq;
-            buffer += '\n';
-        }
-        writer.write(buffer);
+       writer.write(ss);
     }, pimpl_->writer);
 }
 
@@ -83,5 +83,6 @@ void writer::close() {
 }
 
 static_assert(record_writer_c<writer>);
+
 
 }

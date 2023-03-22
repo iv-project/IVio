@@ -1,7 +1,7 @@
 #include <catch2/catch.hpp>
 #include <filesystem>
 #include <fstream>
-#include <ivio/fasta/reader.h>
+#include <ivio/ivio.h>
 
 TEST_CASE("reading fasta files", "[fasta][reader]") {
     auto tmp = std::filesystem::temp_directory_path() / "ivio_test";
@@ -13,7 +13,7 @@ TEST_CASE("reading fasta files", "[fasta][reader]") {
         ivio::fasta::record{.id = "Weird multiline data", .seq = "AGgagatAGagagAGAJKNNNN"},
     };
 
-    auto test_data = std::string{
+    auto test_data = std::string {
         ">I am genomic data\n"
         "ACGTACGTACGTACGT\n"
         ">Some other data\n"
@@ -29,22 +29,22 @@ TEST_CASE("reading fasta files", "[fasta][reader]") {
         ofs << test_data;
     }
 
-    SECTION("Read fasta file using std::filesystem::path as input") {
+    SECTION("Read from std::filesystem::path") {
         auto reader = ivio::fasta::reader{{tmp / "file.fa"}};
         auto vec = std::vector(begin(reader), end(reader));
         static_assert(std::same_as<decltype(vec), decltype(expected)>, "vec and expected should have the exact same type");
         CHECK(expected == vec);
     }
 
-    SECTION("Read fasta file using std::ifstream as input") {
-        auto ifs = std::ifstream{tmp / "file.fa"};
-        auto reader = ivio::fasta::reader{{ifs}};
+    SECTION("Read from std::ifstream") {
+        auto fs = std::ifstream{tmp / "file.fa"};
+        auto reader = ivio::fasta::reader{{fs}};
         auto vec = std::vector(begin(reader), end(reader));
         static_assert(std::same_as<decltype(vec), decltype(expected)>, "vec and expected should have the exact same type");
         CHECK(expected == vec);
     }
 
-    SECTION("Read fasta file using std::stringstream as input") {
+    SECTION("Read from std::stringstream") {
         auto ss = std::stringstream{test_data};
         auto reader = ivio::fasta::reader{{ss}};
         auto vec = std::vector(begin(reader), end(reader));

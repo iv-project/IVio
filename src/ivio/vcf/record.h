@@ -2,11 +2,12 @@
 
 #include <cstddef>
 #include <optional>
-#include <span>
+#include <string>
 #include <string_view>
-#include <vector>
 
 namespace ivio::vcf {
+
+struct record;
 
 struct record_view {
     std::string_view            chrom;
@@ -19,6 +20,9 @@ struct record_view {
     std::string_view            infos;
     std::string_view            formats;
     std::string_view            samples;
+
+    operator record() const;
+    auto operator<=>(record_view const&) const = default;
 };
 
 struct record {
@@ -33,33 +37,49 @@ struct record {
     std::string                 formats;
     std::string                 samples;
 
-    record() = default;
-    record(record_view v)
-        : chrom  {v.chrom}
-        , pos    {v.pos}
-        , id     {v.id}
-        , ref    {v.ref}
-        , alts   {v.alts}
-        , qual   {v.qual}
-        , filters{v.filters}
-        , infos  {v.infos}
-        , formats{v.formats}
-        , samples{v.samples}
-    {}
-    operator record_view() const {
-        return record_view {
-            chrom,
-            pos,
-            id,
-            ref,
-            alts,
-            qual,
-            filters,
-            infos,
-            formats,
-            samples,
-        };
-    }
+    operator record_view() const&;
+    auto operator<=>(record const&) const = default;
 };
 
+// Implementation of the convert operators
+inline record_view::operator record() const {
+    return {
+        .chrom    = std::string{chrom},
+        .pos      = pos,
+        .id       = std::string{id},
+        .ref      = std::string{ref},
+        .alts     = std::string{alts},
+        .qual     = qual,
+        .filters  = std::string{filters},
+        .infos    = std::string{infos},
+        .formats  = std::string{formats},
+        .samples  = std::string{samples},
+    };
 }
+inline record::operator record_view() const& {
+    return {
+        .chrom    = chrom,
+        .pos      = pos,
+        .id       = id,
+        .ref      = ref,
+        .alts     = alts,
+        .qual     = qual,
+        .filters  = filters,
+        .infos    = infos,
+        .formats  = formats,
+        .samples  = samples,
+    };
+}
+
+}
+
+// Specialization to describe their common types
+template <>
+struct std::common_type<ivio::vcf::record, ivio::vcf::record_view> {
+    using type = ivio::vcf::record;
+};
+
+template <>
+struct std::common_type<ivio::vcf::record_view, ivio::vcf::record> {
+    using type = ivio::vcf::record;
+};
