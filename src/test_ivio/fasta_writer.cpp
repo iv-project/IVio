@@ -29,7 +29,7 @@ TEST_CASE("writing fasta files", "[fasta][writer]") {
         "AGgagatAGagagAGAJKNNNN\n"
     };
 
-    SECTION("Write fasta file using std::filesystem::path") {
+    SECTION("Write to std::filesystem::path") {
         auto writer = ivio::fasta::writer{{tmp / "file.fa"}};
         for (auto r : test_data) {
             writer.write(r);
@@ -38,7 +38,7 @@ TEST_CASE("writing fasta files", "[fasta][writer]") {
         CHECK(read_file(tmp / "file.fa") == expected);
     }
 
-    SECTION("Write fasta file using std::ofstream") {
+    SECTION("Write to std::ofstream") {
         auto fs = std::ofstream{tmp / "file.fa"};
         auto writer = ivio::fasta::writer{{fs}};
         for (auto r : test_data) {
@@ -49,7 +49,7 @@ TEST_CASE("writing fasta files", "[fasta][writer]") {
         CHECK(read_file(tmp / "file.fa") == expected);
     }
 
-    SECTION("Write fasta file using std::stringstream") {
+    SECTION("Write to std::stringstream") {
         auto ss = std::stringstream{};
         auto writer = ivio::fasta::writer{{ss}};
         for (auto r : test_data) {
