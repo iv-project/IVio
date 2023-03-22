@@ -82,7 +82,7 @@ TEST_CASE("writing vcf files", "[vcf][writer]") {
         CHECK(read_file(tmp / "file.vcf") == expected);
     }
 
-    SECTION("Write to std::ifstream") {
+    SECTION("Write to std::ofstream") {
         auto fs = std::ofstream{tmp / "file.vcf"};
         auto writer = ivio::vcf::writer{{.output = fs, .header = test_header}};
         for (auto r : test_data) {

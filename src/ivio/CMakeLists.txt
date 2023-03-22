@@ -10,6 +10,7 @@ add_library(ivio bam/reader.cpp
                  fasta/writer.cpp
                  fastq/reader.cpp
                  sam/reader.cpp
+                 sam/writer.cpp
                  vcf/reader.cpp
                  vcf/writer.cpp)
 
