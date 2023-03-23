@@ -58,19 +58,22 @@ struct zlib_writer_impl {
     }
 
     void close() {
-        auto outBuffer = std::array<char, 2<<16>{};
+        if (stream.next_in) {
+            auto outBuffer = std::array<char, 2<<16>{};
 
-        do {
-            stream.next_out  = (unsigned char*)&outBuffer[0];
-            stream.avail_out = outBuffer.size();
+            do {
+                stream.next_out  = (unsigned char*)&outBuffer[0];
+                stream.avail_out = outBuffer.size();
 
-            auto ret = deflate(&stream, Z_FINISH);
-            if (ret != Z_OK && ret != Z_STREAM_END) {
-                throw "error writting zlib";
-            }
-            file.write({&outBuffer[0], outBuffer.size() - stream.avail_out});
-        } while (stream.avail_in);
-        file.close();
+                auto ret = deflate(&stream, Z_FINISH);
+                if (ret != Z_OK && ret != Z_STREAM_END) {
+                    throw "error writting zlib";
+                }
+                file.write({&outBuffer[0], outBuffer.size() - stream.avail_out});
+            } while (stream.avail_in);
+            file.close();
+            stream.next_in = nullptr;
+        }
         deflateEnd(&stream);
     }
 };
