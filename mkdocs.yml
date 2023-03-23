@@ -6,8 +6,6 @@ nav:
   - C++ API-Reference:
     - "formats-fasta.md"
     - "formats-vcf.md"
-  - Python API-Reference:
-    - python-bindings.md
 use_directory_urls: false
 theme:
   name: readthedocs
