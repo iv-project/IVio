@@ -39,11 +39,10 @@ struct reader_mt_pimpl {
 
     reader_mt_pimpl(std::filesystem::path file, bool)
         : reader {[&]() -> VarBufferedReader {
-            if (file.extension() == ".fa") {
-                return mmap_reader{file.c_str()};
-            } else if (file.extension() == ".gz") {
+            if (file.extension() == ".gz") {
                 return zlib_reader{mmap_reader{file.c_str()}};
             }
+            return mmap_reader{file.c_str()};
             throw std::runtime_error("unknown file extension");
         }()}
     {}

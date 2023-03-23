@@ -26,14 +26,14 @@ struct zlib_writer_impl {
         : file{std::move(name)}
     {
         if (deflateInit2(&stream, Z_DEFAULT_COMPRESSION, Z_DEFLATED, 16 + MAX_WBITS, 8, Z_DEFAULT_STRATEGY) != Z_OK) {
-            throw "error";
+            throw std::runtime_error{"error initializing zlib/deflateInit2"};
         }
     }
     zlib_writer_impl(zlib_writer_impl&& _other)
         : file{std::move(_other.file)}
     {
         if (deflateInit2(&stream, Z_DEFAULT_COMPRESSION, Z_DEFLATED, 16 + MAX_WBITS, 8, Z_DEFAULT_STRATEGY) != Z_OK) {
-            throw "error";
+            throw std::runtime_error{"error initializing zlib/deflateInit2"};
         }
     }
 
@@ -51,26 +51,29 @@ struct zlib_writer_impl {
 
         auto ret = deflate(&stream, Z_NO_FLUSH);
         if (ret != Z_OK && ret != Z_STREAM_END) {
-            throw "error writting zlib";
+            throw std::runtime_error{"error deflating data with zlib"};
         }
         file.write({&outBuffer[0], outBuffer.size() - stream.avail_out});
         return buffer.size() - stream.avail_in;
     }
 
     void close() {
-        auto outBuffer = std::array<char, 2<<16>{};
+        if (stream.next_in) {
+            auto outBuffer = std::array<char, 2<<16>{};
 
-        do {
-            stream.next_out  = (unsigned char*)&outBuffer[0];
-            stream.avail_out = outBuffer.size();
+            do {
+                stream.next_out  = (unsigned char*)&outBuffer[0];
+                stream.avail_out = outBuffer.size();
 
-            auto ret = deflate(&stream, Z_FINISH);
-            if (ret != Z_OK && ret != Z_STREAM_END) {
-                throw "error writting zlib";
-            }
-            file.write({&outBuffer[0], outBuffer.size() - stream.avail_out});
-        } while (stream.avail_in);
-        file.close();
+                auto ret = deflate(&stream, Z_FINISH);
+                if (ret != Z_OK && ret != Z_STREAM_END) {
+                    throw std::runtime_error{"error deflating data with zlib"};
+                }
+                file.write({&outBuffer[0], outBuffer.size() - stream.avail_out});
+            } while (stream.avail_in);
+            file.close();
+            stream.next_in = nullptr;
+        }
         deflateEnd(&stream);
     }
 };

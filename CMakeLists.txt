@@ -17,21 +17,14 @@ endif ()
 
 project(IVio)
 
-option(PYTHON_BINDINGS "compile python bindings" OFF)
-
 add_subdirectory(src/ivio)
 
-if (${PYTHON_BINDINGS})
-    add_subdirectory(lib/pybind11)
-    add_subdirectory(src/iviopy)
-else()
-    if (${ROOT_PROJECT})
-        find_package (fmt REQUIRED)
+if (${ROOT_PROJECT})
+    find_package (fmt REQUIRED)
 
-        add_subdirectory(lib/Catch2)
+    add_subdirectory(lib/Catch2)
 
-        enable_testing()
-        add_subdirectory(docs/snippets)
-        add_subdirectory(src/test_ivio)
-    endif()
+    enable_testing()
+    add_subdirectory(docs/snippets)
+    add_subdirectory(src/test_ivio)
 endif()

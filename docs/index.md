@@ -40,7 +40,3 @@ You can now happily use IVio
 ```c++
 {% include-markdown "snippets/simple_example.cpp" %}
 ```
-
-## Usage Python
-We also offer a subset of functions for python. For
-this use the package **iviopy**. See [Python API-Reference](python-bindings.html) for more information.

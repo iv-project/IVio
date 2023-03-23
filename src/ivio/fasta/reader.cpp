@@ -20,12 +20,10 @@ struct reader_base<fasta::reader>::pimpl {
 
     pimpl(std::filesystem::path file, bool)
         : ureader {[&]() -> VarBufferedReader {
-            if (file.extension() == ".fa") {
-                return mmap_reader{file.c_str()};
-            } else if (file.extension() == ".gz") {
+            if (file.extension() == ".gz") {
                 return zlib_reader{mmap_reader{file.c_str()}};
             }
-            throw std::runtime_error("unknown file extension");
+            return mmap_reader{file.c_str()};
         }()}
     {}
     pimpl(std::istream& file, bool compressed)
