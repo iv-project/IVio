@@ -19,7 +19,7 @@ namespace ivio {
 class file_reader {
 protected:
     int fd;
-    size_t filesize;
+    size_t filesize_;
 
 public:
     file_reader(std::filesystem::path path)
@@ -30,14 +30,14 @@ public:
             }
             return r;
         }()}
-        , filesize{std::filesystem::file_size(path)}
+        , filesize_{std::filesystem::file_size(path)}
     {}
 
     file_reader() = delete;
     file_reader(file_reader const&) = delete;
     file_reader(file_reader&& _other) noexcept
         : fd{_other.fd}
-        , filesize{_other.filesize}
+        , filesize_{_other.filesize_}
     {
         _other.fd = -1;
     }
@@ -50,6 +50,10 @@ public:
     auto operator=(file_reader const&) -> file_reader& = delete;
     auto operator=(file_reader&&) -> file_reader& = delete;
 
+    auto getFileHandler() {
+        return fd;
+    }
+
     size_t read(std::span<char> range) const {
         auto bytes_read = ::read(fd, range.data(), range.size());
         if (bytes_read == -1) {
@@ -59,8 +63,8 @@ public:
         return bytes_read;
     }
 
-    auto file_size() const -> size_t {
-        return filesize;
+    auto filesize() const -> size_t {
+        return filesize_;
     }
 };
 
