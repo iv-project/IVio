@@ -26,7 +26,7 @@ public:
         : fd{[&]() {
             auto r = ::open(path.c_str(), O_RDONLY);
             if (r == -1) {
-                throw "file not readable";
+                throw std::runtime_error("file not readable: " + path.string());
             }
             return r;
         }()}
@@ -57,8 +57,7 @@ public:
     size_t read(std::span<char> range) const {
         auto bytes_read = ::read(fd, range.data(), range.size());
         if (bytes_read == -1) {
-            auto s = std::string{"read failed "} + strerror(errno);
-            throw s;
+            throw std::runtime_error{std::string{"read failed "} + strerror(errno)};
         }
         return bytes_read;
     }
