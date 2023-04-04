@@ -7,11 +7,10 @@
 #include "../zlib_file_reader.h"
 #include "../zlib_mmap2_reader.h"
 
-#include <cassert>
 #include <charconv>
-#include <functional>
-#include <optional>
-#include <ranges>
+
+static_assert(std::ranges::range<ivio::fasta_idx::reader>, "reader must be a range (unittest)");
+static_assert(ivio::record_reader_c<ivio::fasta_idx::reader>, "must fulfill the record_reader concept (unittest)");
 
 template <typename T>
 static auto convertTo(std::string_view view) {
@@ -23,47 +22,38 @@ static auto convertTo(std::string_view view) {
     return value;
 }
 
+
 namespace ivio {
 
 template <>
-struct reader_base<sam::reader>::pimpl {
+struct reader_base<fasta_idx::reader>::pimpl {
     VarBufferedReader ureader;
     size_t lastUsed{};
 
-    std::vector<std::string> header;
-
-    pimpl(std::filesystem::path file)
+    pimpl(std::filesystem::path file, bool)
         : ureader {[&]() -> VarBufferedReader {
+            if (file.extension() == ".gz") {
+                return zlib_reader{mmap_reader{file.c_str()}};
+            }
             return mmap_reader{file.c_str()};
         }()}
     {}
-    pimpl(std::istream& file)
+    pimpl(std::istream& file, bool compressed)
         : ureader {[&]() -> VarBufferedReader {
-            return stream_reader{file};
+            if (!compressed) {
+                return stream_reader{file};
+            } else {
+                return zlib_reader{stream_reader{file}};
+            }
         }()}
     {}
-
-    bool readHeaderLine() {
-        auto [buffer, size] = ureader.read(1);
-        if (size >= 1 and buffer[0] == '@') {
-            auto end = ureader.readUntil('\n', 0);
-            if (ureader.eof(end)) throw std::runtime_error{"invalid sam header"};
-            header.emplace_back(ureader.string_view(0, end));
-            ureader.dropUntil(end+1);
-            return true;
-        }
-        return false;
-    }
-
-    void readHeader() {
-        while (readHeaderLine()) {} // read complete header
-    }
 };
 }
 
+
 //!WORKAROUND clang crashes if this is a member function of pimpl, see https://github.com/llvm/llvm-project/issues/61159
 template <size_t ct, char sep>
-static auto readLine(ivio::reader_base<ivio::sam::reader>::pimpl& self) -> std::optional<std::array<std::string_view, ct>> {
+static auto readLine(ivio::reader_base<ivio::fasta_idx::reader>::pimpl& self) -> std::optional<std::array<std::string_view, ct>> {
     auto res = std::array<std::string_view, ct>{};
     size_t start{};
     for (size_t i{}; i < ct-1; ++i) {
@@ -81,17 +71,13 @@ static auto readLine(ivio::reader_base<ivio::sam::reader>::pimpl& self) -> std::
 }
 
 
-namespace ivio::sam {
+namespace ivio::fasta_idx {
 
 reader::reader(config const& config_)
     : reader_base{std::visit([&](auto& p) {
-        return std::make_unique<pimpl>(p);
+        return std::make_unique<pimpl>(p, config_.compressed);
     }, config_.input)}
-{
-    pimpl_->readHeader();
-    header = std::move(pimpl_->header);
-}
-
+{}
 
 reader::~reader() = default;
 
@@ -104,30 +90,21 @@ auto reader::next() -> std::optional<record_view> {
     if (ureader.eof(lastUsed)) return std::nullopt;
     ureader.dropUntil(lastUsed);
 
-    auto res = readLine<12, '\t'>(*pimpl_);
+    auto res = readLine<5, '\t'>(*pimpl_);
     if (!res) return std::nullopt;
 
-    auto [qname, flag, rname, pos, mapq, cigar, rnext, pnext, tlen, seq, qual, tags] = *res;
+    auto [id, length, offset, linebases, linewidth] = *res;
 
-    return record_view {.qname = qname,
-                        .flag  = convertTo<int32_t>(flag),
-                        .rname = rname,
-                        .pos   = convertTo<int32_t>(pos),
-                        .mapq  = convertTo<int32_t>(mapq),
-                        .cigar = cigar,
-                        .rnext = rnext,
-                        .pnext = convertTo<int32_t>(pnext),
-                        .tlen  = convertTo<int32_t>(tlen),
-                        .seq   = seq,
-                        .qual  = qual,
-                        .tags  = tags,
+    return record_view {.id = id,
+                        .length = convertTo<size_t>(length),
+                        .offset = convertTo<size_t>(offset),
+                        .linebases = convertTo<size_t>(linebases),
+                        .linewidth = convertTo<size_t>(linewidth),
                       };
 }
 
 void reader::close() {
     pimpl_.reset();
 }
-
-static_assert(record_reader_c<reader>);
 
 }
