@@ -8,18 +8,19 @@
 
 namespace ivio {
 
-class mmap_reader : public file_reader {
+class mmap_reader {
 protected:
-    size_t filesize;
+    file_reader reader;
+    size_t filesize_; // size of the file from inPos to the end
     char const* buffer;
     size_t inPos{};
 
 public:
     mmap_reader(std::filesystem::path path)
-        : file_reader{path}
-        , filesize{file_size(path)}
+        : reader{path}
+        , filesize_{reader.filesize()}
         , buffer{[&]() {
-            auto ptr = (char const*)mmap(nullptr, filesize, PROT_READ, MAP_PRIVATE, fd, 0);
+            auto ptr = (char const*)mmap(nullptr, filesize_, PROT_READ, MAP_PRIVATE, reader.getFileHandler(), 0);
             return ptr;
         }()}
     {
@@ -29,8 +30,8 @@ public:
     mmap_reader() = delete;
     mmap_reader(mmap_reader const&) = delete;
     mmap_reader(mmap_reader&& _other) noexcept
-        : file_reader{std::move(_other)}
-        , filesize{_other.filesize}
+        : reader{std::move(_other.reader)}
+        , filesize_{_other.filesize_}
         , buffer{_other.buffer}
         , inPos{_other.inPos}
     {
@@ -42,26 +43,26 @@ public:
 
     ~mmap_reader() {
         if (buffer == nullptr) return;
-        munmap((void*)buffer, filesize);
+        munmap((void*)buffer, filesize_);
     }
 
     size_t readUntil(char c, size_t lastUsed) {
         lastUsed += inPos;
-        assert(lastUsed <= filesize);
-        auto pos = std::string_view{buffer, filesize}.find(c, lastUsed);
+        assert(lastUsed <= filesize_);
+        auto pos = std::string_view{buffer, filesize_}.find(c, lastUsed);
         if (pos != std::string_view::npos) {
             return pos - inPos;
         }
-        return filesize - inPos;
+        return filesize_ - inPos;
     }
 
     auto read(size_t) -> std::tuple<char const*, size_t> {
-        return {buffer+inPos, filesize-inPos};
+        return {buffer+inPos, filesize_-inPos};
     }
 
     void dropUntil(size_t i) {
         i += inPos;
-        assert(i <= filesize);
+        assert(i <= filesize_);
         if (i < 1'024ul * 1'024ul) {
             inPos = i;
             return;
@@ -69,30 +70,43 @@ public:
 
         auto mask = std::numeric_limits<size_t>::max() - 4095;
         auto diff = (i & mask);
-        assert(diff-inPos < filesize);
+        assert(diff-inPos < filesize_);
         munmap((void*)buffer, diff);
         buffer = buffer + diff;
-        filesize -= diff;
+        filesize_ -= diff;
         inPos = i - diff;
     }
 
     bool eof(size_t i) const {
         i += inPos;
-        assert(i <= filesize);
-        return filesize == i;
+        assert(i <= filesize_);
+        return filesize_ == i;
     }
 
     auto string_view(size_t start, size_t end) -> std::string_view {
         start += inPos;
         end   += inPos;
-        assert(start <= filesize);
-        assert(end <= filesize);
+        assert(start <= filesize_);
+        assert(end <= filesize_);
         return std::string_view{buffer+start, buffer+end};
     }
 
-    auto size() const {
-        return filesize;
+    void seek(size_t offset) {
+        if (offset >= tell()) { // Seeking forwards
+            inPos += tell() - offset;
+            return;
+        }
+        // Seeking backwards requires remapping the file
+        munmap((void*)buffer, filesize_);
+        filesize_ = reader.filesize();
+        buffer = (char const*)mmap(nullptr, filesize_, PROT_READ, MAP_PRIVATE, reader.getFileHandler(), 0);
+        inPos = offset;
     }
+
+    auto tell() const -> size_t {
+        return inPos + reader.filesize() - filesize_;
+    }
+
 };
 
 static_assert(BufferedReadable<mmap_reader>);

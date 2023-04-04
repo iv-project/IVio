@@ -1,6 +1,7 @@
 #pragma once
 
 #include "fasta/reader.h"
+#include "fasta_idx/reader.h"
 #include "fasta/writer.h"
 #include "sam/reader.h"
 #include "sam/writer.h"

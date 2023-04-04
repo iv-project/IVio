@@ -58,7 +58,7 @@ struct zlib_mmap2_reader : protected mmap_reader {
         if (inflateInit2(&stream, 16 + MAX_WBITS) != Z_OK) {
             throw "error";
         }
-        stream.avail_in = size();
+        stream.avail_in = filesize_;
         stream.next_in  = (unsigned char*)buffer;
         stream.next_out = (unsigned char*)queue.buffer;
     }
@@ -68,7 +68,7 @@ struct zlib_mmap2_reader : protected mmap_reader {
         if (inflateInit2(&stream, 16 + MAX_WBITS) != Z_OK) {
             throw "error";
         }
-        stream.avail_in = size();
+        stream.avail_in = filesize_;
         stream.next_in  = (unsigned char*)buffer;
         stream.next_out = (unsigned char*)queue.buffer;
 
