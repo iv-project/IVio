@@ -24,7 +24,7 @@ protected:
 public:
     file_reader(std::filesystem::path path)
         : fd{[&]() {
-            auto r = ::open(path.c_str(), O_RDONLY); //!TODO Is this call safe?
+            auto r = ::open(path.c_str(), O_RDONLY);
             if (r == -1) {
                 throw "file not readable";
             }
