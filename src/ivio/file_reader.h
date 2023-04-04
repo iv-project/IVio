@@ -22,15 +22,15 @@ protected:
     size_t filesize_;
 
 public:
-    file_reader(std::filesystem::path path)
+    file_reader(std::filesystem::path const& path)
         : fd{[&]() {
             auto r = ::open(path.c_str(), O_RDONLY);
             if (r == -1) {
-                throw std::runtime_error("file not readable: " + path.string());
+                throw std::runtime_error{"file " + path.string() + " not readable"};
             }
             return r;
         }()}
-        , filesize_{std::filesystem::file_size(path)}
+        , filesize_{file_size(path)}
     {}
 
     file_reader() = delete;
@@ -40,6 +40,7 @@ public:
         , filesize_{_other.filesize_}
     {
         _other.fd = -1;
+        _other.filesize_ = 0;
     }
 
     ~file_reader() {
@@ -64,6 +65,14 @@ public:
 
     auto filesize() const -> size_t {
         return filesize_;
+    }
+
+    void seek(size_t offset) {
+        ::lseek64(fd, offset, SEEK_SET);
+    }
+
+    auto tell() const -> size_t {
+        return lseek64(fd, 0, SEEK_CUR);
     }
 };
 

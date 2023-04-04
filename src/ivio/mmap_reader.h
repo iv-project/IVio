@@ -90,6 +90,23 @@ public:
         assert(end <= filesize_);
         return std::string_view{buffer+start, buffer+end};
     }
+
+    void seek(size_t offset) {
+        if (offset >= tell()) { // Seeking forwards
+            inPos += tell() - offset;
+            return;
+        }
+        // Seeking backwards requires remapping the file
+        munmap((void*)buffer, filesize_);
+        filesize_ = reader.filesize();
+        buffer = (char const*)mmap(nullptr, filesize_, PROT_READ, MAP_PRIVATE, reader.getFileHandler(), 0);
+        inPos = offset;
+    }
+
+    auto tell() const -> size_t {
+        return inPos + reader.filesize() - filesize_;
+    }
+
 };
 
 static_assert(BufferedReadable<mmap_reader>);
