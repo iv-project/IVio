@@ -18,7 +18,8 @@ namespace ivio {
 
 class file_reader {
 protected:
-    int fd{-1};
+    int fd;
+    size_t filesize;
 
 public:
     file_reader(std::filesystem::path path)
@@ -29,12 +30,14 @@ public:
             }
             return r;
         }()}
+        , filesize{std::filesystem::file_size(path)}
     {}
 
     file_reader() = delete;
     file_reader(file_reader const&) = delete;
     file_reader(file_reader&& _other) noexcept
         : fd{_other.fd}
+        , filesize{_other.filesize}
     {
         _other.fd = -1;
     }
@@ -54,6 +57,10 @@ public:
             throw s;
         }
         return bytes_read;
+    }
+
+    auto file_size() const -> size_t {
+        return filesize;
     }
 };
 

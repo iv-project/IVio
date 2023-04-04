@@ -10,14 +10,12 @@ namespace ivio {
 
 class mmap_reader : public file_reader {
 protected:
-    size_t filesize;
     char const* buffer;
     size_t inPos{};
 
 public:
     mmap_reader(std::filesystem::path path)
         : file_reader{path}
-        , filesize{file_size(path)}
         , buffer{[&]() {
             auto ptr = (char const*)mmap(nullptr, filesize, PROT_READ, MAP_PRIVATE, fd, 0);
             return ptr;
@@ -30,7 +28,6 @@ public:
     mmap_reader(mmap_reader const&) = delete;
     mmap_reader(mmap_reader&& _other) noexcept
         : file_reader{std::move(_other)}
-        , filesize{_other.filesize}
         , buffer{_other.buffer}
         , inPos{_other.inPos}
     {
