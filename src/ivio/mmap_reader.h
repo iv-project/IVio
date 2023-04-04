@@ -90,10 +90,6 @@ public:
         assert(end <= filesize_);
         return std::string_view{buffer+start, buffer+end};
     }
-
-    auto size() const {
-        return filesize_;
-    }
 };
 
 static_assert(BufferedReadable<mmap_reader>);
