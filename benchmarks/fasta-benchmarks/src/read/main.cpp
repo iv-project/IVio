@@ -11,6 +11,7 @@ auto seqan3_bench(std::filesystem::path file) -> Result;
 auto io2_bench(std::filesystem::path file) -> Result;
 auto bio_bench(std::filesystem::path file) -> Result;
 auto ivio_bench(std::filesystem::path file) -> Result;
+auto ivio_idx_bench(std::filesystem::path file) -> Result;
 auto ivio_mt_bench(std::filesystem::path file) -> Result;
 auto direct_bench(std::filesystem::path path) -> Result;
 auto extreme_bench(std::filesystem::path path) -> Result;
@@ -47,6 +48,7 @@ int main(int argc, char** argv) {
                 if (method == "bio")              return bio_bench(file);
                 if (method == "ivio_mt")          return ivio_mt_bench(file);
                 if (method == "ivio")             return ivio_bench(file);
+                if (method == "ivio_idx")         return ivio_idx_bench(file);
                 if (method == "direct")           return direct_bench(file);
                 if (method == "extreme")          return extreme_bench(file);
                 throw std::runtime_error("unknown method: " + std::string{method});
