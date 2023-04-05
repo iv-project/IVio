@@ -10,6 +10,7 @@ namespace ivio {
 class stream_reader {
 protected:
     std::istream& stream;
+
 public:
     stream_reader(std::istream& _stream)
         : stream{_stream}
@@ -27,7 +28,16 @@ public:
         stream.read(&*std::ranges::begin(range), std::ranges::size(range));
         return stream.gcount();
     }
+
+    auto tell() const -> size_t {
+        return stream.tellg();
+    }
+
+    void seek(size_t offset) {
+        stream.seekg(offset);
+    }
 };
 
 static_assert(Readable<stream_reader>);
+static_assert(Seekable<stream_reader>);
 }
