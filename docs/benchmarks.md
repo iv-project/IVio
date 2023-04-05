@@ -8,7 +8,7 @@
 | reading .vcf            | | 187MB/s |         |         | 165MB/s |   **401MB/s** |            |                |
 | reading .fastq          | | 239MB/s | 172MB/s |         | 441MB/s |   **887MB/s** |            |                |
 | reading .fastq.gz       | | 185MB/s | 158MB/s |         | 268MB/s |   **329MB/s** |            |                |
-| reading short.fasta     | | 398MB/s | 243MB/s | 114MB/s | 342MB/s |   **888MB/s** |   876MB/s  |___1'294MB/s___ |
+| reading short.fasta     | | 398MB/s | 243MB/s | 114MB/s | 342MB/s |   **888MB/s** |   645MB/s  |___1'294MB/s___ |
 | reading short.fasta.gz  | | 170MB/s | 148MB/s |         | 154MB/s |   **182MB/s** |            |                |
 | reading long.fasta      | | 512MB/s | 547MB/s | 150MB/s | 404MB/s | **1'228MB/s** | 1'264MB/s  |___1'470MB/s___ |
 | reading long.fasta.gz   | | 260MB/s | 266MB/s |         | 213MB/s |   **301MB/s** |            |                |

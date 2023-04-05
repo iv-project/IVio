@@ -11,8 +11,8 @@ auto ivio_idx_bench(std::filesystem::path file) -> Result {
     auto idx_reader = ivio::fasta_idx::reader{{.input = idx_file }};
     auto reader     = ivio::fasta::reader{{.input = file }};
 
-    for (auto && [id, seq] : reader) {
-        for (auto c : seq | dna5_rank_view) {
+    for (auto const& idx : idx_reader) {
+        for (auto c : reader.read_faidx(idx.offset) | dna5_rank_view) {
             result.ctChars[c] += 1;
         }
     }

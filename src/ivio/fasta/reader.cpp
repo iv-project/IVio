@@ -9,6 +9,7 @@
 
 static_assert(std::ranges::range<ivio::fasta::reader>, "reader must be a range (unittest)");
 static_assert(ivio::record_reader_c<ivio::fasta::reader>, "must fulfill the record_reader concept (unittest)");
+static_assert(ivio::Seekable<ivio::fasta::reader>, "must fulfill the Seekable concept (unittest)");
 
 namespace ivio {
 
@@ -17,6 +18,7 @@ struct reader_base<fasta::reader>::pimpl {
     VarBufferedReader ureader;
     size_t lastUsed{};
     std::string s;
+    size_t lastSequencePos;
 
     pimpl(std::filesystem::path file, bool)
         : ureader {[&]() -> VarBufferedReader {
@@ -63,6 +65,7 @@ auto reader::next() -> std::optional<record_view> {
     if (ureader.eof(endId)) return std::nullopt;
 
     auto startSeq = endId+1;
+    pimpl_->lastSequencePos = startSeq;
 
     // convert into dense string representation
     s.clear();
@@ -86,6 +89,50 @@ auto reader::next() -> std::optional<record_view> {
 
 void reader::close() {
     pimpl_.reset();
+}
+
+auto reader::tell() const -> size_t {
+    assert(pimpl_);
+
+    auto& ureader  = pimpl_->ureader;
+    return ureader.tell();
+}
+
+void reader::seek(size_t offset) {
+    assert(pimpl_);
+
+    auto& ureader  = pimpl_->ureader;
+
+    ureader.seek(offset);
+    ureader.dropUntil(0);
+    pimpl_->lastUsed = 0;
+}
+
+auto reader::tell_faidx() const -> size_t {
+    assert (pimpl_);
+    return pimpl_->lastSequencePos;
+}
+auto reader::read_faidx(size_t offset) -> std::string_view {
+    auto& s        = pimpl_->s;
+    auto& ureader  = pimpl_->ureader;
+
+    seek(offset);
+    pimpl_->lastSequencePos = offset;
+
+    // convert into dense string representation
+    s.clear();
+    {
+        auto s2 = 0;
+        do {
+            auto s1 = s2;
+            s2 = ureader.readUntil('\n', s1);
+            s += ureader.string_view(s1, s2);
+            s2 += 1;
+        } while (!ureader.eof(s2) and ureader.string_view(s2, s2+1)[0] != '>');
+        pimpl_->lastUsed = s2;
+    }
+
+    return s;
 }
 
 }

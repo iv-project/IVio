@@ -28,6 +28,12 @@ public:
 
     auto next() -> std::optional<record_view>;
     void close();
+
+    auto tell() const -> size_t;
+    void seek(size_t offset);
+
+    auto tell_faidx() const -> size_t; // tell position usable for faidx
+    auto read_faidx(size_t offset) -> std::string_view; // Seek to a position, compatible with faidx
 };
 
 }

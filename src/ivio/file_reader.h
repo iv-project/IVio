@@ -77,4 +77,5 @@ public:
 };
 
 static_assert(Readable<file_reader>);
+static_assert(Seekable<file_reader>);
 }

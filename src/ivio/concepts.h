@@ -33,6 +33,16 @@ concept BufferedReadable = requires(T t) {
     { t.string_view(size_t{}, size_t{}) } -> std::same_as<std::string_view>;
 };
 
+/* \brief a Reader that is seekable
+ * This means that random access is possible.
+ * tell(): returns the current position
+ * seek(): moves the internal position to a certain position
+ */
+template <typename T>
+concept Seekable = requires(T t) {
+    { t.tell() } -> std::same_as<size_t>;
+    { t.seek(size_t{}) } -> std::same_as<void>;
+};
 
 /* \brief a Reader that reads record by record
  * - next: returns an optional, which is a record or std::nullopt if not available

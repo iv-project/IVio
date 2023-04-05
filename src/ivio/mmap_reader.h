@@ -91,9 +91,13 @@ public:
         return std::string_view{buffer+start, buffer+end};
     }
 
+    auto tell() const -> size_t {
+        return inPos + reader.filesize() - filesize_;
+    }
+
     void seek(size_t offset) {
         if (offset >= tell()) { // Seeking forwards
-            inPos += tell() - offset;
+            inPos += offset - tell();
             return;
         }
         // Seeking backwards requires remapping the file
@@ -102,12 +106,9 @@ public:
         buffer = (char const*)mmap(nullptr, filesize_, PROT_READ, MAP_PRIVATE, reader.getFileHandler(), 0);
         inPos = offset;
     }
-
-    auto tell() const -> size_t {
-        return inPos + reader.filesize() - filesize_;
-    }
-
 };
 
 static_assert(BufferedReadable<mmap_reader>);
+static_assert(Seekable<mmap_reader>);
+
 }
