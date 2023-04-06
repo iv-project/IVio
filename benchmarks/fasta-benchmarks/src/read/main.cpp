@@ -10,6 +10,7 @@ auto seqan2_bench(std::filesystem::path file) -> Result;
 auto seqan3_bench(std::filesystem::path file) -> Result;
 auto io2_bench(std::filesystem::path file) -> Result;
 auto bio_bench(std::filesystem::path file) -> Result;
+auto seqtk_bench(std::filesystem::path file) -> Result;
 auto ivio_bench(std::filesystem::path file) -> Result;
 auto ivio_idx_bench(std::filesystem::path file) -> Result;
 auto ivio_mt_bench(std::filesystem::path file) -> Result;
@@ -46,6 +47,7 @@ int main(int argc, char** argv) {
                 if (method == "seqan3")           return seqan3_bench(file);
                 if (method == "io2")              return io2_bench(file);
                 if (method == "bio")              return bio_bench(file);
+                if (method == "seqtk")            return seqtk_bench(file);
                 if (method == "ivio_mt")          return ivio_mt_bench(file);
                 if (method == "ivio")             return ivio_bench(file);
                 if (method == "ivio_idx")         return ivio_idx_bench(file);

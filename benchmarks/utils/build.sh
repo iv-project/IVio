@@ -22,7 +22,8 @@ INCLUDES="-I . -I ../../src/ \
     -DSEQAN_HAS_ZLIB  -isystem../../lib/seqan/include \
     -DBIOCPP_IO_HAS_ZLIB -isystem../../lib/biocpp-io/include \
                    -isystem../../lib/biocpp-core/include \
-    -DSEQAN3_HAS_ZLIB -isystem../../lib/seqan3/include -isystem../../lib/submodules/sdsl-lite/include"
+    -DSEQAN3_HAS_ZLIB -isystem../../lib/seqan3/include -isystem../../lib/submodules/sdsl-lite/include \
+    -isystem../../lib/seqtk"
 ARGS="-std=c++20 ${FLAGS} ${INCLUDES}"
 
 
