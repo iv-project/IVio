@@ -70,7 +70,7 @@ public:
 
         auto mask = std::numeric_limits<size_t>::max() - 4095;
         auto diff = (i & mask);
-        assert(diff-inPos < filesize_);
+        assert(diff <= filesize_);
         munmap((void*)buffer, diff);
         buffer = buffer + diff;
         filesize_ -= diff;

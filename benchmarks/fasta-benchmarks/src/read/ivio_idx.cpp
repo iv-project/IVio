@@ -12,7 +12,10 @@ auto ivio_idx_bench(std::filesystem::path file) -> Result {
     auto reader     = ivio::fasta::reader{{.input = file }};
 
     for (auto const& idx : idx_reader) {
-        for (auto c : reader.read_faidx(idx.offset) | dna5_rank_view) {
+        reader.seek_faidx(idx);
+        auto record = reader.next();
+        assert(record);
+        for (auto c : record->seq | dna5_rank_view) {
             result.ctChars[c] += 1;
         }
     }
