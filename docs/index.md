@@ -31,7 +31,7 @@ Easiest way to use this repository is to clone this as a subrepo into your proje
 add_subdirectory(lib/IVio)
 
 # ...
-target_link_library(your_project ivio::ivio)
+target_link_libraries(your_project ivio::ivio)
 ```
 
 You can now happily use IVio
