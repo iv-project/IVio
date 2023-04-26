@@ -18,7 +18,7 @@ struct reader_base<fasta::reader>::pimpl {
     VarBufferedReader ureader;
     size_t lastUsed{};
     std::string s;
-    size_t lastSequencePos;
+    fasta_idx::record faidx_record{{}, 0, 0, 0, 0};
 
     pimpl(std::filesystem::path file, bool)
         : ureader {[&]() -> VarBufferedReader {
@@ -65,7 +65,6 @@ auto reader::next() -> std::optional<record_view> {
     if (ureader.eof(endId)) return std::nullopt;
 
     auto startSeq = endId+1;
-    pimpl_->lastSequencePos = startSeq;
 
     // convert into dense string representation
     s.clear();
@@ -108,31 +107,29 @@ void reader::seek(size_t offset) {
     pimpl_->lastUsed = 0;
 }
 
-auto reader::tell_faidx() const -> size_t {
+auto reader::tell_faidx() const -> fasta_idx::record {
     assert (pimpl_);
-    return pimpl_->lastSequencePos;
+    return pimpl_->faidx_record;
 }
-auto reader::read_faidx(size_t offset) -> std::string_view {
-    auto& s        = pimpl_->s;
+
+void reader::seek_faidx(fasta_idx::record const& faidx) {
+    assert (pimpl_);
+
     auto& ureader  = pimpl_->ureader;
 
-    seek(offset);
-    pimpl_->lastSequencePos = offset;
+    size_t numberOfLines = faidx.length / faidx.linebases;
 
-    // convert into dense string representation
-    s.clear();
-    {
-        auto s2 = 0;
-        do {
-            auto s1 = s2;
-            s2 = ureader.readUntil('\n', s1);
-            s += ureader.string_view(s1, s2);
-            s2 += 1;
-        } while (!ureader.eof(s2) and ureader.string_view(s2, s2+1)[0] != '>');
-        pimpl_->lastUsed = s2;
+    if (faidx.length % faidx.linebases != 0) { // last line is not full
+        numberOfLines += 1;
     }
 
-    return s;
+    size_t numberOfNewLineCharacters = numberOfLines * (faidx.linewidth - faidx.linebases);
+    size_t offset = faidx.offset + numberOfNewLineCharacters + faidx.length;
+    if (!ureader.eof(offset - ureader.tell())) {
+        seek(offset);
+    } else {
+        seek(0);
+    }
 }
 
 }

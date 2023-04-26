@@ -2,6 +2,7 @@
 
 #include "../reader_base.h"
 #include "record.h"
+#include "../fasta_idx/record.h"
 
 #include <filesystem>
 #include <optional>
@@ -32,8 +33,8 @@ public:
     auto tell() const -> size_t;
     void seek(size_t offset);
 
-    auto tell_faidx() const -> size_t; // tell position usable for faidx
-    auto read_faidx(size_t offset) -> std::string_view; // Seek to a position, compatible with faidx
+    auto tell_faidx() const -> fasta_idx::record;
+    void seek_faidx(fasta_idx::record const& offset);
 };
 
 }
