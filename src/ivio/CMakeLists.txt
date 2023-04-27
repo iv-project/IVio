@@ -8,7 +8,7 @@ add_library(ivio bam/reader.cpp
                  fasta/reader.cpp
                  fasta/reader_mt.cpp
                  fasta/writer.cpp
-                 fasta_idx/reader.cpp
+                 faidx/reader.cpp
                  fastq/reader.cpp
                  sam/reader.cpp
                  sam/writer.cpp

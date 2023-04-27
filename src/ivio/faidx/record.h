@@ -3,7 +3,7 @@
 #include <string>
 #include <string_view>
 
-namespace ivio::fasta_idx {
+namespace ivio::faidx {
 
 struct record;
 
@@ -54,11 +54,11 @@ inline record::operator record_view() const {
 
 // Specialization to describe their common types
 template <>
-struct std::common_type<ivio::fasta_idx::record, ivio::fasta_idx::record_view> {
-    using type = ivio::fasta_idx::record;
+struct std::common_type<ivio::faidx::record, ivio::faidx::record_view> {
+    using type = ivio::faidx::record;
 };
 
 template <>
-struct std::common_type<ivio::fasta_idx::record_view, ivio::fasta_idx::record> {
-    using type = ivio::fasta_idx::record;
+struct std::common_type<ivio::faidx::record_view, ivio::faidx::record> {
+    using type = ivio::faidx::record;
 };

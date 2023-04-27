@@ -9,8 +9,8 @@
 
 #include <charconv>
 
-static_assert(std::ranges::range<ivio::fasta_idx::reader>, "reader must be a range (unittest)");
-static_assert(ivio::record_reader_c<ivio::fasta_idx::reader>, "must fulfill the record_reader concept (unittest)");
+static_assert(std::ranges::range<ivio::faidx::reader>, "reader must be a range (unittest)");
+static_assert(ivio::record_reader_c<ivio::faidx::reader>, "must fulfill the record_reader concept (unittest)");
 
 template <typename T>
 static auto convertTo(std::string_view view) {
@@ -26,7 +26,7 @@ static auto convertTo(std::string_view view) {
 namespace ivio {
 
 template <>
-struct reader_base<fasta_idx::reader>::pimpl {
+struct reader_base<faidx::reader>::pimpl {
     VarBufferedReader ureader;
     size_t lastUsed{};
 
@@ -53,7 +53,7 @@ struct reader_base<fasta_idx::reader>::pimpl {
 
 //!WORKAROUND clang crashes if this is a member function of pimpl, see https://github.com/llvm/llvm-project/issues/61159
 template <size_t ct, char sep>
-static auto readLine(ivio::reader_base<ivio::fasta_idx::reader>::pimpl& self) -> std::optional<std::array<std::string_view, ct>> {
+static auto readLine(ivio::reader_base<ivio::faidx::reader>::pimpl& self) -> std::optional<std::array<std::string_view, ct>> {
     auto res = std::array<std::string_view, ct>{};
     size_t start{};
     for (size_t i{}; i < ct-1; ++i) {
@@ -71,7 +71,7 @@ static auto readLine(ivio::reader_base<ivio::fasta_idx::reader>::pimpl& self) ->
 }
 
 
-namespace ivio::fasta_idx {
+namespace ivio::faidx {
 
 reader::reader(config const& config_)
     : reader_base{std::visit([&](auto& p) {

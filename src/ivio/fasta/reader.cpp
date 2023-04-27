@@ -18,7 +18,7 @@ struct reader_base<fasta::reader>::pimpl {
     VarBufferedReader ureader;
     size_t lastUsed{};
     std::string s;
-    fasta_idx::record faidx_record{{}, 0, 0, 0, 0};
+    faidx::record faidx_record{{}, 0, 0, 0, 0};
 
     pimpl(std::filesystem::path file, bool)
         : ureader {[&]() -> VarBufferedReader {
@@ -107,12 +107,12 @@ void reader::seek(size_t offset) {
     pimpl_->lastUsed = 0;
 }
 
-auto reader::tell_faidx() const -> fasta_idx::record {
+auto reader::tell_faidx() const -> faidx::record {
     assert (pimpl_);
     return pimpl_->faidx_record;
 }
 
-void reader::seek_faidx(fasta_idx::record const& faidx) {
+void reader::seek_faidx(faidx::record const& faidx) {
     assert (pimpl_);
 
     auto& ureader  = pimpl_->ureader;
