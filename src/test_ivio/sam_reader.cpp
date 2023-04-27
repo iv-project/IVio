@@ -134,3 +134,57 @@ TEST_CASE("reading sam files", "[sam][reader]") {
         std::filesystem::remove_all(tmp);
     }
 }
+
+TEST_CASE("reading invalid sam files", "[sam][reader][invalid]") {
+    auto tmp = std::filesystem::temp_directory_path() / "ivio_test";
+    std::filesystem::create_directory(tmp);
+
+    auto test_data = std::string {
+        "@HD	VN:1.3	SO:coordinate\n"
+        "@SQ	SN:chrM	LN:16571\n"
+        "@SQ	SN:chr1	LN:249250621\n"
+        "@SQ	SN:chr2	LN:243199373\n"
+        "@SQ	SN:chr3	LN:198022430\n"
+        "@SQ	SN:chr4	LN:191154276\n"
+        "@SQ	SN:chr5	LN:180915260\n"
+        "@SQ	SN:chr6	LN:171115067\n"
+        "@SQ	SN:chr7	LN:159138663\n"
+        "@SQ	SN:chr8	LN:146364022\n"
+        "@SQ	SN:chr9	LN:141213431\n"
+        "@SQ	SN:chr10	LN:135534747\n"
+        "@SQ	SN:chr11	LN:135006516\n"
+        "@SQ	SN:chr12	LN:133851895\n"
+        "@SQ	SN:chr13	LN:115169878\n"
+        "@SQ	SN:chr14	LN:107349540\n"
+        "@SQ	SN:chr15	LN:102531392\n"
+        "@SQ	SN:chr16	LN:90354753\n"
+        "@SQ	SN:chr17	LN:81195210\n"
+        "@SQ	SN:chr18	LN:78077248\n"
+        "@SQ	SN:chr19	LN:59128983\n"
+        "@SQ	SN:chr20	LN:63025520\n"
+        "@SQ	SN:chr21	LN:48129895\n"
+        "@SQ	SN:chr22	LN:51304566\n"
+        "@SQ	SN:chrX	LN:155270560\n"
+        "@SQ	SN:chrY	LN:59373566\n"
+        "@PG	ID:bwa	PN:bwa	VN:0.7.7-r441	CL:bwa mem -t 2 ref.fa left.fq.gz right.fq.gz\n"
+        "@PG	ID:samtools	PN:samtools	PP:bwa	VN:1.15.1	CL:samtools view -s 0.01 -b HG002.mate_pair.sorted.bam\n"
+        "@PG	ID:samtools.1	PN:samtools	PP:samtools	VN:1.15.1	CL:samtools view -h sampled.bam\n"
+        "D00360:64:HBAP3ADXX:2:1115:16968:20035	invalidPosition	chrM	1	6	61H40M	=	8953	9053	GATCACAGGTCTATCACCCTATTAACCACTCACGGGAGCT	IGGDGGEHEA=BDFFFFCECEECE>CCCBCCCCC=80>B<	NM:i:0	MD:Z:40	AS:i:40	XS:i:0	SA:Z:chrM,16511,+,61M40S,6,1;\n"
+    };
+
+    SECTION("Creating Test file") {
+        auto ofs = std::ofstream{tmp / "file.sam", std::ios::binary};
+        ofs << test_data;
+    }
+
+    SECTION("Read from std::filesystem::path") {
+        auto reader = ivio::sam::reader{{tmp / "file.sam"}};
+        REQUIRE_THROWS([&]() {
+            auto vec = std::vector(begin(reader), end(reader));
+        }());
+    }
+
+    SECTION("cleanup - deleting temp folder") {
+        std::filesystem::remove_all(tmp);
+    }
+}
