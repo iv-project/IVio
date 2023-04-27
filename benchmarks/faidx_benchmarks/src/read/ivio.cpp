@@ -4,7 +4,7 @@
 #include <ivio/fasta_idx/reader.h>
 #include <ivio/fasta/reader.h>
 
-auto ivio_idx_bench(std::filesystem::path file) -> Result {
+auto ivio_bench(std::filesystem::path file) -> Result {
     Result result;
 
     auto idx_file = std::filesystem::path{file.string() + ".fai"};
