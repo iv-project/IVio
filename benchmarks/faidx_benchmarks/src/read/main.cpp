@@ -6,17 +6,7 @@
 #include <string_view>
 #include <sys/resource.h>
 
-auto seqan2_bench(std::filesystem::path file) -> Result;
-auto seqan3_bench(std::filesystem::path file) -> Result;
-auto io2_bench(std::filesystem::path file) -> Result;
-auto bio_bench(std::filesystem::path file) -> Result;
-auto seqtk_bench(std::filesystem::path file) -> Result;
 auto ivio_bench(std::filesystem::path file) -> Result;
-auto ivio_mt_bench(std::filesystem::path file) -> Result;
-auto direct_bench(std::filesystem::path path) -> Result;
-auto extreme_bench(std::filesystem::path path) -> Result;
-
-
 
 int main(int argc, char** argv) {
     auto p = [](auto v, size_t w) {
@@ -42,15 +32,7 @@ int main(int argc, char** argv) {
             auto start  = std::chrono::high_resolution_clock::now();
 
             auto r = [&]() {
-                if (method == "seqan2")           return seqan2_bench(file);
-                if (method == "seqan3")           return seqan3_bench(file);
-                if (method == "io2")              return io2_bench(file);
-                if (method == "bio")              return bio_bench(file);
-                if (method == "seqtk")            return seqtk_bench(file);
-                if (method == "ivio_mt")          return ivio_mt_bench(file);
                 if (method == "ivio")             return ivio_bench(file);
-                if (method == "direct")           return direct_bench(file);
-                if (method == "extreme")          return extreme_bench(file);
                 throw std::runtime_error("unknown method: " + std::string{method});
             }();
             auto end  = std::chrono::high_resolution_clock::now();

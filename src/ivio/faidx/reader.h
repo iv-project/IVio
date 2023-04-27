@@ -8,11 +8,11 @@
 #include <tuple>
 #include <variant>
 
-namespace ivio::fasta_idx {
+namespace ivio::faidx {
 
 struct reader : public reader_base<reader> {
-    using record      = fasta_idx::record;
-    using record_view = fasta_idx::record_view;
+    using record      = faidx::record;
+    using record_view = faidx::record_view;
 
     struct config {
         // Source: file or stream

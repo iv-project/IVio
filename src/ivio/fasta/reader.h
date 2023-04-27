@@ -1,8 +1,8 @@
 #pragma once
 
+#include "../faidx/record.h"
 #include "../reader_base.h"
 #include "record.h"
-#include "../fasta_idx/record.h"
 
 #include <filesystem>
 #include <optional>
@@ -33,8 +33,8 @@ public:
     auto tell() const -> size_t;
     void seek(size_t offset);
 
-    auto tell_faidx() const -> fasta_idx::record;
-    void seek_faidx(fasta_idx::record const& offset);
+    auto tell_faidx() const -> faidx::record;
+    void seek_faidx(faidx::record const& offset);
 };
 
 }
