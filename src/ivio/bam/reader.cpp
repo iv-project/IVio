@@ -134,7 +134,9 @@ reader::reader(config const& config_)
     header_ = std::move(pimpl_->header);
 }
 
-reader::~reader() = default;
+reader::~reader() {
+    close();
+}
 
 auto reader::next() -> std::optional<record_view> {
     assert(pimpl_);
