@@ -70,24 +70,24 @@ jobs:
           CC: ${{ matrix.cc }}
         run: |
           source ${HOME}/.activate_brew
-          mkdir ivio-build && cd $_
-          cmake ../ivio -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} ${{ matrix.cmake_flags }} -DCMAKE_CXX_FLAGS="--coverage" -DCMAKE_C_FLAGS="--coverage"
+          mkdir ivio/ivio-build && cd $_
+          cmake .. -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} ${{ matrix.cmake_flags }} -DCMAKE_CXX_FLAGS="--coverage" -DCMAKE_C_FLAGS="--coverage"
 
       - name: Build tests
         run: |
           source ${HOME}/.activate_brew
-          cd ivio-build
+          cd ivio/ivio-build
           make -k -j2
 
       - name: Run tests
         run: |
           source ${HOME}/.activate_brew
-          cd ivio-build
+          cd ivio/ivio-build
           ctest . -j ${{ matrix.threads }} --output-on-failure
       - name: Generate report and upload
         run: |
           source ${HOME}/.activate_brew
-          cd ivio-build
+          cd ivio/ivio-build
           lcov -c --directory . --output coverage.info --gcov ${{ matrix.gcov }}
           lcov --remove coverage.info '/usr/include/*' --output-file coverage.info
           lcov --remove coverage.info '/home/linuxbrew/*' --output-file coverage.info
