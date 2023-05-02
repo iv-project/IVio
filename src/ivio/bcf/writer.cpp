@@ -4,9 +4,8 @@
 // This file may be used, modified and/or redistributed under the terms of the 3-clause BSD-License
 // shipped with this file.
 // -----------------------------------------------------------------------------------------------------
+#include "../detail/bgzf_writer.h"
 #include "writer.h"
-
-#include "../bgzf_writer.h"
 
 #include <cassert>
 #include <cstddef>
