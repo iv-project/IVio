@@ -6,7 +6,7 @@
 # -----------------------------------------------------------------------------------------------------
 cmake_minimum_required (VERSION 3.14)
 
-project(ivio)
+find_package(ZLIB REQUIRED)
 
 add_library(ivio bam/reader.cpp
                  bcf/reader.cpp
@@ -23,12 +23,11 @@ add_library(ivio bam/reader.cpp
 
 add_library(ivio::ivio ALIAS ivio)
 
-target_include_directories(${PROJECT_NAME}
+target_include_directories(ivio
     PUBLIC
-    ${CMAKE_CURRENT_SOURCE_DIR}
-    ${CMAKE_CURRENT_SOURCE_DIR}/..
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/..>
+    $<INSTALL_INTERFACE:include>
 )
-target_link_libraries(${PROJECT_NAME}
-#//!TODO must have a better way to link against z library
-    z
+target_link_libraries(ivio
+    ${ZLIB_LIBRARIES}
 )
