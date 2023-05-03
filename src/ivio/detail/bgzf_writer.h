@@ -8,9 +8,9 @@
 
 #include "file_writer.h"
 
+#include <algorithm>
 #include <cassert>
 #include <fstream>
-#include <iostream>
 #include <cstring>
 #include <ranges>
 #include <zlib.h>

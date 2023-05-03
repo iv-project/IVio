@@ -6,7 +6,7 @@
 // -----------------------------------------------------------------------------------------------------
 #pragma once
 
-#include "../writer_base.h"
+#include "../detail/writer_base.h"
 #include "record.h"
 
 #include <filesystem>

@@ -6,8 +6,8 @@
 // -----------------------------------------------------------------------------------------------------
 #pragma once
 
+#include "../detail/reader_base.h"
 #include "../faidx/record.h"
-#include "../reader_base.h"
 #include "record.h"
 
 #include <filesystem>

@@ -4,14 +4,13 @@
 // This file may be used, modified and/or redistributed under the terms of the 3-clause BSD-License
 // shipped with this file.
 // -----------------------------------------------------------------------------------------------------
+#include "../detail/buffered_reader.h"
+#include "../detail/file_reader.h"
+#include "../detail/mmap_reader.h"
+#include "../detail/stream_reader.h"
+#include "../detail/zlib_file_reader.h"
+#include "../detail/zlib_mmap2_reader.h"
 #include "reader.h"
-
-#include "../buffered_reader.h"
-#include "../file_reader.h"
-#include "../mmap_reader.h"
-#include "../stream_reader.h"
-#include "../zlib_file_reader.h"
-#include "../zlib_mmap2_reader.h"
 
 #include <charconv>
 

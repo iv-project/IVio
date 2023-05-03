@@ -11,6 +11,7 @@
 #include "mmap_reader.h"
 #include "stream_reader.h"
 
+#include <algorithm>
 #include <ranges>
 #include <zlib.h>
 
