@@ -6,8 +6,8 @@
 # -----------------------------------------------------------------------------------------------------
 
 cmake_minimum_required (VERSION 3.12)
-if (TARGET ivio)
+if (TARGET ivio::ivio)
     return()
 endif()
 
-add_subdirectory(src/ivio)
+add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/src/ivio ${CMAKE_CURRENT_BINARY_DIR}/ivio)
