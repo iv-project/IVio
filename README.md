@@ -15,6 +15,10 @@ add_executable(your_exec file1.cpp)
 target_link_libraries(your_exec PUBLIC ivio::ivio)
 ```
 
+## Benchmarks
+
+For detailed benchmarks see [IVbenchmark](https://github.com/SGSSGene/IVbenchmark#results).
+
 ## Sample snippet
 This demonstrates how reading a file and printing it to the command line looks like:
 ```c++
