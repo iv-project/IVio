@@ -7,10 +7,10 @@ It supports many file like **fasta**, **fastq**, **faidx**, **vcf**, **bcf**, **
 See [documentation](https://sgssgene.github.io/IVio/) for detailed information.
 
 ## Usage CMake
-To use this package with cmake you must add this repository via `add_subdirectory` and add a `target_link_libraries`.
+To use this package with cmake you must add this repository via `find_package` and add a `target_link_libraries`.
 e.g:
 ```cmake
-add_subdirectory(lib/IVio);
+find_package(ivio HINTS lib/IVio)
 add_executable(your_exec file1.cpp)
 target_link_libraries(your_exec PUBLIC ivio::ivio)
 ```
