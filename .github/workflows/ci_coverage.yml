@@ -84,9 +84,9 @@ jobs:
           source ${HOME}/.activate_brew
           cd ivio/ivio-build
           lcov -c --directory . --output coverage.info --gcov ${{ matrix.gcov }}
-          lcov --remove coverage.info '/usr/include/*' --output-file coverage.info
-          lcov --remove coverage.info '/home/linuxbrew/*' --output-file coverage.info
-          lcov --remove coverage.info '*/lib/*' --output-file coverage.info
+          lcov --remove coverage.info --ignore-errors unused '/usr/include/*' --output-file coverage.info
+          lcov --remove coverage.info --ignore-errors unused '/home/linuxbrew/*' --output-file coverage.info
+          lcov --remove coverage.info --ignore-errors unused '*/lib/*' --output-file coverage.info
           lcov --list coverage.info
           #gcovr -r ../ivio . --xml -o report.xml -e ../ivio/lib --exclude-noncode-lines --exclude-unreachable-branches --exclude-function-lines
           #gcovr -r ../ . --html --html-details --html-syntax-highlighting -o report.html -e ../lib
