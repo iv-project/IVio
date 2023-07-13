@@ -3,7 +3,6 @@ name: "Linux"
 on:
   push:
     branches:
-      # Push events to branches matching refs/heads/master
       - 'main'
   pull_request:
 
@@ -55,3 +54,10 @@ jobs:
     steps:
       - name: Standard IV-project testing
         uses: iv-project/linux-testing/actions
+        with:
+          name: ${{ matrix.name }}
+          cc: ${{ matrix.cc }}
+          cxx: ${{ matrix.cxx }}
+          cxx_flags: "${{ matrix.cxx_flags }}  -Wextra -Werror"
+          brew_pkgs: "${{ brew_pkgs }}"
+          build_type: ${{ matrix.build_type }}
