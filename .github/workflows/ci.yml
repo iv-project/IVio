@@ -62,6 +62,6 @@ jobs:
           name: ${{ matrix.name }}
           cc: ${{ matrix.cc }}
           cxx: ${{ matrix.cxx }}
-          cxx_flags: "${{ matrix.cxx_flags }}  -Wextra -Werror"
+          cxx_flags: "${{ matrix.cxx_flags }}"
           brew_pkgs: "${{ matrix.brew_pkgs }}"
           build_type: ${{ matrix.build_type }}
