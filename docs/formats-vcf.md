@@ -1,6 +1,6 @@
 # VCF
 
-Support reading and writing [vcf files](https://samtools.github.io/hts-specs/VCFv4.3.pdf)
+Support reading and writing [vcf files 🔗](https://samtools.github.io/hts-specs/VCFv4.3.pdf)
 
 ## Record and Record-View
 IVio provides the data structs `ivio::vcf::record` and `ivio::vcf::record_view`.

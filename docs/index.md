@@ -1,17 +1,23 @@
 # Introduction
 
-**IVio**, pronounced **for you** aka **io4**. 
+**IVio**, pronounced **for you** aka **io4**.
 A c++20 library for **bioinformatics**. Providing functions for reading and writing different file formats.
 
 ## Support
 
- - **fasta** (rw) + **gzip** (rw)
- - **indexed fasta** (ro)
- - **fastq** (ro) + **gzip** (ro)
- - **vcf** (rw) / **bcf** (ro)
- - **sam** (rw) / **bam** (ro)
+A list of currently supported file types:
 
-(description - rw: read/write, ro: read-only)
+|                   | read support | write support |
+|-------------------|--------------|---------------|
+| **fasta**         |  ✔           | ✔             |
+| **fasta**+**gzip**|  ✔           | ✔             |
+| **indexed fasta** |  ✔           | ✘             |
+| **fastq**         |  ✔           | ✘             |
+| **fastq**+**gzip**|  ✔           | ✘             |
+| **vcf**           |  ✔           | ✔             |
+| **bcf**           |  ✔           | ✘             |
+| **sam**           |  ✔           | ✔             |
+| **bam**           |  ✔           | ✘             |
 
 
 ## Basic concepts
@@ -37,7 +43,8 @@ target_link_libraries(your_project ivio::ivio)
 You can now happily use IVio
 
 
-**Code**
+## Example Code
+Reading a fasta file:
 ```c++
 {% include-markdown "snippets/simple_example.cpp" %}
 ```
