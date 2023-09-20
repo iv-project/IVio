@@ -34,7 +34,7 @@ Easiest way to use this repository is to clone this as a subrepo into your proje
 `lib/IVio`, and then edit your `CMakeLists.txt`:
 
 ```cmake
-add_subdirectory(lib/IVio)
+find_package (ivio REQUIRED PATHS lib/IVio)
 
 # ...
 target_link_libraries(your_project ivio::ivio)
