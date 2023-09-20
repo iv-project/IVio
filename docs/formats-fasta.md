@@ -1,6 +1,6 @@
 # FASTA
 
-Support reading and writing [fasta files](https://blast.ncbi.nlm.nih.gov/doc/blast-topics/).
+Support reading and writing [fasta files 🔗](https://blast.ncbi.nlm.nih.gov/doc/blast-topics/).
 All classes/functions are available in the `ivio::fasta` namespace.
 
 [TOC]
