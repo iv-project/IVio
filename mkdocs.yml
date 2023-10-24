@@ -1,44 +1,35 @@
+# SPDX-FileCopyrightText: 2006-2023, Knut Reinert & Freie Universität Berlin
+# SPDX-FileCopyrightText: 2016-2023, Knut Reinert & MPI für molekulare Genetik
+# SPDX-License-Identifier: CC0-1.0
 site_name: IVio
 docs_dir: docs
 nav:
   - index.md
   - C++ API-Reference:
-    - "formats-fasta.md"
-    - "formats-vcf.md"
+    - formats-fasta.md
+    - formats-vcf.md
 use_directory_urls: false
 repo_url: https://github.com/iv-project/IVio
 theme:
   name: material
-#  custom_dir: docs/readthedocs-customization
-  highlightjs: true
-  collapse_navigation: false
-  locale: en
-  prev_next_buttons_location: none
+  local: en
   features:
-  - content.code.copy
-extra_javascript:
-  - extra-highlights.js
+    - navigation.sections
+    - content.code.copy
 plugins:
   - include-markdown:
       comments: false
       trailing_newlines: false
 markdown_extensions:
   - tables
-#  - admonition
-#  - codehilite:
-#      use_pygments: true
   - toc:
       permalink: true
       separator: "_"
-#  - sane_lists
-#  - smarty
   - pymdownx.highlight:
-      anchor_linenums: true
-      line_spans: __span
       pygments_lang_class: true
   - pymdownx.inlinehilite
   - attr_list
-  - pymdownx.snippets
+#  - pymdownx.snippets
   - pymdownx.superfences
 #  - pymdownx.critic
 #  - pymdownx.caret
