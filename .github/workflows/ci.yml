@@ -61,7 +61,7 @@ jobs:
             brew_pkgs: llvm@15
     steps:
       - name: Standard IV-project testing
-        uses: iv-project/IVaction/linux-testing@v1
+        uses: iv-project/IVaction/linux-testing@v2
         with:
           name: ${{ matrix.name }}
           cc: ${{ matrix.cc }}
