@@ -7,7 +7,6 @@ project(test_ivio)
 
 # fmindex-collectionunittests
 add_executable(${PROJECT_NAME}
-    main.cpp
     fasta_reader.cpp
     fasta_writer.cpp
     sam_reader.cpp
@@ -16,7 +15,7 @@ add_executable(${PROJECT_NAME}
     vcf_writer.cpp
 )
 target_link_libraries(${PROJECT_NAME}
-    Catch2::Catch2
+    Catch2::Catch2WithMain
     ivio::ivio
 )
 
