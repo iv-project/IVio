@@ -1,3 +1,8 @@
+<!--
+    SPDX-FileCopyrightText: 2006-2023, Knut Reinert & Freie Universität Berlin
+    SPDX-FileCopyrightText: 2016-2023, Knut Reinert & MPI für molekulare Genetik
+    SPDX-License-Identifier: CC-BY-4.0
+-->
 # FASTA
 
 Support reading and writing [fasta files 🔗](https://blast.ncbi.nlm.nih.gov/doc/blast-topics/).
@@ -53,7 +58,7 @@ struct ivio::fasta::reader {
 ## Writer (`writer`, `writer::config`) { #markdown data-toc-label="Writer" }
 The `ivio::fasta::writer` provides a single function `write` which takes a `ivio::fasta::record_view` as input.
 The class is initialized with a `ivio::fasta::writer::config` object which has the options:
-```
+```c++
 struct ivio::fasta::writer::config {
     // Source: file or stream
     std::variant<std::filesystem::path, std::reference_wrapper<std::ostream>> output;
@@ -68,7 +73,7 @@ struct ivio::fasta::writer::config {
 ### Example - Reading record by record
 In this example a file is being opened and print to command line
 ```c++
-{% include-markdown "snippets/fasta_example_01.cpp" %}
+{% include-markdown "snippets/fasta_example_01.cpp" start="CC0-1.0" %}
 ```
 **Output**
 ```sh
@@ -77,11 +82,11 @@ In this example a file is being opened and print to command line
 ### Example - Copying a file
 In this example the data is read from the standard input and writen to standard output
 ```c++
-{% include-markdown "snippets/fasta_example_02.cpp" %}
+{% include-markdown "snippets/fasta_example_02.cpp" start="CC0-1.0" %}
 ```
 
 ### Example - Reading complete file
 Load complete fasta file into memory:
 ```c++
-{% include-markdown "snippets/fasta_example_03.cpp" %}
+{% include-markdown "snippets/fasta_example_03.cpp" start="CC0-1.0" %}
 ```

@@ -1,3 +1,9 @@
+<!--
+    SPDX-FileCopyrightText: 2006-2023, Knut Reinert & Freie Universität Berlin
+    SPDX-FileCopyrightText: 2016-2023, Knut Reinert & MPI für molekulare Genetik
+    SPDX-License-Identifier: CC-BY-4.0
+-->
+
 # VCF
 
 Support reading and writing [vcf files 🔗](https://samtools.github.io/hts-specs/VCFv4.3.pdf)
@@ -38,7 +44,7 @@ struct record {
 ## Reading
 **Example**
 ```cpp
-{% include-markdown "snippets/read_vcf.cpp" %}
+{% include-markdown "snippets/read_vcf.cpp" start="CC0-1.0"%}
 ```
 **Output**
 ```sh
@@ -48,7 +54,7 @@ struct record {
 ## Writing
 **Example**
 ```cpp
-{% include-markdown "snippets/write_vcf.cpp" %}
+{% include-markdown "snippets/write_vcf.cpp" start="CC0-1.0"%}
 ```
 **Output**
 ```cpp

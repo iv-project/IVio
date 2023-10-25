@@ -1,3 +1,5 @@
+// SPDX-FileCopyrightText: 1995-2016 Jean-loup Gailly and Mark Adler
+// SPDX-License-Identifier: Zlib
 #ifndef ZNGLIB_H_
 #define ZNGLIB_H_
 /* zlib-ng.h -- interface of the 'zlib-ng' compression library, forked from zlib.
