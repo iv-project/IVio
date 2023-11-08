@@ -75,7 +75,13 @@ namespace Catch {
         static void normalizeNamespaceMarkers(std::string& str) {
             std::size_t pos = str.find( "::" );
             while ( pos != str.npos ) {
+                //!TODO !BUG !GCC-12.3 https://gcc.gnu.org/bugzilla/show_bug.cgi?id=105329
+                #pragma GCC diagnostic push
+                #if !defined(__has_warning) || __has_warning("-Wrestrict")
+                #pragma GCC diagnostic ignored "-Wrestrict"
+                #endif
                 str.replace( pos, 2, "." );
+                #pragma GCC diagnostic pop
                 pos += 1;
                 pos = str.find( "::", pos );
             }
