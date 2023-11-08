@@ -41,7 +41,7 @@ public:
     auto next() -> std::optional<record_view>;
 
     friend auto begin(reader_mt& reader) -> iter;
-    friend auto end(reader_mt& reader) {
+    friend auto end(reader_mt& /*reader*/) {
         return nullptr;
     }
 };

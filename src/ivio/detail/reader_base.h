@@ -34,7 +34,7 @@ struct reader_base {
             nextItem = reader_->next();
             return currentItem;
         }
-        auto operator==(iter const& _other) const {
+        auto operator==([[maybe_unused]] iter const& _other) const {
             assert(reader_);
             assert(_other.reader_ == nullptr);
             return !nextItem.has_value();

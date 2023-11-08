@@ -105,7 +105,7 @@ struct ivio::writer_base<ivio::bcf::writer>::pimpl {
         }()}
     {}
 
-    pimpl(std::ostream& output)
+    pimpl(std::ostream& /*output*/)
         : writer {[&]() -> Writers {
             //!TODO
             throw std::runtime_error("streams are currently not supported");

@@ -310,12 +310,12 @@ struct reader_base<bcf::reader>::pimpl {
                 auto a = buffer.readAny();
                 std::visit(overloaded{
                     [](std::nullptr_t) {},
-                    [](int32_t v) {},
-                    [](float v) {},
-                    [](char v) {},
-                    [](std::vector<int32_t> const& v) {},
-                    [](std::vector<float> const& v) {},
-                    [](std::string_view v) {}
+                    [](int32_t) {},
+                    [](float) {},
+                    [](char) {},
+                    [](std::vector<int32_t> const&) {},
+                    [](std::vector<float> const&) {},
+                    [](std::string_view) {}
                 }, a);
             }
         });

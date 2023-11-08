@@ -77,7 +77,7 @@ namespace Catch {
             while ( pos != str.npos ) {
                 //!TODO !BUG !GCC-12.3 https://gcc.gnu.org/bugzilla/show_bug.cgi?id=105329
                 #pragma GCC diagnostic push
-                #if !defined(__has_warning) || __has_warning("-Wrestrict")
+                #if !defined(__clang__)
                 #pragma GCC diagnostic ignored "-Wrestrict"
                 #endif
                 str.replace( pos, 2, "." );

@@ -16,14 +16,16 @@ namespace ivio {
 struct zlib_reader {
     VarBufferedReader reader;
 
-    z_stream stream {
-        .next_in = Z_NULL,
-        .avail_in = 0,
-        .total_out = 0,
-        .zalloc = Z_NULL,
-        .zfree = Z_NULL,
-        .opaque = Z_NULL,
-    };
+    z_stream stream = []() {
+        auto stream = z_stream{};
+        stream.next_in   = Z_NULL;
+        stream.avail_in  = 0;
+        stream.total_out = 0;
+        stream.zalloc    = Z_NULL;
+        stream.zfree     = Z_NULL;
+        stream.opaque    = Z_NULL;
+        return stream;
+    }();
 
     zlib_reader(VarBufferedReader reader)
         : reader{std::move(reader)}
