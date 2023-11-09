@@ -1,9 +1,6 @@
-// -----------------------------------------------------------------------------------------------------
-// Copyright (c) 2006-2023, Knut Reinert & Freie Universität Berlin
-// Copyright (c) 2016-2023, Knut Reinert & MPI für molekulare Genetik
-// This file may be used, modified and/or redistributed under the terms of the 3-clause BSD-License
-// shipped with this file.
-// -----------------------------------------------------------------------------------------------------
+// SPDX-FileCopyrightText: 2006-2023, Knut Reinert & Freie Universität Berlin
+// SPDX-FileCopyrightText: 2016-2023, Knut Reinert & MPI für molekulare Genetik
+// SPDX-License-Identifier: BSD-3-Clause
 #include "../detail/bgzf_writer.h"
 #include "writer.h"
 
@@ -108,7 +105,7 @@ struct ivio::writer_base<ivio::bcf::writer>::pimpl {
         }()}
     {}
 
-    pimpl(std::ostream& output)
+    pimpl(std::ostream& /*output*/)
         : writer {[&]() -> Writers {
             //!TODO
             throw std::runtime_error("streams are currently not supported");

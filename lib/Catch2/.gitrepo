@@ -4,9 +4,9 @@
 ; git-subrepo command. See https://github.com/ingydotnet/git-subrepo#readme
 ;
 [subrepo]
-	remote = git@github.com:catchorg/Catch2.git
-	branch = v2.13.7
-	commit = c4e3767e265808590986d5db6ca1b5532a7f3d13
-	parent = 2685d18af1d8155b5dff02fb5010a5fbe9a3ed89
+	remote = https://github.com/catchorg/Catch2
+	branch = v3.4.0
+	commit = 6e79e682b726f524310d55dec8ddac4e9c52fb5f
+	parent = a8455e2249dc86d2f0c6450cad9acf40670be370
 	method = merge
-	cmdver = 0.4.5
+	cmdver = 0.4.6

@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2006-2023, Knut Reinert & Freie Universität Berlin
+# SPDX-FileCopyrightText: 2016-2023, Knut Reinert & MPI für molekulare Genetik
+# SPDX-License-Identifier: CC0-1.0
+
 name: "Coverage"
 
 on:
@@ -32,7 +36,7 @@ jobs:
             cc: "gcc-13"
             gcov: "gcov-13"
             build_type: Debug
-            brew_pkgs: gcc@13 lcov
+            brew_pkgs: gcc@13
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v3
@@ -46,7 +50,7 @@ jobs:
           echo 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"' >> ${HOME}/.activate_brew
           eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
           sudo apt-get update -y
-          sudo apt-get install -y build-essential libfmt-dev
+          sudo apt-get install -y build-essential libfmt-dev lcov
           brew install --force-bottle zlib boost cmake fmt pkg-config ${{ matrix.brew_pkgs }}
           ${{ matrix.cxx }} --version
 

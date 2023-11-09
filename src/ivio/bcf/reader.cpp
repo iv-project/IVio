@@ -1,9 +1,6 @@
-// -----------------------------------------------------------------------------------------------------
-// Copyright (c) 2006-2023, Knut Reinert & Freie Universität Berlin
-// Copyright (c) 2016-2023, Knut Reinert & MPI für molekulare Genetik
-// This file may be used, modified and/or redistributed under the terms of the 3-clause BSD-License
-// shipped with this file.
-// -----------------------------------------------------------------------------------------------------
+// SPDX-FileCopyrightText: 2006-2023, Knut Reinert & Freie Universität Berlin
+// SPDX-FileCopyrightText: 2016-2023, Knut Reinert & MPI für molekulare Genetik
+// SPDX-License-Identifier: BSD-3-Clause
 #include "../detail/bgzf_reader.h"
 #include "../detail/bgzf_mt_reader.h"
 #include "../detail/buffered_reader.h"
@@ -313,12 +310,12 @@ struct reader_base<bcf::reader>::pimpl {
                 auto a = buffer.readAny();
                 std::visit(overloaded{
                     [](std::nullptr_t) {},
-                    [](int32_t v) {},
-                    [](float v) {},
-                    [](char v) {},
-                    [](std::vector<int32_t> const& v) {},
-                    [](std::vector<float> const& v) {},
-                    [](std::string_view v) {}
+                    [](int32_t) {},
+                    [](float) {},
+                    [](char) {},
+                    [](std::vector<int32_t> const&) {},
+                    [](std::vector<float> const&) {},
+                    [](std::string_view) {}
                 }, a);
             }
         });

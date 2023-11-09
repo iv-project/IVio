@@ -1,9 +1,6 @@
-// -----------------------------------------------------------------------------------------------------
-// Copyright (c) 2006-2023, Knut Reinert & Freie Universität Berlin
-// Copyright (c) 2016-2023, Knut Reinert & MPI für molekulare Genetik
-// This file may be used, modified and/or redistributed under the terms of the 3-clause BSD-License
-// shipped with this file.
-// -----------------------------------------------------------------------------------------------------
+// SPDX-FileCopyrightText: 2006-2023, Knut Reinert & Freie Universität Berlin
+// SPDX-FileCopyrightText: 2016-2023, Knut Reinert & MPI für molekulare Genetik
+// SPDX-License-Identifier: BSD-3-Clause
 #pragma once
 
 #include "buffered_writer.h"
@@ -19,14 +16,16 @@ template <writer_c writer>
 struct zlib_writer_impl {
     writer file;
 
-    z_stream stream {
-        .next_in = Z_NULL,
-        .avail_in = 0,
-        .total_out = 0,
-        .zalloc = Z_NULL,
-        .zfree = Z_NULL,
-        .opaque = Z_NULL,
-    };
+    z_stream stream = []() {
+        auto stream = z_stream{};
+        stream.next_in   = Z_NULL;
+        stream.avail_in  = 0;
+        stream.total_out = 0;
+        stream.zalloc    = Z_NULL;
+        stream.zfree     = Z_NULL;
+        stream.opaque    = Z_NULL;
+        return stream;
+    }();
 
     zlib_writer_impl(writer&& name)
         : file{std::move(name)}
