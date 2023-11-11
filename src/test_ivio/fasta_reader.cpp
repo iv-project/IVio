@@ -55,6 +55,76 @@ TEST_CASE("reading fasta files", "[fasta][reader]") {
         CHECK(expected == vec);
     }
 
+    SECTION("close a reader") {
+        auto ss = std::stringstream{test_data};
+        auto reader = ivio::fasta::reader{{ss}};
+        reader.close();
+    }
+
+    SECTION("Tell and Seek over FASTA entries over a file") {
+        auto recordPositions = std::vector<size_t>{};
+        auto reader = ivio::fasta::reader{{tmp / "file.fa"}};
+        recordPositions.push_back(reader.tell());
+        for ([[maybe_unused]] auto r : reader) {
+            recordPositions.push_back(reader.tell());
+        }
+
+        for (auto p : {1, 0, 2, 0, 1, 2, 2, 2, 0, 0, 0, 1, 1, 2, 1, 0}) {
+            reader.seek(recordPositions[p]);
+            auto v = reader.next();
+            REQUIRE(v);
+            CHECK(*v == static_cast<ivio::fasta::record_view>(expected[p]));
+        }
+    }
+
+    SECTION("Tell and Seek over FASTA entries over a stream") {
+        auto recordPositions = std::vector<size_t>{};
+        auto fs = std::ifstream{tmp / "file.fa", std::ios::binary};
+        auto reader = ivio::fasta::reader{{fs}};
+        recordPositions.push_back(reader.tell());
+        for ([[maybe_unused]] auto r : reader) {
+            recordPositions.push_back(reader.tell());
+        }
+        REQUIRE(recordPositions.size() == 4);
+
+        for (auto p : {1, 0, 2, 0, 1, 2, 2, 2, 0, 0, 0, 1, 1, 2, 1, 0}) {
+            reader.seek(recordPositions[p]);
+            auto v = reader.next();
+            REQUIRE(v);
+            CHECK(*v == static_cast<ivio::fasta::record_view>(expected[p]));
+        }
+    }
+
+    //!TODO !Currently not working
+    if (false) {
+    SECTION("Tell and Seek over FASAT entries, compatible with faidx") {
+        auto recordPositions = std::vector<ivio::faidx::record>{};
+//        auto fs = std::ifstream{tmp / "file.fa"};
+//        auto reader = ivio::fasta::reader{{fs}};
+        auto reader = ivio::fasta::reader{{tmp / "file.fa"}};
+        recordPositions.push_back(reader.tell_faidx());
+        for ([[maybe_unused]] auto r : reader) {
+            recordPositions.push_back(reader.tell_faidx());
+        }
+        REQUIRE(recordPositions.size() == 4);
+
+        for (auto p : {1, 0, 2, 0, 1, 2, 2, 2, 0, 0, 0, 1, 1, 2, 1, 0}) {
+            reader.seek_faidx(recordPositions[p]);
+            auto v = reader.next();
+            REQUIRE(v);
+            CHECK(*v == static_cast<ivio::fasta::record_view>(expected[p]));
+        }
+    }
+    }
+
+    SECTION("Read from std::stringstream") {
+        auto ss = std::stringstream{test_data};
+        auto reader = ivio::fasta::reader{{ss}};
+        auto vec = std::vector(begin(reader), end(reader));
+        static_assert(std::same_as<decltype(vec), decltype(expected)>, "vec and expected should have the exact same type");
+        CHECK(expected == vec);
+    }
+
     SECTION("cleanup - deleting temp folder") {
         std::filesystem::remove_all(tmp);
     }
