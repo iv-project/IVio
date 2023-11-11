@@ -80,9 +80,11 @@ public:
     }
 
     auto tell() const -> size_t requires Seekable<Reader> {
-        return reader.tell();
+        return reader.tell() - buf.size() + inPos;
     }
     void seek(size_t offset) requires Seekable<Reader> {
+        buf.clear();
+        inPos = 0;
         return reader.seek(offset);
     }
 

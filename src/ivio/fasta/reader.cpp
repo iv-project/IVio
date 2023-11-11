@@ -83,7 +83,6 @@ auto reader::next() -> std::optional<record_view> {
         lastUsed = s2;
     }
 
-
     return record_view {
         .id  = ureader.string_view(0, endId),
         .seq = s,

@@ -28,7 +28,7 @@ public:
     auto operator=(stream_reader&&) -> stream_reader& = delete;
 
     size_t read(std::ranges::sized_range auto&& range) const {
-        stream.read(&*std::ranges::begin(range), std::ranges::size(range));
+        stream.readsome(&*std::ranges::begin(range), std::ranges::size(range));
         return stream.gcount();
     }
 
