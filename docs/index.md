@@ -36,7 +36,7 @@ Each file type consist of different parts. Here we discuss it for the fasta form
  - `fasta::record_view`
 
 ## Integration CMake
-Easiest way to use this repository is to clone this as a subrepo into your project, for example to
+Easiest way to use this repository is to clone this as a sub-repo into your project, for example to
 `lib/IVio`, and then edit your `CMakeLists.txt`:
 
 ```cmake
@@ -52,5 +52,5 @@ You can now happily use IVio
 ## Example Code
 Reading a fasta file:
 ```c++
-{% include-markdown "snippets/simple_example.cpp" %}
+{% include-markdown "snippets/simple_example.cpp" start="CC0-1.0" %}
 ```
