@@ -31,7 +31,7 @@ struct record {
 
 ## Reader (`reader`, `reader::config`) { #markdown data-toc-label="Reader" }
 The `ivio::fasta::reader` accepts a `ivio::fasta::reader::config` object for initialization. It initializes an object
-that enables you to iterate over the records of a file. It is is for-range compatible, meaning it fulfils c++ concepts of  [range](https://en.cppreference.com/w/cpp/ranges/range) and [LegacyInputIterator](https://en.cppreference.com/w/cpp/named_req/InputIterator).
+that enables you to iterate over the records of a file. It is is for-range compatible, meaning it fulfills c++ concepts of  [range](https://en.cppreference.com/w/cpp/ranges/range) and [LegacyInputIterator](https://en.cppreference.com/w/cpp/named_req/InputIterator).
 When looping over a reader it returns `record_view` objects that are only valid until next record is being requested from the reader.
 To get ownership of the data, it is required to create an object of type `record`.
 
@@ -46,7 +46,7 @@ struct ivio::fasta::reader::config {
 };
 ```
 
-Overview of the memberfunctions of `ivio::fasta::reader`
+Overview of the member functions of `ivio::fasta::reader`
 ```c++
 struct ivio::fasta::reader {
     /*...*/
@@ -80,7 +80,7 @@ In this example a file is being opened and print to command line
 {% include-markdown "snippets/fasta_example_01.cpp.out" %}
 ```
 ### Example - Copying a file
-In this example the data is read from the standard input and writen to standard output
+In this example the data is read from the standard input and written to standard output
 ```c++
 {% include-markdown "snippets/fasta_example_02.cpp" start="CC0-1.0" %}
 ```
