@@ -213,7 +213,7 @@ struct reader_base<bcf::reader>::pimpl {
             throw std::runtime_error("faulty bcf header");
         }
 
-        auto tableHeader = std::string_view{ptr, txt_len-s};
+        auto tableHeader = std::string_view{ptr, txt_len-s-2};
 #if __clang__ //!WORKAROUND for at least clang15, std::views::split is not working
         {
             size_t start = 0;
