@@ -222,7 +222,7 @@ struct reader_base<bcf::reader>::pimpl {
                 genotypes.emplace_back(tableHeader.begin() + start, tableHeader.begin() + pos);
                 start = pos+1;
             }
-            genotypes.emplace_back(tableHeader.begin() + start);
+            genotypes.emplace_back(tableHeader.begin() + start, tableHeader.end());
         }
 #else
         for (auto v : std::views::split(tableHeader, '\t')) {
