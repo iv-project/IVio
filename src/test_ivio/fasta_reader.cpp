@@ -395,3 +395,58 @@ TEST_CASE("reading large fasta files with lfcr line ending", "[fasta][reader][la
         std::filesystem::remove_all(tmp);
     }
 }
+
+TEST_CASE("reading compressed fasta files", "[fasta][reader][gz][short]") {
+    auto tmp = std::filesystem::temp_directory_path() / "ivio_test";
+    std::filesystem::create_directory(tmp);
+
+    auto test_data = []() -> std::string {
+        auto buffer = std::vector<uint8_t> {
+            0x1f,0x8b,0x08,0x00,0x00,0x00,0x00,0x00,0x00,0x03,0x2d,0x8c,0x4b,0x0a,0xc3,0x30,
+            0x0c,0x05,0xf7,0xef,0x14,0x3a,0x89,0x41,0x78,0x21,0xf2,0x41,0x9b,0x18,0xba,0x16,
+            0x8d,0x70,0x0d,0x71,0x0c,0xc1,0xb9,0x7f,0x9a,0xa6,0xab,0xe1,0xc1,0xbc,0x09,0x03,
+            0x59,0xa5,0xec,0x7b,0xab,0xe5,0x4d,0xab,0x75,0x03,0x47,0x41,0xe2,0x08,0x49,0x8c,
+            0x28,0xe9,0xd9,0x08,0x4b,0xab,0x4e,0xad,0x7f,0xfc,0x78,0x34,0x51,0x85,0x8a,0x62,
+            0x9c,0x66,0x84,0x97,0x97,0x63,0xa5,0x7a,0x6e,0xbd,0x6c,0x65,0xf7,0x7f,0x48,0x32,
+            0x2c,0x1b,0x3a,0xcb,0x8f,0xf9,0x4b,0x1e,0x27,0xe8,0xfd,0xc4,0x05,0xa3,0xd4,0xfe,
+            0x1c,0x7a,0x00,0x00,0x00
+        };
+        auto r = std::string{};
+        r.resize(buffer.size());
+        memcpy(r.data(), buffer.data(), buffer.size());
+        return r;
+    }();
+
+
+    auto expected = std::vector<ivio::fasta::record> {
+        ivio::fasta::record{.id = "I am genomic data",    .seq = "ACGTACGTACGTACGT"},
+        ivio::fasta::record{.id = "Some other data",      .seq = "GNNNGNJKL"},
+        ivio::fasta::record{.id = "Weird multiline data", .seq = "AGgagatAGagagAGAJKNNNN"},
+    };
+
+    SECTION("prepare, write the test data") {
+        auto ofs = std::ofstream{tmp / "file.fa.gz", std::ios::binary};
+        ofs.write(test_data.data(), test_data.size());
+        ofs.close();
+    }
+
+    SECTION("Read from std::filesystem::path") {
+        auto reader = ivio::fasta::reader{{tmp / "file.fa.gz"}};
+        auto vec = std::vector(begin(reader), end(reader));
+        static_assert(std::same_as<decltype(vec), decltype(expected)>, "vec and expected should have the exact same type");
+        CHECK(expected == vec);
+    }
+
+    SECTION("Read from std::ifstream") {
+        auto fs = std::ifstream{tmp / "file.fa.gz"};
+        auto reader = ivio::fasta::reader{{.input = fs, .compressed = true}};
+        auto vec = std::vector(begin(reader), end(reader));
+        static_assert(std::same_as<decltype(vec), decltype(expected)>, "vec and expected should have the exact same type");
+        CHECK(expected == vec);
+    }
+
+
+    SECTION("cleanup - deleting temp folder") {
+        std::filesystem::remove_all(tmp);
+    }
+}
