@@ -4,8 +4,9 @@
 #pragma once
 
 #include "fasta/reader.h"
-#include "faidx/reader.h"
 #include "fasta/writer.h"
+#include "faidx/reader.h"
+#include "fastq/reader.h"
 #include "sam/reader.h"
 #include "sam/writer.h"
 #include "vcf/reader.h"

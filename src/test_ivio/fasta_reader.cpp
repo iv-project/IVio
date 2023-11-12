@@ -6,6 +6,8 @@
 #include <fstream>
 #include <ivio/ivio.h>
 
+#include "generateSequence.h"
+
 TEST_CASE("reading fasta files", "[fasta][reader]") {
     auto tmp = std::filesystem::temp_directory_path() / "ivio_test";
     std::filesystem::create_directory(tmp);
@@ -122,15 +124,6 @@ TEST_CASE("reading fasta files", "[fasta][reader]") {
     SECTION("cleanup - deleting temp folder") {
         std::filesystem::remove_all(tmp);
     }
-}
-
-static auto generateSequence(size_t size) -> std::string {
-    auto s = std::string{};
-    s.reserve(size);
-    while (s.size() < size) {
-        s = s + static_cast<char>(rand() % 26 + 'a');
-    }
-    return s;
 }
 
 TEST_CASE("reading large fasta files", "[fasta][reader][large]") {
