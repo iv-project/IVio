@@ -69,11 +69,18 @@ auto reader::next() -> std::optional<record_view> {
 
     auto startSeq = endId+1;
 
+    bool lfcrEncoding = false;
+    if (endId > 0) {
+        if (ureader.string_view(endId-1, endId)[0] == '\r') {
+            lfcrEncoding = true;
+            endId -= 1;
+        }
+    }
+
     pimpl_->faidxView.offset = tell() + startSeq;
 
     // convert into dense string representation
     size_t firstLineLength = std::numeric_limits<size_t>::max();
-    bool lfcrEncoding = false;
     s.clear();
     {
         auto s2 = startSeq;
@@ -82,7 +89,6 @@ auto reader::next() -> std::optional<record_view> {
             s2 = ureader.readUntil('\n', s1);
             s += ureader.string_view(s1, s2);
             if (s.size() > 0 && s.back() == '\r') {
-                lfcrEncoding = true;
                 s.pop_back();
             }
             firstLineLength = std::min(firstLineLength, s.size());
@@ -131,11 +137,16 @@ auto reader::tell_faidx() const -> faidx::record {
 }
 
 void reader::seek_faidx(faidx::record const& faidx) {
-    if (faidx.offset < faidx.id.size() + 2) {
+    if (faidx.linebases + 1 != faidx.linewidth
+        && faidx.linebases + 2 != faidx.linewidth) {
+        throw std::runtime_error{"FAIDX record expects an unknown line ending format"};
+    }
+    bool lfcrEnding = (faidx.linebases + 2 == faidx.linewidth);
+    if (faidx.offset < faidx.id.size() + 2 + (lfcrEnding?1:0)) {
         throw std::runtime_error("Invalid faidx seek index, offset: " + std::to_string(faidx.offset) + ", id size: " + faidx.id);
     }
 
-    seek(faidx.offset - faidx.id.size() - 2);
+    seek(faidx.offset - faidx.id.size() - 2 - (lfcrEnding?1:0));
 }
 
 }

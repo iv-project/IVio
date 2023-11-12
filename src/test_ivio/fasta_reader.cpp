@@ -193,7 +193,9 @@ TEST_CASE("reading large fasta files", "[fasta][reader][large]") {
             recordPositions.push_back(reader.tell());
         }
 
-        for (auto p : {1, 0, 2, 0, 1, 2, 2, 2, 0, 0, 0, 1, 1, 2, 1, 0}) {
+        srand(0);
+        for (size_t i{0}; i < 10'000; ++i) {
+            auto p = rand() % 1024;
             reader.seek(recordPositions[p]);
             auto v = reader.next();
             REQUIRE(v);
@@ -321,7 +323,9 @@ TEST_CASE("reading large fasta files with lfcr line ending", "[fasta][reader][la
             recordPositions.push_back(reader.tell());
         }
 
-        for (auto p : {1, 0, 2, 0, 1, 2, 2, 2, 0, 0, 0, 1, 1, 2, 1, 0}) {
+        srand(0);
+        for (size_t i{0}; i < 10'000; ++i) {
+            auto p = rand() % 1024;
             reader.seek(recordPositions[p]);
             auto v = reader.next();
             REQUIRE(v);
@@ -374,6 +378,16 @@ TEST_CASE("reading large fasta files with lfcr line ending", "[fasta][reader][la
             .linewidth = 81,
         };
         CHECK_THROWS(reader.seek_faidx(invalid_faidx_record));
+
+        auto invalid_faidx_record_lineending = ivio::faidx::record {
+            .id        = "some id",
+            .length    = 10,
+            .offset    = 2,
+            .linebases = 80,
+            .linewidth = 83,
+        };
+        CHECK_THROWS(reader.seek_faidx(invalid_faidx_record_lineending));
+
     }
 
     SECTION("Read from std::stringstream") {
