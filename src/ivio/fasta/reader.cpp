@@ -20,7 +20,8 @@ struct reader_base<fasta::reader>::pimpl {
     VarBufferedReader ureader;
     size_t lastUsed{};
     std::string s;
-    faidx::record faidx_record{{}, 0, 0, 0, 0};
+
+    faidx::record_view faidxView;
 
     pimpl(std::filesystem::path file, bool)
         : ureader {[&]() -> VarBufferedReader {
@@ -68,7 +69,11 @@ auto reader::next() -> std::optional<record_view> {
 
     auto startSeq = endId+1;
 
+    pimpl_->faidxView.offset = tell() + startSeq;
+
     // convert into dense string representation
+    size_t firstLineLength = std::numeric_limits<size_t>::max();
+    bool lfcrEncoding = false;
     s.clear();
     {
         auto s2 = startSeq;
@@ -76,12 +81,22 @@ auto reader::next() -> std::optional<record_view> {
             auto s1 = s2;
             s2 = ureader.readUntil('\n', s1);
             s += ureader.string_view(s1, s2);
+            if (s.size() > 0 && s.back() == '\r') {
+                lfcrEncoding = true;
+                s.pop_back();
+            }
+            firstLineLength = std::min(firstLineLength, s.size());
             if (!ureader.eof(s2)) {
                 s2 += 1;
             }
         } while (!ureader.eof(s2) and ureader.string_view(s2, s2+1)[0] != '>');
         lastUsed = s2;
     }
+
+    pimpl_->faidxView.id        = ureader.string_view(0, endId);
+    pimpl_->faidxView.length    = s.size();
+    pimpl_->faidxView.linebases = firstLineLength;
+    pimpl_->faidxView.linewidth = firstLineLength + 1 + (lfcrEncoding?1:0);
 
     return record_view {
         .id  = ureader.string_view(0, endId),
@@ -112,27 +127,15 @@ void reader::seek(size_t offset) {
 
 auto reader::tell_faidx() const -> faidx::record {
     assert (pimpl_);
-    return pimpl_->faidx_record;
+    return pimpl_->faidxView;
 }
 
 void reader::seek_faidx(faidx::record const& faidx) {
-    assert (pimpl_);
-
-    auto& ureader  = pimpl_->ureader;
-
-    size_t numberOfLines = faidx.length / faidx.linebases;
-
-    if (faidx.length % faidx.linebases != 0) { // last line is not full
-        numberOfLines += 1;
+    if (faidx.offset < faidx.id.size() + 2) {
+        throw std::runtime_error("Invalid faidx seek index, offset: " + std::to_string(faidx.offset) + ", id size: " + faidx.id);
     }
 
-    size_t numberOfNewLineCharacters = numberOfLines * (faidx.linewidth - faidx.linebases);
-    size_t offset = faidx.offset + numberOfNewLineCharacters + faidx.length;
-    if (!ureader.eof(offset - ureader.tell())) {
-        seek(offset);
-    } else {
-        seek(0);
-    }
+    seek(faidx.offset - faidx.id.size() - 2);
 }
 
 }

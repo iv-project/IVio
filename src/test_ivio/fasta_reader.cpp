@@ -95,18 +95,13 @@ TEST_CASE("reading fasta files", "[fasta][reader]") {
         }
     }
 
-    //!TODO !Currently not working
-    if (false) {
     SECTION("Tell and Seek over FASAT entries, compatible with faidx") {
         auto recordPositions = std::vector<ivio::faidx::record>{};
-//        auto fs = std::ifstream{tmp / "file.fa"};
-//        auto reader = ivio::fasta::reader{{fs}};
         auto reader = ivio::fasta::reader{{tmp / "file.fa"}};
-        recordPositions.push_back(reader.tell_faidx());
         for ([[maybe_unused]] auto r : reader) {
             recordPositions.push_back(reader.tell_faidx());
         }
-        REQUIRE(recordPositions.size() == 4);
+        REQUIRE(recordPositions.size() == 3);
 
         for (auto p : {1, 0, 2, 0, 1, 2, 2, 2, 0, 0, 0, 1, 1, 2, 1, 0}) {
             reader.seek_faidx(recordPositions[p]);
@@ -114,7 +109,6 @@ TEST_CASE("reading fasta files", "[fasta][reader]") {
             REQUIRE(v);
             CHECK(*v == static_cast<ivio::fasta::record_view>(expected[p]));
         }
-    }
     }
 
     SECTION("Read from std::stringstream") {
@@ -227,18 +221,13 @@ TEST_CASE("reading large fasta files", "[fasta][reader][large]") {
         }
     }
 
-    //!TODO !Currently not working
-    if (false) {
     SECTION("Tell and Seek over FASAT entries, compatible with faidx") {
         auto recordPositions = std::vector<ivio::faidx::record>{};
-//        auto fs = std::ifstream{tmp / "file.fa"};
-//        auto reader = ivio::fasta::reader{{fs}};
         auto reader = ivio::fasta::reader{{tmp / "file.fa"}};
-        recordPositions.push_back(reader.tell_faidx());
         for ([[maybe_unused]] auto r : reader) {
             recordPositions.push_back(reader.tell_faidx());
         }
-        REQUIRE(recordPositions.size() == 1025);
+        REQUIRE(recordPositions.size() == 1024);
 
         srand(0);
         for (size_t i{0}; i < 10'000; ++i) {
@@ -248,7 +237,15 @@ TEST_CASE("reading large fasta files", "[fasta][reader][large]") {
             REQUIRE(v);
             CHECK(*v == static_cast<ivio::fasta::record_view>(expected[p]));
         }
-    }
+
+        auto invalid_faidx_record = ivio::faidx::record {
+            .id        = "some id",
+            .length    = 10,
+            .offset    = 2,
+            .linebases = 80,
+            .linewidth = 81,
+        };
+        CHECK_THROWS(reader.seek_faidx(invalid_faidx_record));
     }
 
     SECTION("Read from std::stringstream") {
