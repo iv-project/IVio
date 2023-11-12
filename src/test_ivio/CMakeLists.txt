@@ -9,6 +9,7 @@ project(test_ivio)
 add_executable(${PROJECT_NAME}
     fasta_reader.cpp
     fasta_writer.cpp
+    faidx_reader.cpp
     fastq_reader.cpp
     sam_reader.cpp
     sam_writer.cpp

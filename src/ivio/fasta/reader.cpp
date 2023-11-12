@@ -35,9 +35,8 @@ struct reader_base<fasta::reader>::pimpl {
         : ureader {[&]() -> VarBufferedReader {
             if (!compressed) {
                 return stream_reader{file};
-            } else {
-                return zlib_reader{stream_reader{file}};
             }
+            return zlib_reader{stream_reader{file}};
         }()}
     {}
 };

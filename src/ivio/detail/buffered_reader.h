@@ -83,9 +83,9 @@ public:
         return reader.tell() - buf.size() + inPos;
     }
     void seek(size_t offset) requires Seekable<Reader> {
-        buf.clear();
         inPos = 0;
-        return reader.seek(offset);
+        buf.clear();
+        reader.seek(offset);
     }
 
 };
