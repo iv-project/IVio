@@ -13,3 +13,4 @@ endfunction()
 
 test_snippet("read_vcf.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/data/vcf.vcf")
 test_snippet("fasta_example_01.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/data/demo.fa")
+test_snippet("fastq_example_01.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/data/demo.fq")

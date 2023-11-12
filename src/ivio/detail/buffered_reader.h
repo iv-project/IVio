@@ -83,9 +83,9 @@ public:
         return reader.tell() - buf.size() + inPos;
     }
     void seek(size_t offset) requires Seekable<Reader> {
-        buf.clear();
         inPos = 0;
-        return reader.seek(offset);
+        buf.clear();
+        reader.seek(offset);
     }
 
 };
@@ -121,7 +121,8 @@ struct VarBufferedReader {
             if constexpr (Seekable<T>) {
                 return sptr->tell();
             }
-            throw std::runtime_error("this file format does not support tell/seek(1)");
+            return 0;
+//            throw std::runtime_error("this file format does not support tell/seek(1)");
         };
         seek = [sptr](size_t offset) {
             if constexpr (Seekable<T>) {

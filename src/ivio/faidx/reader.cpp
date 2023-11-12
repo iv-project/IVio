@@ -44,9 +44,8 @@ struct reader_base<faidx::reader>::pimpl {
         : ureader {[&]() -> VarBufferedReader {
             if (!compressed) {
                 return stream_reader{file};
-            } else {
-                return zlib_reader{stream_reader{file}};
             }
+            return zlib_reader{stream_reader{file}};
         }()}
     {}
 };
@@ -89,7 +88,6 @@ auto reader::next() -> std::optional<record_view> {
     auto& ureader  = pimpl_->ureader;
     auto& lastUsed = pimpl_->lastUsed;
 
-    if (ureader.eof(lastUsed)) return std::nullopt;
     ureader.dropUntil(lastUsed);
 
     auto res = readLine<5, '\t'>(*pimpl_);

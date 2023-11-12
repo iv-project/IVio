@@ -17,27 +17,6 @@
 #include <optional>
 #include <ranges>
 
-// Implementation taken from cpp reference and adjusted: https://en.cppreference.com/w/cpp/numeric/bit_cast
-template <class To, class From>
-std::enable_if_t<
-    sizeof(To) == sizeof(From) &&
-    std::is_trivially_copyable_v<From> &&
-    std::is_trivially_copyable_v<To>,
-    To>
-// constexpr support needs compiler magic
-bit_cast(const From& src) noexcept {
-#if __GNUC__ == 10 //!WORKAROUND missing bit_cast in g++10
-    static_assert(std::is_trivially_constructible_v<To>,
-        "This implementation additionally requires "
-        "destination type to be trivially constructible");
-    To dst;
-    std::memcpy(&dst, &src, sizeof(To));
-    return dst;
-#else
-    return std::bit_cast<To>(src);
-#endif
-}
-
 namespace ivio {
 
 namespace {
@@ -93,7 +72,7 @@ struct bcf_buffer {
     auto readFloat() -> std::optional<float> {
        auto q     = ivio::bgzfUnpack<float>(iter);
        iter += 4;
-       if (q == bit_cast<float>(uint32_t{0b0111'1111'1000'0000'0000'0000'0001})) return std::nullopt;
+       if (q == std::bit_cast<float>(uint32_t{0b0111'1111'1000'0000'0000'0000'0001})) return std::nullopt;
        return {q};
     }
 
@@ -234,7 +213,7 @@ struct reader_base<bcf::reader>::pimpl {
             throw std::runtime_error("faulty bcf header");
         }
 
-        auto tableHeader = std::string_view{ptr, txt_len-s};
+        auto tableHeader = std::string_view{ptr, txt_len-s-2};
 #if __clang__ //!WORKAROUND for at least clang15, std::views::split is not working
         {
             size_t start = 0;
@@ -243,11 +222,11 @@ struct reader_base<bcf::reader>::pimpl {
                 genotypes.emplace_back(tableHeader.begin() + start, tableHeader.begin() + pos);
                 start = pos+1;
             }
-            genotypes.emplace_back(tableHeader.begin() + start);
+            genotypes.emplace_back(tableHeader.begin() + start, tableHeader.end());
         }
 #else
         for (auto v : std::views::split(tableHeader, '\t')) {
-    #if __GNUC__ == 11  || __GNUC__ == 10 // !WORKAROUND for gcc11 and gcc10
+    #if __GNUC__ == 11 // !WORKAROUND for gcc11
                 auto cv = std::ranges::common_view{v};
                 genotypes.emplace_back(cv.begin(), cv.end());
     #else

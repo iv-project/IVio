@@ -7,6 +7,7 @@ nav:
   - index.md
   - C++ API-Reference:
     - formats-fasta.md
+    - formats-fastq.md
     - formats-vcf.md
 use_directory_urls: false
 repo_url: https://github.com/iv-project/IVio

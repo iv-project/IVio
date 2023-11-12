@@ -90,13 +90,10 @@ void writer::write(record_view record) {
     if (qual) {
         auto oldSize = ss.size();
         ss.resize(oldSize + 256); // can only convert floats that fit into 256characters
-#if __GNUC__ != 10 //!WORKAROUND std::to_chars for float is not working for gcc 10
         auto [ptr, ec] = std::to_chars(ss.data() + oldSize, ss.data() + ss.size(), *qual);
         if (ec == std::errc()) {
             ss.resize(ptr - ss.data());
-        } else
-#endif
-        {
+        } else {
             // Something didn't work, fall back to slow std::stringstream implementation
             ss.resize(oldSize);
             auto str = std::stringstream{};
