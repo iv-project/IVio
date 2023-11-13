@@ -8,10 +8,14 @@
 #include <array>
 #include <cstdint>
 #include <cstring>
-#include <fcntl.h>
 #include <filesystem>
 #include <ranges>
 #include <string>
+#include <tuple>
+
+#if (defined(unix) || defined(__unix__) || defined(__unix))
+
+#include <fcntl.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <tuple>
@@ -79,6 +83,40 @@ public:
     }
 };
 
-static_assert(Readable<file_reader>);
-static_assert(Seekable<file_reader>);
 }
+#else
+
+#include <fstream>
+
+#include "stream_reader.h"
+
+namespace ivio {
+
+class file_reader {
+protected:
+    std::ifstream ifs;
+    stream_reader reader;
+public:
+    file_reader(std::filesystem::path const& path)
+        : ifs{path, std::ios::binary}
+        , reader{ifs}
+    {}
+
+    file_reader() = delete;
+    file_reader(file_reader const&) = delete;
+    file_reader(file_reader&& _other) noexcept = default;
+
+    ~file_reader() = default;
+    auto operator=(file_reader const&) -> file_reader& = delete;
+    auto operator=(file_reader&&) -> file_reader& = delete;
+
+    size_t read(std::span<char> range) const { return reader.read(range); }
+    void seek(size_t offset) { reader.seek(offset); }
+    auto tell() const -> size_t { return reader.tell(); }
+};
+
+}
+#endif
+
+static_assert(ivio::Readable<ivio::file_reader>);
+static_assert(ivio::Seekable<ivio::file_reader>);
