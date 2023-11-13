@@ -3,6 +3,9 @@
 // SPDX-License-Identifier: BSD-3-Clause
 #pragma once
 
+#include "bam/reader.h"
+#include "bcf/reader.h"
+#include "bcf/writer.h"
 #include "fasta/reader.h"
 #include "fasta/writer.h"
 #include "faidx/reader.h"
@@ -11,5 +14,3 @@
 #include "sam/writer.h"
 #include "vcf/reader.h"
 #include "vcf/writer.h"
-#include "bcf/reader.h"
-#include "bcf/writer.h"
