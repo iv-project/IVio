@@ -12,6 +12,8 @@
 
 namespace ivio {
 
+#if !defined(__APPLE__)
+
 namespace bgzf_mt {
 
 template <typename Job>
@@ -212,6 +214,19 @@ struct bgzf_mt_reader {
         return size;
     }
 };
+
+#else
+
+struct bgzf_mt_reader : bgzf_reader {
+    bgzf_mt_reader(VarBufferedReader reader_, size_t threadNbr=1)
+        : bgzf_reader{std::move(reader_)}
+    {
+        (void)threadNbr;
+    }
+};
+
+
+#endif
 static_assert(Readable<bgzf_mt_reader>);
 
 }
