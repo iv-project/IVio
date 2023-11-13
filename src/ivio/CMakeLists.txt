@@ -26,5 +26,5 @@ target_include_directories(ivio
     $<INSTALL_INTERFACE:include>
 )
 target_link_libraries(ivio
-    ${ZLIB_LIBRARIES}
+    ZLIB::ZLIB
 )

@@ -19,5 +19,9 @@ jobs:
     runs-on: windows-2022
     timeout-minutes: 120
     steps:
+      - name: install zlib
+        run: |
+          vcpkg integrate install
+          vcpkg install zlib zlib:x64-windows
       - name: Standard IV-project testing
         uses: iv-project/IVaction/msvc-testing@v6
