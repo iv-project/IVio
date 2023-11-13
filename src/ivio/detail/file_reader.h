@@ -86,9 +86,9 @@ public:
 }
 #else
 
-#include <fstream>
-
 #include "stream_reader.h"
+
+#include <fstream>
 
 namespace ivio {
 

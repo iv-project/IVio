@@ -4,6 +4,7 @@
 #pragma once
 
 #include "file_writer.h"
+#include "portable_endian.h"
 
 #include <algorithm>
 #include <cassert>

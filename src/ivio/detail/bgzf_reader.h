@@ -6,6 +6,7 @@
 #include "buffered_reader.h"
 #include "file_reader.h"
 #include "mmap_reader.h"
+#include "portable_endian.h"
 #include "stream_reader.h"
 
 #include <algorithm>
