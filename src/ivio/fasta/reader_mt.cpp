@@ -42,19 +42,17 @@ struct reader_mt_pimpl {
     reader_mt_pimpl(std::filesystem::path file, bool)
         : reader {[&]() -> VarBufferedReader {
             if (file.extension() == ".gz") {
-                return zlib_reader{mmap_reader{file.c_str()}};
+                return zlib_reader{mmap_reader{file}};
             }
-            return mmap_reader{file.c_str()};
-            throw std::runtime_error("unknown file extension");
+            return mmap_reader{file};
         }()}
     {}
     reader_mt_pimpl(std::istream& file, bool compressed)
         : reader {[&]() -> VarBufferedReader {
             if (!compressed) {
                 return stream_reader{file};
-            } else {
-                return zlib_reader{stream_reader{file}};
             }
+            return zlib_reader{stream_reader{file}};
         }()}
     {}
 

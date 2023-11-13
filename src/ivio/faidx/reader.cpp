@@ -35,9 +35,9 @@ struct reader_base<faidx::reader>::pimpl {
     pimpl(std::filesystem::path file, bool)
         : ureader {[&]() -> VarBufferedReader {
             if (file.extension() == ".gz") {
-                return zlib_reader{mmap_reader{file.c_str()}};
+                return zlib_reader{mmap_reader{file}};
             }
-            return mmap_reader{file.c_str()};
+            return mmap_reader{file};
         }()}
     {}
     pimpl(std::istream& file, bool compressed)

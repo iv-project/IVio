@@ -36,7 +36,7 @@ struct reader_base<sam::reader>::pimpl {
 
     pimpl(std::filesystem::path file)
         : ureader {[&]() -> VarBufferedReader {
-            return mmap_reader{file.c_str()};
+            return mmap_reader{file};
         }()}
     {}
     pimpl(std::istream& file)

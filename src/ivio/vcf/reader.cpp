@@ -40,9 +40,9 @@ struct reader_base<vcf::reader>::pimpl {
     pimpl(std::filesystem::path file, bool)
         : ureader {[&]() -> VarBufferedReader {
             if (file.extension() == ".vcf") {
-                return mmap_reader{file.c_str()};
+                return mmap_reader{file};
             } else if (file.extension() == ".gz") {
-                return zlib_reader{mmap_reader{file.c_str()}};
+                return zlib_reader{mmap_reader{file}};
             }
             throw std::runtime_error("unknown file extension");
         }()}
