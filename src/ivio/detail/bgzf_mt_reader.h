@@ -12,7 +12,7 @@
 
 namespace ivio {
 
-#if !defined(__APPLE__)
+#if !defined(__APPLE__) && !defined(_WIN32)
 
 namespace bgzf_mt {
 
