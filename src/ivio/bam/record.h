@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 #pragma once
 
+#include <array>
 #include <cstddef>
 #include <optional>
 #include <ranges>

@@ -4,6 +4,7 @@
 #include "../detail/bgzf_writer.h"
 #include "writer.h"
 
+#include <array>
 #include <cassert>
 #include <cstddef>
 #include <variant>

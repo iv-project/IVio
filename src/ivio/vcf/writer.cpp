@@ -10,6 +10,7 @@
 
 #include <cassert>
 #include <charconv>
+#include <sstream>
 
 template <>
 struct ivio::writer_base<ivio::vcf::writer>::pimpl {
