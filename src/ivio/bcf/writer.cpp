@@ -92,7 +92,7 @@ struct bcf_buffer {
 template <>
 struct ivio::writer_base<ivio::bcf::writer>::pimpl {
     //!TODO support other writers
-    using Writers = std::variant<bgzf_file_writer>;
+    using Writers = std::variant<ivio::bgzf_file_writer>;
 
 
     Writers writer;
@@ -101,7 +101,7 @@ struct ivio::writer_base<ivio::bcf::writer>::pimpl {
 
     pimpl(std::filesystem::path output)
         : writer {[&]() -> Writers {
-            return bgzf_file_writer{output};
+            return ivio::bgzf_file_writer{output};
         }()}
     {}
 
