@@ -90,11 +90,14 @@ void writer::write(record_view record) {
 
     if (qual) {
         auto oldSize = ss.size();
+        #if !defined(__APPLE__)
         ss.resize(oldSize + 256); // can only convert floats that fit into 256characters
         auto [ptr, ec] = std::to_chars(ss.data() + oldSize, ss.data() + ss.size(), *qual);
         if (ec == std::errc()) {
             ss.resize(ptr - ss.data());
-        } else {
+        } else
+        #endif
+        {
             // Something didn't work, fall back to slow std::stringstream implementation
             ss.resize(oldSize);
             auto str = std::stringstream{};
