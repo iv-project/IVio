@@ -8,7 +8,7 @@ function(test_snippet file_base_name params)
     target_link_libraries(snippet_${file_base_name} ivio::ivio fmt::fmt)
 
     add_test (NAME test_snippet_${file_base_name}
-              COMMAND bash -c "$<TARGET_FILE:snippet_${file_base_name}> ${params} | diff - ${CMAKE_CURRENT_SOURCE_DIR}/${file_base_name}.out")
+              COMMAND bash -c "$<TARGET_FILE:snippet_${file_base_name}> ${params} | tr -d '\r' | diff - ${CMAKE_CURRENT_SOURCE_DIR}/${file_base_name}.out")
 endfunction()
 
 test_snippet("read_vcf.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/data/vcf.vcf")
