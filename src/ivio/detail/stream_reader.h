@@ -28,12 +28,7 @@ public:
     auto operator=(stream_reader&&) -> stream_reader& = delete;
 
     size_t read(std::ranges::sized_range auto&& range) const {
-        if (stream.fail()) return 0;
-        stream.read(&*std::ranges::begin(range), std::ranges::size(range));
-        if (stream.fail()) {
-            stream.clear();
-        }
-        return stream.gcount();
+        return stream.rdbuf()->sgetn(std::ranges::data(range), std::ranges::size(range));
     }
 
     auto tell() const -> size_t {

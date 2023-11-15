@@ -104,7 +104,10 @@ public:
 
     file_reader() = delete;
     file_reader(file_reader const&) = delete;
-    file_reader(file_reader&& _other) noexcept = default;
+    file_reader(file_reader&& _other) noexcept
+        : ifs{std::move(_other.ifs)}
+        , reader{ifs}
+    {}
 
     ~file_reader() = default;
     auto operator=(file_reader const&) -> file_reader& = delete;
