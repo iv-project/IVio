@@ -151,7 +151,8 @@ struct bgzf_reader {
 
     ~bgzf_reader() = default;
 
-    size_t read(std::ranges::sized_range auto&& range) {
+    size_t read(std::ranges::contiguous_range auto&& range) {
+        static_assert(std::same_as<std::ranges::range_value_t<decltype(range)>, char>);
         while(true) {
             auto [ptr, avail_in] = reader.read(18);
             if (avail_in == 0) return 0;

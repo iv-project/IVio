@@ -46,20 +46,21 @@ struct zlib_ng_reader_impl {
         zng_inflateEnd(&stream);
     }
 
-    size_t read(std::ranges::sized_range auto&& range) {
+    size_t read(std::ranges::contiguous_range auto&& range) {
+        static_assert(std::same_as<std::ranges::range_value_t<decltype(range)>, char>);
         while(true) {
             auto [ptr, avail_in] = file.read(range.size());
 
             stream.next_in  = (unsigned char*)(ptr);
             stream.avail_in = avail_in;
             stream.avail_out = range.size();
-            stream.next_out  = (unsigned char*)&*std::begin(range);
+            stream.next_out  = (unsigned char*)range.data();
             auto ret = zng_inflate(&stream, Z_NO_FLUSH);
             auto diff = avail_in - stream.avail_in;
 
             file.dropUntil(diff);
 
-            auto producedBytes = (size_t)(stream.next_out - (unsigned char*)&*std::begin(range));
+            auto producedBytes = (size_t)(stream.next_out - (unsigned char*)range.data());
             if (producedBytes > 0) {
                 return producedBytes;
             }

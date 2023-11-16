@@ -198,7 +198,8 @@ struct bgzf_mt_reader {
         jobs.finish();
     }
 
-    size_t read(std::ranges::sized_range auto&& range) {
+    size_t read(std::ranges::contiguous_range auto&& range) {
+        static_assert(std::same_as<std::ranges::range_value_t<decltype(range)>, char>);
         auto next = jobs.begin();
         if (!next) return 0; // abort, nothing todo, finished everything
         next->await();
