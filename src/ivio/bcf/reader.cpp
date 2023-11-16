@@ -21,8 +21,10 @@ namespace ivio {
 namespace {
 // helper type for the visitor #4
 template<class... Ts> struct overloaded : Ts... { using Ts::operator()...; };
-// explicit deduction guide (not needed as of C++20) //!WORKAROUND but at least clang15 needs it
+//!WORKAROUND clang15/16 need explicit deduction guides
+#if defined(__clang_major__) && __clang_major__ < 17
 template<class... Ts> overloaded(Ts...) -> overloaded<Ts...>;
+#endif
 
 struct bcf_buffer {
     char const* iter{};
@@ -213,7 +215,8 @@ struct reader_base<bcf::reader>::pimpl {
         }
 
         auto tableHeader = std::string_view{ptr, txt_len-s-2};
-#if __clang__ //!WORKAROUND for at least clang15, std::views::split is not working
+//!WORKAROUND clang15's split_view is not working
+#if __clang_major__ == 15
         {
             size_t start = 0;
             size_t pos = 0;

@@ -12,20 +12,30 @@ namespace ivio::detail {
 template <typename T>
 static auto convertTo(std::string_view view) {
     T value{}; //!Should not be initialized with {}, but gcc warns...
-    //!WORKAROUND missing std::from_chars in msvc
-    #if defined(_WIN32) || defined(__clang__)
-    std::stringstream ss;
-    ss << view;
-    ss >> value;
-    if (!ss.eof() || ss.fail()) {
-        throw std::runtime_error{"can't convert to T"};
-    }
+
+    //!WORKAROUND std::from_chars for float/double is missing from libc++
+    // libc++ does not define __cpp_lib_to_chars
+    #if defined(_LIBCPP_VERSION) && !defined(__cpp_lib_to_chars)
+    if constexpr (std::floating_point<T>)
     #else
-    auto result = std::from_chars(begin(view), end(view), value);
-    if (result.ec == std::errc::invalid_argument) {
-        throw std::runtime_error{"can't convert to T"};
-    }
+    if constexpr (false)
     #endif
+    {
+        std::stringstream ss;
+        ss << view;
+        ss >> value;
+        if (!ss.eof() || ss.fail()) {
+            throw std::runtime_error{"can't convert to T"};
+        }
+    }
+    else
+    {
+        auto result = std::from_chars(view.data(), view.data() + view.size(), value);
+        if (result.ec == std::errc::invalid_argument) {
+            throw std::runtime_error{"can't convert to T"};
+        }
+    }
+
     return value;
 }
 

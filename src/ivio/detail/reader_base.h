@@ -41,7 +41,7 @@ struct reader_base {
         }
     };
 
-    struct pimpl; //!WORKAROUND, this should be protected, but clang15 fails, see readLine
+    struct pimpl;
 protected:
 
     std::unique_ptr<pimpl> pimpl_;

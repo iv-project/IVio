@@ -90,7 +90,9 @@ void writer::write(record_view record) {
 
     if (qual) {
         auto oldSize = ss.size();
-        #if !defined(__APPLE__)
+        //!WORKAROUND std::from_chars for float/double is missing from libc++
+        // libc++ does not define __cpp_lib_to_chars
+        #if !defined(_LIBCPP_VERSION) || defined(__cpp_lib_to_chars)
         ss.resize(oldSize + 256); // can only convert floats that fit into 256characters
         auto [ptr, ec] = std::to_chars(ss.data() + oldSize, ss.data() + ss.size(), *qual);
         if (ec == std::errc()) {

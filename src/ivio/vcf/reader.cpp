@@ -66,7 +66,8 @@ struct reader_base<vcf::reader>::pimpl {
             auto start = 1;
             auto end = ureader.readUntil('\n', start);
             auto tableHeader = ureader.string_view(start, end);
-#if __clang__ //!WORKAROUND for at least clang15, std::views::split is not working
+//!WORKAROUND clang15's split_view is not working
+#if __clang_major__ == 15
         {
             size_t start = 0;
             size_t pos = 0;
