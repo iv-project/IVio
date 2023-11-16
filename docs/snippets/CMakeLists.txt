@@ -7,8 +7,9 @@ function(test_snippet file_base_name params)
     add_executable(snippet_${file_base_name} ${file_base_name})
     target_link_libraries(snippet_${file_base_name} ivio::ivio fmt::fmt)
 
-    add_test (NAME test_snippet_${file_base_name}
-              COMMAND bash -c "$<TARGET_FILE:snippet_${file_base_name}> ${params} | tr -d '\r' | diff - ${CMAKE_CURRENT_SOURCE_DIR}/${file_base_name}.out")
+    add_test(NAME test_snippet_${file_base_name} COMMAND bash -c "$<TARGET_FILE:snippet_${file_base_name}> ${params} > ${file_base_name}.run.out")
+    add_test(test_snippet_${file_base_name}_compare ${CMAKE_COMMAND} -E compare_files --ignore-eol ${file_base_name}.run.out ${CMAKE_CURRENT_SOURCE_DIR}/${file_base_name}.out)
+    set_tests_properties(test_snippet_${file_base_name}_compare PROPERTIES DEPENDS test_snippet_${file_base_name})
 endfunction()
 
 test_snippet("read_vcf.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/data/vcf.vcf")
