@@ -6,7 +6,9 @@
 #include <algorithm>
 #include <compare>
 #include <cstdint>
+#include <optional>
 #include <span>
+#include <string>
 
 namespace ivio {
 

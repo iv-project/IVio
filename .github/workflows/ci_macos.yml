@@ -29,7 +29,7 @@ jobs:
 
     steps:
       - name: Standard IV-project testing
-        uses: iv-project/IVaction/macos-testing@feat/more_options
+        uses: iv-project/IVaction/macos-testing@v6.2
         with:
           compiler: ${{ matrix.compiler }}
           threads: 3
