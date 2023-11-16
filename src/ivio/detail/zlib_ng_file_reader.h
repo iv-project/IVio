@@ -3,6 +3,8 @@
 // SPDX-License-Identifier: BSD-3-Clause
 #pragma once
 
+#if 0
+
 #include "buffered_reader.h"
 #include "file_reader.h"
 #include "mmap_reader.h"
@@ -73,3 +75,4 @@ struct zlib_ng_reader {
 
 static_assert(Readable<zlib_ng_reader>);
 }
+#endif

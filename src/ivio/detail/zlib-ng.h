@@ -1,5 +1,6 @@
 // SPDX-FileCopyrightText: 1995-2016 Jean-loup Gailly and Mark Adler
 // SPDX-License-Identifier: Zlib
+#if 0
 #ifndef ZNGLIB_H_
 #define ZNGLIB_H_
 /* zlib-ng.h -- interface of the 'zlib-ng' compression library, forked from zlib.
@@ -1900,3 +1901,4 @@ Z_EXTERN Z_EXPORTVA int32_t zng_gzvprintf(gzFile file, const char *format, va_li
 #endif
 
 #endif /* ZNGLIB_H_ */
+#endif
