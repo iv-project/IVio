@@ -8,7 +8,6 @@
 #include "../detail/mmap_reader.h"
 #include "../detail/stream_reader.h"
 #include "../detail/zlib_file_reader.h"
-#include "../detail/zlib_mmap2_reader.h"
 #include "reader.h"
 
 #include <cassert>
@@ -52,8 +51,8 @@ struct reader_base<bam::reader>::pimpl {
         std::tie(ptr, size) = ureader.read(12 + l_text + 8); // read complete header
         if (size < 12 + l_text + 8) throw std::runtime_error{"couldn't read header of bam file (1a)"};
 
-        header.buffer.resize(l_text);
-        memcpy(header.buffer.data(), ptr + 12, l_text);
+        header.buffer.resize(l_text - 4); //!TODO where does the -4 come from?
+        memcpy(header.buffer.data(), ptr + 12, l_text - 4);//!TODO where does the -4 come from?
 
         auto n_ref = ivio::bgzfUnpack<uint32_t>(ptr + 8 + l_text);
         ureader.dropUntil(12 + l_text);
@@ -91,7 +90,10 @@ struct reader_base<bam::reader>::pimpl {
         auto next_refID  = ivio::bgzfUnpack<int32_t>(ptr2+24);
         auto next_pos    = ivio::bgzfUnpack<int32_t>(ptr2+28);
         auto tlen        = ivio::bgzfUnpack<int32_t>(ptr2+32);
-        auto read_name   = ureader.string_view(36, 36+l_read_name);
+        if (l_read_name == 0) {
+            throw std::runtime_error{"invalid read name in bam file"};
+        }
+        auto read_name   = ureader.string_view(36, 36+l_read_name-1);
         auto start_cigar = l_read_name + 36;
         auto cigar       = ureader.string_view(start_cigar, start_cigar+n_cigar_op*4);
         auto start_seq   = start_cigar+n_cigar_op*4;

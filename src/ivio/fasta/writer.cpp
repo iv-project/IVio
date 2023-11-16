@@ -67,7 +67,7 @@ void writer::write(record_view record) {
         buffer += record.id;
         buffer += '\n';
         auto seq = record.seq;
-        while (seq.size() > contig_length) {
+        while (seq.size() >= contig_length) {
             buffer += seq.substr(0, contig_length);
             buffer += '\n';
             seq = seq.substr(contig_length);

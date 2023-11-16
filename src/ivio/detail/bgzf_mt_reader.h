@@ -12,6 +12,12 @@
 
 namespace ivio {
 
+//!WORKAROUND llvm < 18 and MSVC < 19.28 do not provide jthread
+// libstdc++ defines `__GLIBCXX__` -> Has jthread
+// libstd++ defines `_LIBCPP_VERSION` -> jthread since 18
+// msvc defines `_MSC_VER` -> jthread since 19.28
+#if defined(__GLIBCXX__) || _LIBCPP_VERSION >= 180000 || _MSC_VER >= 1928
+
 namespace bgzf_mt {
 
 template <typename Job>
@@ -196,7 +202,8 @@ struct bgzf_mt_reader {
         jobs.finish();
     }
 
-    size_t read(std::ranges::sized_range auto&& range) {
+    size_t read(std::ranges::contiguous_range auto&& range) {
+        static_assert(std::same_as<std::ranges::range_value_t<decltype(range)>, char>);
         auto next = jobs.begin();
         if (!next) return 0; // abort, nothing todo, finished everything
         next->await();
@@ -212,6 +219,19 @@ struct bgzf_mt_reader {
         return size;
     }
 };
+
+#else
+
+struct bgzf_mt_reader : bgzf_reader {
+    bgzf_mt_reader(VarBufferedReader reader_, size_t threadNbr=1)
+        : bgzf_reader{std::move(reader_)}
+    {
+        (void)threadNbr;
+    }
+};
+
+
+#endif
 static_assert(Readable<bgzf_mt_reader>);
 
 }

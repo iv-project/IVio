@@ -11,7 +11,7 @@ All classes/functions are available in the `ivio::fasta` namespace.
 [TOC]
 
 ## Record and RecordView (`record`, `record_view`) { #markdown data-toc-label="Record and RecordView" }
-IVio provides the datastructures `ivio::fasta::record` and `ivio::fasta::record_view`. These are the typical input/output arguments of the readers and writers.
+IVio provides the datastructures `ivio::fasta::record` and `ivio::fasta::record_view`. These are typically used as input/output arguments of the readers and writers.
 These datastructures convertible to each other.
 
 The `record_view` layout

@@ -27,8 +27,9 @@ public:
     auto operator=(stream_reader const&) -> stream_reader& = delete;
     auto operator=(stream_reader&&) -> stream_reader& = delete;
 
-    size_t read(std::ranges::sized_range auto&& range) const {
-        return stream.readsome(&*std::ranges::begin(range), std::ranges::size(range));
+    size_t read(std::ranges::contiguous_range auto&& range) const {
+        static_assert(std::same_as<std::ranges::range_value_t<decltype(range)>, char>);
+        return stream.rdbuf()->sgetn(std::ranges::data(range), std::ranges::size(range));
     }
 
     auto tell() const -> size_t {

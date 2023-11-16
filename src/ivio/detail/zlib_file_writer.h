@@ -7,8 +7,9 @@
 #include "file_writer.h"
 #include "stream_writer.h"
 
-#include <zlib.h>
+#include <array>
 #include <ranges>
+#include <zlib.h>
 
 namespace ivio {
 

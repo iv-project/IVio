@@ -7,6 +7,7 @@ project(test_ivio)
 
 # fmindex-collectionunittests
 add_executable(${PROJECT_NAME}
+    bam_reader.cpp
     bcf_reader.cpp
     fasta_reader.cpp
     fasta_writer.cpp

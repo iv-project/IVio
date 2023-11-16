@@ -5,25 +5,14 @@
 #include "../detail/file_reader.h"
 #include "../detail/mmap_reader.h"
 #include "../detail/stream_reader.h"
+#include "../detail/utilities.h"
 #include "../detail/zlib_file_reader.h"
-#include "../detail/zlib_mmap2_reader.h"
 #include "reader.h"
 
 #include <cassert>
-#include <charconv>
 #include <functional>
 #include <optional>
 #include <ranges>
-
-template <typename T>
-static auto convertTo(std::string_view view) {
-    T value{}; //!Should not be initialized with {}, but gcc warns...
-    auto result = std::from_chars(begin(view), end(view), value);
-    if (result.ec == std::errc::invalid_argument) {
-        throw std::runtime_error{"can't convert to int"};
-    }
-    return value;
-}
 
 namespace ivio {
 
@@ -36,7 +25,7 @@ struct reader_base<sam::reader>::pimpl {
 
     pimpl(std::filesystem::path file)
         : ureader {[&]() -> VarBufferedReader {
-            return mmap_reader{file.c_str()};
+            return mmap_reader{file};
         }()}
     {}
     pimpl(std::istream& file)
@@ -114,14 +103,14 @@ auto reader::next() -> std::optional<record_view> {
     auto [qname, flag, rname, pos, mapq, cigar, rnext, pnext, tlen, seq, qual, tags] = *res;
 
     return record_view {.qname = qname,
-                        .flag  = convertTo<int32_t>(flag),
+                        .flag  = detail::convertTo<int32_t>(flag),
                         .rname = rname,
-                        .pos   = convertTo<int32_t>(pos),
-                        .mapq  = convertTo<int32_t>(mapq),
+                        .pos   = detail::convertTo<int32_t>(pos),
+                        .mapq  = detail::convertTo<int32_t>(mapq),
                         .cigar = cigar,
                         .rnext = rnext,
-                        .pnext = convertTo<int32_t>(pnext),
-                        .tlen  = convertTo<int32_t>(tlen),
+                        .pnext = detail::convertTo<int32_t>(pnext),
+                        .tlen  = detail::convertTo<int32_t>(tlen),
                         .seq   = seq,
                         .qual  = qual,
                         .tags  = tags,

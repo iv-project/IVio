@@ -3,6 +3,9 @@
 // SPDX-License-Identifier: BSD-3-Clause
 #pragma once
 
+#include "../detail/compare.h"
+
+#include <array>
 #include <cstddef>
 #include <optional>
 #include <ranges>
@@ -11,6 +14,8 @@
 #include <vector>
 
 namespace ivio::bam {
+
+struct record;
 
 struct record_view {
     constexpr static auto rank_to_char = std::string_view{"=ACMGRSVTWYHKDBN"};
@@ -53,6 +58,8 @@ struct record_view {
         friend auto end(compact_seq const& seq) {
             return iter{&seq, seq.size};
         }
+
+        auto operator<=>(compact_seq const& _other) const = default;
     };
     int32_t                     refID;
     int32_t                     pos;
@@ -66,6 +73,10 @@ struct record_view {
     std::span<uint8_t const>    cigar;
     compact_seq                 seq;
     std::span<uint8_t const>    qual;
+
+    operator record() const;
+    auto operator<=>(record_view const& _rhs) const = default;
+
 };
 
 struct record {
@@ -83,38 +94,54 @@ struct record {
     size_t                      seq_len;
     std::vector<uint8_t>        qual;
 
-    record() = default;
-    record(record_view v)
-        : refID      {v.refID}
-        , pos        {v.pos}
-        , mapq       {v.mapq}
-        , bin        {v.bin}
-        , flag       {v.flag}
-        , next_refID {v.next_refID}
-        , next_pos   {v.next_pos}
-        , tlen       {v.tlen}
-        , read_name  {v.read_name}
-        , cigar      {begin(v.cigar), end(v.cigar)}
-        , seq        {begin(v.seq.data), end(v.seq.data)}
-        , seq_len    {v.seq.size}
-        , qual       {begin(v.qual), end(v.qual)}
-    {}
-    operator record_view() const {
-        return record_view {
-            refID,
-            pos,
-            mapq,
-            bin,
-            flag,
-            next_refID,
-            next_pos,
-            tlen,
-            read_name,
-            cigar,
-            {seq, seq_len},
-            qual,
-        };
-    }
+    operator record_view() const;
+    auto operator<=>(record const&) const = default;
 };
 
+// Implementation of the convert operators
+inline record_view::operator record() const {
+    return {
+        .refID      = refID,
+        .pos        = pos,
+        .mapq       = mapq,
+        .bin        = bin,
+        .flag       = flag,
+        .next_refID = next_refID,
+        .next_pos   = next_pos,
+        .tlen       = tlen,
+        .read_name  = std::string{read_name},
+        .cigar      = std::vector(begin(cigar), end(cigar)),
+        .seq        = std::vector(begin(seq.data), end(seq.data)),
+        .seq_len    = seq.size,
+        .qual       = std::vector(begin(qual), end(qual)),
+    };
 }
+
+inline record::operator record_view() const {
+    return {
+        .refID      = refID,
+        .pos        = pos,
+        .mapq       = mapq,
+        .bin        = bin,
+        .flag       = flag,
+        .next_refID = next_refID,
+        .next_pos   = next_pos,
+        .tlen       = tlen,
+        .read_name  = read_name,
+        .cigar      = cigar,
+        .seq        = {seq, seq_len},
+        .qual       = qual,
+    };
+}
+}
+
+// Specialization to describe their common types
+template <>
+struct std::common_type<ivio::bam::record, ivio::bam::record_view> {
+    using type = ivio::bam::record;
+};
+
+template <>
+struct std::common_type<ivio::bam::record_view, ivio::bam::record> {
+    using type = ivio::bam::record;
+};

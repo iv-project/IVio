@@ -34,19 +34,14 @@ struct reader_base {
             nextItem = reader_->next();
             return currentItem;
         }
-        auto operator==([[maybe_unused]] iter const& _other) const {
+        bool operator==([[maybe_unused]] iter const& _other) const {
             assert(reader_);
             assert(_other.reader_ == nullptr);
             return !nextItem.has_value();
         }
-        //!WORKAROUND clang15 is requiring this
-        auto operator!=(iter const& _other) const {
-            return !(*this == _other);
-        }
-
     };
 
-    struct pimpl; //!WORKAROUND, this should be protected, but clang15 fails, see readLine
+    struct pimpl;
 protected:
 
     std::unique_ptr<pimpl> pimpl_;

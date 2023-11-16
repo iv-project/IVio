@@ -5,25 +5,12 @@
 #include "../detail/file_reader.h"
 #include "../detail/mmap_reader.h"
 #include "../detail/stream_reader.h"
+#include "../detail/utilities.h"
 #include "../detail/zlib_file_reader.h"
-#include "../detail/zlib_mmap2_reader.h"
 #include "reader.h"
-
-#include <charconv>
 
 static_assert(std::ranges::range<ivio::faidx::reader>, "reader must be a range (unittest)");
 static_assert(ivio::record_reader_c<ivio::faidx::reader>, "must fulfill the record_reader concept (unittest)");
-
-template <typename T>
-static auto convertTo(std::string_view view) {
-    T value{}; //!Should not be initialized with {}, but gcc warns...
-    auto result = std::from_chars(begin(view), end(view), value);
-    if (result.ec == std::errc::invalid_argument) {
-        throw std::runtime_error{"can't convert to int"};
-    }
-    return value;
-}
-
 
 namespace ivio {
 
@@ -35,9 +22,9 @@ struct reader_base<faidx::reader>::pimpl {
     pimpl(std::filesystem::path file, bool)
         : ureader {[&]() -> VarBufferedReader {
             if (file.extension() == ".gz") {
-                return zlib_reader{mmap_reader{file.c_str()}};
+                return zlib_reader{mmap_reader{file}};
             }
-            return mmap_reader{file.c_str()};
+            return mmap_reader{file};
         }()}
     {}
     pimpl(std::istream& file, bool compressed)
@@ -96,10 +83,10 @@ auto reader::next() -> std::optional<record_view> {
     auto [id, length, offset, linebases, linewidth] = *res;
 
     return record_view {.id = id,
-                        .length = convertTo<size_t>(length),
-                        .offset = convertTo<size_t>(offset),
-                        .linebases = convertTo<size_t>(linebases),
-                        .linewidth = convertTo<size_t>(linewidth),
+                        .length    = detail::convertTo<size_t>(length),
+                        .offset    = detail::convertTo<size_t>(offset),
+                        .linebases = detail::convertTo<size_t>(linebases),
+                        .linewidth = detail::convertTo<size_t>(linewidth),
                       };
 }
 

@@ -4,6 +4,7 @@
 #include "../detail/bgzf_writer.h"
 #include "writer.h"
 
+#include <array>
 #include <cassert>
 #include <cstddef>
 #include <variant>
@@ -83,7 +84,12 @@ struct bcf_buffer {
     void writeData(std::span<uint8_t const> data) {
         auto oldSize = buffer.size();
         buffer.resize(oldSize + data.size());
+//!WORKAROUND llvm < 16 does not provide std::ranges::copy
+#if defined(_LIBCPP_VERSION) && _LIBCPP_VERSION < 160000
+        std::copy(data.begin(), data.end(), begin(buffer) + oldSize);
+#else
         std::ranges::copy(data, begin(buffer) + oldSize);
+#endif
     }
 
 };
@@ -92,7 +98,7 @@ struct bcf_buffer {
 template <>
 struct ivio::writer_base<ivio::bcf::writer>::pimpl {
     //!TODO support other writers
-    using Writers = std::variant<bgzf_file_writer>;
+    using Writers = std::variant<ivio::bgzf_file_writer>;
 
 
     Writers writer;
@@ -101,7 +107,7 @@ struct ivio::writer_base<ivio::bcf::writer>::pimpl {
 
     pimpl(std::filesystem::path output)
         : writer {[&]() -> Writers {
-            return bgzf_file_writer{output};
+            return ivio::bgzf_file_writer{output};
         }()}
     {}
 

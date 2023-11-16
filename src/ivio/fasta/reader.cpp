@@ -6,7 +6,6 @@
 #include "../detail/mmap_reader.h"
 #include "../detail/stream_reader.h"
 #include "../detail/zlib_file_reader.h"
-#include "../detail/zlib_mmap2_reader.h"
 #include "reader.h"
 
 static_assert(std::ranges::range<ivio::fasta::reader>, "reader must be a range (unittest)");
@@ -26,9 +25,9 @@ struct reader_base<fasta::reader>::pimpl {
     pimpl(std::filesystem::path file, bool)
         : ureader {[&]() -> VarBufferedReader {
             if (file.extension() == ".gz") {
-                return zlib_reader{mmap_reader{file.c_str()}};
+                return zlib_reader{mmap_reader{file}};
             }
-            return mmap_reader{file.c_str()};
+            return mmap_reader{file};
         }()}
     {}
     pimpl(std::istream& file, bool compressed)

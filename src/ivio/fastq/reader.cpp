@@ -6,7 +6,6 @@
 #include "../detail/mmap_reader.h"
 #include "../detail/stream_reader.h"
 #include "../detail/zlib_file_reader.h"
-#include "../detail/zlib_mmap2_reader.h"
 #include "reader.h"
 
 namespace ivio {
@@ -19,9 +18,9 @@ struct reader_base<fastq::reader>::pimpl {
     pimpl(std::filesystem::path file, bool)
         : ureader {[&]() -> VarBufferedReader {
             if (file.extension() == ".fq") {
-                return mmap_reader{file.c_str()};
+                return mmap_reader{file};
             } else if (file.extension() == ".gz") {
-                return zlib_reader{mmap_reader{file.c_str()}};
+                return zlib_reader{mmap_reader{file}};
             }
             throw std::runtime_error("unknown file extension");
         }()}

@@ -10,13 +10,14 @@
 
 #include <cassert>
 #include <charconv>
+#include <sstream>
 
 template <>
 struct ivio::writer_base<ivio::vcf::writer>::pimpl {
-    using Writers = std::variant<file_writer,
-                                 buffered_writer<zlib_file_writer>,
-                                 stream_writer,
-                                 buffered_writer<zlib_stream_writer>
+    using Writers = std::variant<ivio::file_writer,
+                                 ivio::buffered_writer<ivio::zlib_file_writer>,
+                                 ivio::stream_writer,
+                                 ivio::buffered_writer<ivio::zlib_stream_writer>
                                  >;
 
     ivio::vcf::writer::config config;
@@ -89,11 +90,16 @@ void writer::write(record_view record) {
 
     if (qual) {
         auto oldSize = ss.size();
+        //!WORKAROUND std::from_chars for float/double is missing from libc++
+        // libc++ does not define __cpp_lib_to_chars
+        #if !defined(_LIBCPP_VERSION) || defined(__cpp_lib_to_chars)
         ss.resize(oldSize + 256); // can only convert floats that fit into 256characters
         auto [ptr, ec] = std::to_chars(ss.data() + oldSize, ss.data() + ss.size(), *qual);
         if (ec == std::errc()) {
             ss.resize(ptr - ss.data());
-        } else {
+        } else
+        #endif
+        {
             // Something didn't work, fall back to slow std::stringstream implementation
             ss.resize(oldSize);
             auto str = std::stringstream{};

@@ -5,27 +5,14 @@
 #include "../detail/file_reader.h"
 #include "../detail/mmap_reader.h"
 #include "../detail/stream_reader.h"
+#include "../detail/utilities.h"
 #include "../detail/zlib_file_reader.h"
-#include "../detail/zlib_mmap2_reader.h"
 #include "reader.h"
 
 #include <cassert>
-#include <charconv>
 #include <functional>
 #include <optional>
 #include <ranges>
-
-namespace {
-template <typename T>
-auto convertTo(std::string_view view) {
-    T value{}; //!Should not be initialized with {}, but gcc warns...
-    auto result = std::from_chars(begin(view), end(view), value);
-    if (result.ec == std::errc::invalid_argument) {
-        throw std::runtime_error{"can't convert to int"};
-    }
-    return value;
-}
-}
 
 namespace ivio {
 
@@ -40,9 +27,9 @@ struct reader_base<vcf::reader>::pimpl {
     pimpl(std::filesystem::path file, bool)
         : ureader {[&]() -> VarBufferedReader {
             if (file.extension() == ".vcf") {
-                return mmap_reader{file.c_str()};
+                return mmap_reader{file};
             } else if (file.extension() == ".gz") {
-                return zlib_reader{mmap_reader{file.c_str()}};
+                return zlib_reader{mmap_reader{file}};
             }
             throw std::runtime_error("unknown file extension");
         }()}
@@ -79,7 +66,8 @@ struct reader_base<vcf::reader>::pimpl {
             auto start = 1;
             auto end = ureader.readUntil('\n', start);
             auto tableHeader = ureader.string_view(start, end);
-#if __clang__ //!WORKAROUND for at least clang15, std::views::split is not working
+//!WORKAROUND clang15's split_view is not working
+#if __clang_major__ == 15
         {
             size_t start = 0;
             size_t pos = 0;
@@ -161,11 +149,11 @@ auto reader::next() -> std::optional<record_view> {
 
     return record_view {
         .chrom   = chrom,
-        .pos     = convertTo<int32_t>(pos),
+        .pos     = detail::convertTo<int32_t>(pos),
         .id      = id,
         .ref     = ref,
         .alts    = alts,
-        .qual    = convertTo<float>(qual),
+        .qual    = detail::convertTo<float>(qual),
         .filters = filters,
         .infos   = infos,
         .formats = formats,

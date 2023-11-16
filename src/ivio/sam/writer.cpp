@@ -12,10 +12,10 @@
 
 template <>
 struct ivio::writer_base<ivio::sam::writer>::pimpl {
-    using Writers = std::variant<file_writer,
-                                 buffered_writer<zlib_file_writer>,
-                                 stream_writer,
-                                 buffered_writer<zlib_stream_writer>
+    using Writers = std::variant<ivio::file_writer,
+                                 ivio::buffered_writer<ivio::zlib_file_writer>,
+                                 ivio::stream_writer,
+                                 ivio::buffered_writer<ivio::zlib_stream_writer>
                                  >;
 
     ivio::sam::writer::config config;

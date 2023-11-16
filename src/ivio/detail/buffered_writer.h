@@ -33,7 +33,12 @@ public:
     auto write(std::span<char const> _buffer) -> size_t {
         auto oldSize = buffer.size();
         buffer.resize(oldSize + _buffer.size());
+//!WORKAROUND llvm < 16 does not provide std::ranges::copy
+#if defined(_LIBCPP_VERSION) && _LIBCPP_VERSION < 160000
+        std::copy(_buffer.begin(), _buffer.end(), buffer.begin()+oldSize);
+#else
         std::ranges::copy(_buffer, buffer.begin()+oldSize);
+#endif
         if (buffer.size() > minV) {
             auto writtenBytes = writer.write(buffer);
             if (writtenBytes > 0) {
