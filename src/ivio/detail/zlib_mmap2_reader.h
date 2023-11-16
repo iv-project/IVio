@@ -2,6 +2,7 @@
 // SPDX-FileCopyrightText: 2016-2023, Knut Reinert & MPI für molekulare Genetik
 // SPDX-License-Identifier: BSD-3-Clause
 #pragma once
+#if 0
 
 #include "mmap_reader.h"
 
@@ -144,3 +145,4 @@ struct zlib_mmap2_reader : protected mmap_reader {
 
 static_assert(BufferedReadable<zlib_mmap2_reader>);
 }
+#endif
