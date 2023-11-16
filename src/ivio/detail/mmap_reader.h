@@ -129,5 +129,4 @@ using mmap_reader = buffered_reader<file_reader>;
 #endif
 
 static_assert(ivio::BufferedReadable<ivio::mmap_reader>);
-//static_assert(ivio::Readable<ivio::mmap_reader>);
 static_assert(ivio::Seekable<ivio::mmap_reader>);
