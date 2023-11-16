@@ -33,7 +33,12 @@ public:
     auto write(std::span<char const> _buffer) -> size_t {
         auto oldSize = buffer.size();
         buffer.resize(oldSize + _buffer.size());
+//!WORKAROUND clang15 does not have std::ranges::copy
+#if __clang_major__ == 15
+        std::copy(_buffer.begin(), _buffer.end(), buffer.begin()+oldSize);
+#else
         std::ranges::copy(_buffer, buffer.begin()+oldSize);
+#endif
         if (buffer.size() > minV) {
             auto writtenBytes = writer.write(buffer);
             if (writtenBytes > 0) {

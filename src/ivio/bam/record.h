@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 #pragma once
 
-#include "../detail/span_comparison.h"
+#include "../detail/compare.h"
 
 #include <array>
 #include <cstddef>
