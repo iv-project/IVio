@@ -46,7 +46,7 @@ TEST_CASE("reading fastq files", "[fastq][reader]") {
     }
 
     SECTION("Read from std::ifstream") {
-        auto fs = std::ifstream{tmp / "file.fq"};
+        auto fs = std::ifstream{tmp / "file.fq", std::ios::binary};
         auto reader = ivio::fastq::reader{{fs}};
         auto vec = std::vector(begin(reader), end(reader));
         static_assert(std::same_as<decltype(vec), decltype(expected)>, "vec and expected should have the exact same type");
@@ -114,7 +114,7 @@ TEST_CASE("reading fastq files over large files", "[fastq][reader][large]") {
     }
 
     SECTION("Read from std::ifstream") {
-        auto fs = std::ifstream{tmp / "file.fq"};
+        auto fs = std::ifstream{tmp / "file.fq", std::ios::binary};
         auto reader = ivio::fastq::reader{{fs}};
         auto vec = std::vector(begin(reader), end(reader));
         static_assert(std::same_as<decltype(vec), decltype(expected)>, "vec and expected should have the exact same type");

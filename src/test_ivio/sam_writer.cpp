@@ -108,7 +108,7 @@ TEST_CASE("writing sam files", "[sam][writer]") {
     }
 
     SECTION("Write to std::ofstream") {
-        auto fs = std::ofstream{tmp / "file.sam"};
+        auto fs = std::ofstream{tmp / "file.sam", std::ios::binary};
         auto writer = ivio::sam::writer{{.output = fs, .header = test_header}};
         for (auto r : test_data) {
             writer.write(r);

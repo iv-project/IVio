@@ -219,7 +219,7 @@ TEST_CASE("reading bam files", "[bam][reader]") {
     }
 
     SECTION("Read from std::ifstream") {
-        auto ifs = std::ifstream{tmp / "file.bam"};
+        auto ifs = std::ifstream{tmp / "file.bam", std::ios::binary};
         auto reader = ivio::bam::reader{{ifs}};
         CHECK(reader.header().buffer == expected_header);
         auto vec = std::vector(begin(reader), end(reader));

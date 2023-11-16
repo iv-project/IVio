@@ -38,7 +38,7 @@ TEST_CASE("writing fasta files", "[fasta][writer]") {
     }
 
     SECTION("Write to std::ofstream") {
-        auto fs = std::ofstream{tmp / "file.fa"};
+        auto fs = std::ofstream{tmp / "file.fa", std::ios::binary};
         auto writer = ivio::fasta::writer{{fs}};
         for (auto r : test_data) {
             writer.write(r);
@@ -93,7 +93,7 @@ TEST_CASE("writing fasta files (compressed)", "[fasta][writer][gz]") {
     }
 
     SECTION("Write to std::ofstream") {
-        auto fs = std::ofstream{tmp / "file.fa.gz"};
+        auto fs = std::ofstream{tmp / "file.fa.gz", std::ios::binary};
         auto writer = ivio::fasta::writer{{.output = fs, .compressed = true}};
         for (auto r : test_data) {
             writer.write(r);
@@ -168,7 +168,7 @@ TEST_CASE("writing fasta files, short lines (compressed)", "[fasta][writer][gz][
     }
 
     SECTION("Write to std::ofstream") {
-        auto fs = std::ofstream{tmp / "file.fa.gz"};
+        auto fs = std::ofstream{tmp / "file.fa.gz", std::ios::binary};
         auto writer = ivio::fasta::writer{{.output = fs, .compressed = true, .length = 3}};
         for (auto r : test_data) {
             writer.write(r);

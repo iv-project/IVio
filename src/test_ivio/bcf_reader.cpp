@@ -179,7 +179,7 @@ TEST_CASE("reading bcf files", "[bcf][reader]") {
     }
 
     SECTION("Read from std::ifstream") {
-        auto ifs = std::ifstream{tmp / "file.bcf"};
+        auto ifs = std::ifstream{tmp / "file.bcf", std::ios::binary};
         auto reader = ivio::bcf::reader{{ifs}};
         CHECK(reader.header().table == expected_header.table);
         CHECK(reader.header().genotypes == expected_header.genotypes);

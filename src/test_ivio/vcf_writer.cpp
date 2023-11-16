@@ -81,7 +81,7 @@ TEST_CASE("writing vcf files", "[vcf][writer]") {
     }
 
     SECTION("Write to std::ofstream") {
-        auto fs = std::ofstream{tmp / "file.vcf"};
+        auto fs = std::ofstream{tmp / "file.vcf", std::ios::binary};
         auto writer = ivio::vcf::writer{{.output = fs, .header = test_header}};
         for (auto r : test_data) {
             writer.write(r);
