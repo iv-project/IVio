@@ -13,43 +13,43 @@
 
 namespace ivio {
 
-template <BufferedReadable Reader>
-struct zlib_ng_reader_impl {
-    Reader file;
+struct zlib_ng_reader {
+    VarBufferedReader reader;
 
-    zng_stream stream {
-        .next_in = Z_NULL,
-        .avail_in = 0,
-        .total_out = 0,
-        .zalloc = Z_NULL,
-        .zfree = Z_NULL,
-        .opaque = Z_NULL,
-    };
+    zng_stream stream = []() {
+        auto stream = zng_stream{};
+        stream.next_in   = NULL;
+        stream.avail_in  = 0;
+        stream.total_out = 0;
+        stream.zalloc    = NULL;
+        stream.zfree     = NULL;
+        stream.opaque    = NULL;
+        return stream;
+    }();
 
-    template <typename T>
-    zlib_ng_reader_impl(T&& name)
-        : file(std::forward<T>(name))
+    zlib_ng_reader(VarBufferedReader reader)
+        : reader{std::move(reader)}
     {
         if (zng_inflateInit2(&stream, 16 + MAX_WBITS) != Z_OK) {
             throw "error";
         }
     }
-    zlib_ng_reader_impl(zlib_ng_reader_impl&& _other)
-        : file{std::move(_other.file)}
+    zlib_ng_reader(zlib_ng_reader&& _other)
+        : reader{std::move(_other.reader)}
     {
         if (zng_inflateInit2(&stream, 16 + MAX_WBITS) != Z_OK) {
             throw "error";
         }
     }
 
-    ~zlib_ng_reader_impl() {
+    ~zlib_ng_reader() {
         zng_inflateEnd(&stream);
     }
 
     size_t read(std::ranges::contiguous_range auto&& range) {
         static_assert(std::same_as<std::ranges::range_value_t<decltype(range)>, char>);
         while(true) {
-            auto [ptr, avail_in] = file.read(range.size());
+            auto [ptr, avail_in] = reader.read(range.size());
 
             stream.next_in  = (unsigned char*)(ptr);
             stream.avail_in = avail_in;
@@ -58,7 +58,7 @@ struct zlib_ng_reader_impl {
             auto ret = zng_inflate(&stream, Z_NO_FLUSH);
             auto diff = avail_in - stream.avail_in;
 
-            file.dropUntil(diff);
+            reader.dropUntil(diff);
 
             auto producedBytes = (size_t)(stream.next_out - (unsigned char*)range.data());
             if (producedBytes > 0) {
@@ -71,13 +71,5 @@ struct zlib_ng_reader_impl {
     }
 };
 
-using zlib_ng_file_reader   = zlib_ng_reader_impl<buffered_reader<>>;
-using zlib_ng_mmap_reader   = zlib_ng_reader_impl<mmap_reader>;
-using zlib_ng_stream_reader = zlib_ng_reader_impl<buffered_reader<>>;
-
-static_assert(Readable<zlib_ng_file_reader>);
-static_assert(Readable<zlib_ng_mmap_reader>);
-static_assert(Readable<zlib_ng_stream_reader>);
-
-
+static_assert(Readable<zlib_ng_reader>);
 }
