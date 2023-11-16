@@ -24,10 +24,12 @@ jobs:
         compiler:
           - clang15-cpp20-release
           - clang16-cpp20-release
-          - clang17-cpp20-release
+          - cang17-cpp20-debug-sanitize_address
+          - cang17-cpp20-debug-sanitize_undefined
+
     steps:
       - name: Standard IV-project testing
-        uses: iv-project/IVaction/macos-testing@v6
+        uses: iv-project/IVaction/macos-testing@feat/more_options
         with:
           compiler: ${{ matrix.compiler }}
           threads: 3
