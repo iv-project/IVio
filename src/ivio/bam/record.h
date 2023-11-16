@@ -3,6 +3,8 @@
 // SPDX-License-Identifier: BSD-3-Clause
 #pragma once
 
+#include "../detail/span_comparison.h"
+
 #include <array>
 #include <cstddef>
 #include <optional>
@@ -56,6 +58,8 @@ struct record_view {
         friend auto end(compact_seq const& seq) {
             return iter{&seq, seq.size};
         }
+
+        auto operator<=>(compact_seq const& _other) const = default;
     };
     int32_t                     refID;
     int32_t                     pos;
@@ -71,12 +75,7 @@ struct record_view {
     std::span<uint8_t const>    qual;
 
     operator record() const;
-    auto operator<=>(record_view const& _rhs) const
-    //!WORKAROUND = default doesn't work for clang
-    #if !__clang__
-        = default
-    #endif
-    ;
+    auto operator<=>(record_view const& _rhs) const = default;
 
 };
 
@@ -134,14 +133,6 @@ inline record::operator record_view() const {
         .qual       = qual,
     };
 }
-
-//!WORKAROUND = default doesn't work for clang
-#if __clang__
-inline auto record_view::operator<=>(record_view const& _rhs) const {
-    return static_cast<record>(*this) <=> static_cast<record>(_rhs);
-}
-#endif
-
 }
 
 // Specialization to describe their common types
