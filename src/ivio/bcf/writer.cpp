@@ -84,7 +84,12 @@ struct bcf_buffer {
     void writeData(std::span<uint8_t const> data) {
         auto oldSize = buffer.size();
         buffer.resize(oldSize + data.size());
+//!WORKAROUND llvm < 16 does not provide std::ranges::copy
+#if defined(_LIBCPP_VERSION) && _LIBCPP_VERSION < 160000
+        std::copy(data.begin(), data.end(), begin(buffer) + oldSize);
+#else
         std::ranges::copy(data, begin(buffer) + oldSize);
+#endif
     }
 
 };

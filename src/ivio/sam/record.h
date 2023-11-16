@@ -3,6 +3,8 @@
 // SPDX-License-Identifier: BSD-3-Clause
 #pragma once
 
+#include "../detail/compare.h"
+
 #include <cstddef>
 #include <string>
 #include <string_view>

@@ -161,7 +161,12 @@ struct bgzf_writer_impl {
     auto write(std::span<char const> out) -> size_t {
         auto oldSize = buffer.size();
         buffer.resize(buffer.size() + out.size());
+//!WORKAROUND llvm < 16 does not provide std::ranges::copy
+#if defined(_LIBCPP_VERSION) && _LIBCPP_VERSION < 160000
+        std::copy(out.begin(), out.end(), buffer.data() + oldSize);
+#else
         std::ranges::copy(out, buffer.data() + oldSize);
+#endif
 
         auto writeData = [&](std::span<char const> v) {
             outBuffer.resize(fullLength);
