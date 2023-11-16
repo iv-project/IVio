@@ -24,8 +24,8 @@ jobs:
         compiler:
           - clang15-cpp20-release
           - clang16-cpp20-release
-          - cang17-cpp20-debug-sanitize_address
-          - cang17-cpp20-debug-sanitize_undefined
+          - clang17-cpp20-debug-sanitize_address
+          - clang17-cpp20-debug-sanitize_undefined
 
     steps:
       - name: Standard IV-project testing
