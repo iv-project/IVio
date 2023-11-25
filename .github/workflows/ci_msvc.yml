@@ -24,4 +24,4 @@ jobs:
           vcpkg integrate install
           vcpkg install zlib zlib:x64-windows
       - name: Standard IV-project testing
-        uses: iv-project/IVaction/msvc-testing@v6.2
+        uses: iv-project/IVaction/msvc-testing@v6.3
