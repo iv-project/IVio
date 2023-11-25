@@ -25,11 +25,12 @@ endif ()
 project(ivio LANGUAGES CXX VERSION "${IVIO_PROJECT_VERSION}"
             DESCRIPTION "ivio -- IO library for file formats used in bioinformatics")
 
+include(cmake/CPM.cmake)
 include(ivio-config.cmake)
 
 if (${ROOT_PROJECT})
-    find_package (fmt REQUIRED)
-    add_subdirectory(lib/Catch2)
+    CPMaddPackage("gh:fmtlib/fmt#10.1.1")
+    CPMaddPackage("gh:catchorg/Catch2#v3.4.0")
 
     enable_testing()
     add_subdirectory(docs/snippets)
