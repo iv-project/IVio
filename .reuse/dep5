@@ -1,5 +1,0 @@
-Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
-
-Files: lib/Catch2/*
-Copyright: Catch2 Authors
-License: BSL-1.0
