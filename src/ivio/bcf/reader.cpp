@@ -21,8 +21,8 @@ namespace ivio {
 namespace {
 // helper type for the visitor #4
 template<class... Ts> struct overloaded : Ts... { using Ts::operator()...; };
-//!WORKAROUND clang15/16 need explicit deduction guides
-#if defined(__clang_major__) && __clang_major__ < 17
+//!WORKAROUND clang15/16 and IntelLLVM need explicit deduction guides
+#if (defined(__clang_major__) && __clang_major__ < 17) || defined(__INTEL_LLVM_COMPILER)
 template<class... Ts> overloaded(Ts...) -> overloaded<Ts...>;
 #endif
 
