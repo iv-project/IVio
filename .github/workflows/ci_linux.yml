@@ -34,7 +34,7 @@ jobs:
           - intel-cpp20-release
     steps:
       - name: Standard IV-project testing
-        uses: iv-project/IVaction/linux-testing@feat/intel_compiler
+        uses: iv-project/IVaction/linux-testing@v8
         with:
           compiler: ${{ matrix.compiler }}
           threads: 2
