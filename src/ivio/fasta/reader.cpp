@@ -22,20 +22,31 @@ struct reader_base<fasta::reader>::pimpl {
 
     faidx::record_view faidxView;
 
-    pimpl(std::filesystem::path file, bool)
+    pimpl(std::filesystem::path file)
         : ureader {[&]() -> VarBufferedReader {
-            if (file.extension() == ".gz") {
-                return zlib_reader{mmap_reader{file}};
+            auto reader = mmap_reader{file}; // create a reader and peak into the file
+            auto [buffer, len] = reader.read(2);
+
+            if (len >= 2
+                && buffer[0] == (char)0x1f
+                && buffer[1] == (char)0x8b) {
+                return zlib_reader{std::move(reader)};
             }
-            return mmap_reader{file};
+            return reader;
         }()}
     {}
-    pimpl(std::istream& file, bool compressed)
+    pimpl(std::istream& file)
         : ureader {[&]() -> VarBufferedReader {
-            if (!compressed) {
-                return stream_reader{file};
+            auto reader = stream_reader{file};
+            auto buffer = std::array<char, 2>{};
+            auto len = reader.read(buffer);
+            reader.seek(0);
+            if (len >= 2
+                && buffer[0] == (char)0x1f
+                && buffer[1] == (char)0x8b) {
+                return zlib_reader{std::move(reader)};
             }
-            return zlib_reader{stream_reader{file}};
+            return reader;
         }()}
     {}
 };
@@ -45,7 +56,7 @@ namespace ivio::fasta {
 
 reader::reader(config const& config_)
     : reader_base{std::visit([&](auto& p) {
-        return std::make_unique<pimpl>(p, config_.compressed);
+        return std::make_unique<pimpl>(p);
     }, config_.input)}
 {}
 

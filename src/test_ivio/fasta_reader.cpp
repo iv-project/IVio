@@ -439,7 +439,7 @@ TEST_CASE("reading compressed fasta files", "[fasta][reader][gz][short]") {
 
     SECTION("Read from std::ifstream") {
         auto fs = std::ifstream{tmp / "file.fa.gz"};
-        auto reader = ivio::fasta::reader{{.input = fs, .compressed = true}};
+        auto reader = ivio::fasta::reader{{.input = fs}};
         auto vec = std::vector(begin(reader), end(reader));
         static_assert(std::same_as<decltype(vec), decltype(expected)>, "vec and expected should have the exact same type");
         CHECK(expected == vec);
