@@ -69,6 +69,15 @@ struct zlib_reader {
             }
         }
     }
+
+    /**
+     * Function checks if the given buffer contains the magic header of a gz file
+     */
+    static bool checkHeader(std::span<char const> buffer) {
+        return buffer.size() >= 2
+            && buffer[0] == (char)0x1f
+            && buffer[1] == (char)0x8b;
+    }
 };
 
 static_assert(Readable<zlib_reader>);

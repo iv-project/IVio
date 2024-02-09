@@ -26,10 +26,7 @@ struct reader_base<fasta::reader>::pimpl {
         : ureader {[&]() -> VarBufferedReader {
             auto reader = mmap_reader{file}; // create a reader and peak into the file
             auto [buffer, len] = reader.read(2);
-
-            if (len >= 2
-                && buffer[0] == (char)0x1f
-                && buffer[1] == (char)0x8b) {
+            if (zlib_reader::checkHeader({buffer, len})) {
                 return zlib_reader{std::move(reader)};
             }
             return reader;
@@ -41,9 +38,7 @@ struct reader_base<fasta::reader>::pimpl {
             auto buffer = std::array<char, 2>{};
             auto len = reader.read(buffer);
             reader.seek(0);
-            if (len >= 2
-                && buffer[0] == (char)0x1f
-                && buffer[1] == (char)0x8b) {
+            if (zlib_reader::checkHeader({buffer.data(), len})) {
                 return zlib_reader{std::move(reader)};
             }
             return reader;
