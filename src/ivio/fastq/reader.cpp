@@ -17,21 +17,18 @@ struct reader_base<fastq::reader>::pimpl {
 
     pimpl(std::filesystem::path file, bool)
         : ureader {[&]() -> VarBufferedReader {
-            if (file.extension() == ".fq") {
-                return mmap_reader{file};
-            } else if (file.extension() == ".gz") {
+            if (file.extension() == ".gz") {
                 return zlib_reader{mmap_reader{file}};
             }
-            throw std::runtime_error("unknown file extension");
+            return mmap_reader{file};
         }()}
     {}
     pimpl(std::istream& file, bool compressed)
         : ureader {[&]() -> VarBufferedReader {
             if (!compressed) {
                 return stream_reader{file};
-            } else {
-                return zlib_reader{stream_reader{file}};
             }
+            return zlib_reader{stream_reader{file}};
         }()}
     {}
 };
