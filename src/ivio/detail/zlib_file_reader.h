@@ -75,9 +75,8 @@ struct zlib_reader {
      * See https://www.ietf.org/rfc/rfc1952.txt
      */
     static bool checkHeader(std::span<char const> buffer) {
-        return buffer.size() >= 2
-            && buffer[0] == (char)0x1f
-            && buffer[1] == (char)0x8b;
+        auto view = std::string_view{buffer.data(), buffer.size()};
+        return view.starts_with("\x1f\x8b");
     }
 };
 
