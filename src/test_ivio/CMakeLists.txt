@@ -9,6 +9,7 @@ project(test_ivio)
 add_executable(${PROJECT_NAME}
     bam_reader.cpp
     bcf_reader.cpp
+    bcf_mt_reader.cpp
     fasta_reader.cpp
     fasta_writer.cpp
     faidx_reader.cpp

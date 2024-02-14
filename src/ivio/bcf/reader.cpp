@@ -166,7 +166,7 @@ struct reader_base<bcf::reader>::pimpl {
             if (threadNbr == 0) {
                 return make_buffered_reader<1<<16>(bgzf_reader{mmap_reader{file}});
             }
-            return bgzf_mt_reader{mmap_reader{file}, threadNbr};
+            return make_buffered_reader<1<<16>(bgzf_mt_reader{mmap_reader{file}, threadNbr});
         }()}
     {}
     pimpl(std::istream& file, size_t threadNbr)
@@ -174,7 +174,7 @@ struct reader_base<bcf::reader>::pimpl {
             if (threadNbr == 0) {
                 return make_buffered_reader<1<<16>(bgzf_reader{stream_reader{file}});
             }
-            return bgzf_mt_reader{stream_reader{file}, threadNbr};
+            return make_buffered_reader<1<<16>(bgzf_mt_reader{stream_reader{file}, threadNbr});
         }()}
     {}
 

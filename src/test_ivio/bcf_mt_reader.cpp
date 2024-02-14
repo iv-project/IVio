@@ -6,7 +6,7 @@
 #include <fstream>
 #include <ivio/ivio.h>
 
-TEST_CASE("reading bcf files", "[bcf][reader]") {
+TEST_CASE("reading bcf files with multiple threads", "[bcf][reader][mt]") {
     auto tmp = std::filesystem::temp_directory_path() / "ivio_test";
     std::filesystem::create_directory(tmp);
 
@@ -134,7 +134,8 @@ TEST_CASE("reading bcf files", "[bcf][reader]") {
     }
 
     SECTION("Read from std::filesystem::path") {
-        auto reader = ivio::bcf::reader{{tmp / "file.bcf"}};
+        auto reader = ivio::bcf::reader{{.input     = tmp / "file.bcf",
+                                         .threadNbr = 2}};
         REQUIRE(reader.header().table.size() == expected_header.table.size());
 
         for (size_t i{0}; i < reader.header().table.size(); ++i) {
@@ -188,7 +189,8 @@ TEST_CASE("reading bcf files", "[bcf][reader]") {
 
     SECTION("Read from std::ifstream") {
         auto ifs = std::ifstream{tmp / "file.bcf", std::ios::binary};
-        auto reader = ivio::bcf::reader{{ifs}};
+        auto reader = ivio::bcf::reader{{.input     = ifs,
+                                         .threadNbr = 2}};
         CHECK(reader.header().table == expected_header.table);
         CHECK(reader.header().genotypes == expected_header.genotypes);
         auto vec = std::vector(begin(reader), end(reader));
@@ -198,7 +200,8 @@ TEST_CASE("reading bcf files", "[bcf][reader]") {
 
     SECTION("Read from std::stringstream") {
         auto ss = std::stringstream{test_data};
-        auto reader = ivio::bcf::reader{{ss}};
+        auto reader = ivio::bcf::reader{{.input     = ss,
+                                         .threadNbr = 2}};
         CHECK(reader.header().table == expected_header.table);
         CHECK(reader.header().genotypes == expected_header.genotypes);
         auto vec = std::vector(begin(reader), end(reader));
