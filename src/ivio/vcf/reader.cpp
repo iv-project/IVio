@@ -24,23 +24,26 @@ struct reader_base<vcf::reader>::pimpl {
     std::vector<std::tuple<std::string, std::string>> header;
     std::vector<std::string> genotypes;
 
-    pimpl(std::filesystem::path file, bool)
+    pimpl(std::filesystem::path file)
         : ureader {[&]() -> VarBufferedReader {
-            if (file.extension() == ".vcf") {
-                return mmap_reader{file};
-            } else if (file.extension() == ".gz") {
-                return zlib_reader{mmap_reader{file}};
+            auto reader = mmap_reader{file};
+            auto [buffer, len] = reader.read(2);
+            if (zlib_reader::isGZipHeader({buffer, len})) {
+                return zlib_reader{std::move(reader)};
             }
-            throw std::runtime_error("unknown file extension");
+            return reader;
         }()}
     {}
-    pimpl(std::istream& file, bool compressed)
+    pimpl(std::istream& file)
         : ureader {[&]() -> VarBufferedReader {
-            if (!compressed) {
-                return stream_reader{file};
-            } else {
-                return zlib_reader{stream_reader{file}};
+            auto reader = stream_reader{file};
+            auto buffer = std::array<char, 2>{};
+            auto len = reader.read(buffer);
+            reader.seek(0);
+            if (zlib_reader::isGZipHeader({buffer.data(), len})) {
+                return zlib_reader{std::move(reader)};
             }
+            return reader;
         }()}
     {}
 
@@ -120,7 +123,7 @@ namespace ivio::vcf {
 
 reader::reader(config const& config_)
     : reader_base{std::visit([&](auto& p) {
-        return std::make_unique<pimpl>(p, config_.compressed);
+        return std::make_unique<pimpl>(p);
     }, config_.input)}
 {
     pimpl_->readHeader();
