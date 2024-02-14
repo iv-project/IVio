@@ -45,6 +45,14 @@ TEST_CASE("reading bcf files", "[bcf][reader]") {
         .genotypes = {"NA00001", "NA00002", "NA00003"},
     };
 
+    // -----------------------------------------------------------------------------------------------------------------
+    // formatted input
+    // -----------------------------------------------------------------------------------------------------------------
+    // The corresponding human readable-form can be found at docs/snippets/data/vcf.vcf
+    // This data was created by running:
+    //   cd docs/snipets/data
+    //   bcftools view vcf.vcf. -o vcf.bcf
+    //   bin2c vcf.bcf | tail +6 | head -n -6 | sed 's/^/            /'
     auto test_data = []() -> std::string {
         auto buffer = std::vector<uint8_t> {
             0x1f,0x8b,0x08,0x04,0x00,0x00,0x00,0x00,0x00,0xff,0x06,0x00,0x42,0x43,0x02,0x00,
