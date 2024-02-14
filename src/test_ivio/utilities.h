@@ -9,6 +9,9 @@
 #include <string>
 #include <zlib.h>
 
+/**
+ * Reads the file into a single string. If file is gzip compressed, decompressing it
+ */
 inline auto read_file(std::filesystem::path p) -> std::string {
     auto buffer = std::string{};
 
@@ -28,6 +31,11 @@ inline auto read_file(std::filesystem::path p) -> std::string {
     gzclose(f);
     return buffer;
 }
+
+/**
+ * Decompresses the string `buffer` into a string by writing it into a temporary file and
+ * reading that.
+ */
 inline auto read_compressed_string(std::string buffer, std::filesystem::path tmpFile) -> std::string {
     auto ofs = std::ofstream{tmpFile, std::ios::binary};
     ofs.write(buffer.c_str(), buffer.size());
