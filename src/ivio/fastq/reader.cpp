@@ -19,7 +19,7 @@ struct reader_base<fastq::reader>::pimpl {
         : ureader {[&]() -> VarBufferedReader {
             auto reader = mmap_reader{file}; // create a reader and peak into the file
             auto [buffer, len] = reader.read(2);
-            if (zlib_reader::checkHeader({buffer, len})) {
+            if (zlib_reader::isGZipHeader({buffer, len})) {
                 return zlib_reader{std::move(reader)};
             }
             return reader;
@@ -31,7 +31,7 @@ struct reader_base<fastq::reader>::pimpl {
             auto buffer = std::array<char, 2>{};
             auto len = reader.read(buffer);
             reader.seek(0);
-            if (zlib_reader::checkHeader({buffer.data(), len})) {
+            if (zlib_reader::isGZipHeader({buffer.data(), len})) {
                 return zlib_reader{std::move(reader)};
             }
             return reader;
