@@ -69,6 +69,15 @@ struct zlib_reader {
             }
         }
     }
+
+    /**
+     * Function checks if the given buffer contains the magic header of a gz file.
+     * See https://www.ietf.org/rfc/rfc1952.txt
+     */
+    static bool isGZipHeader(std::span<char const> buffer) {
+        auto view = std::string_view{buffer.data(), buffer.size()};
+        return view.starts_with("\x1f\x8b");
+    }
 };
 
 static_assert(Readable<zlib_reader>);
