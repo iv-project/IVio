@@ -20,9 +20,6 @@ struct reader : public reader_base<reader> {
     struct config {
         // Source: file or stream
         std::variant<std::filesystem::path, std::reference_wrapper<std::istream>> input;
-
-        // This is only relevant if a stream is being used
-        bool compressed{};
     };
 
 public:

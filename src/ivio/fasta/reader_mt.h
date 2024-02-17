@@ -18,9 +18,6 @@ namespace ivio::fasta {
 struct reader_mt_config {
     // Source: file or stream
     std::variant<std::filesystem::path, std::reference_wrapper<std::istream>> input;
-
-    // This is only relevant if a stream is being used
-    bool compressed{};
 };
 
 struct reader_mt_pimpl;
