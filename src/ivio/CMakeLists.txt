@@ -17,6 +17,8 @@ add_library(ivio bam/reader.cpp
                  vcf/reader.cpp
                  vcf/writer.cpp)
 
+
+target_compile_options(ivio PUBLIC "-std=c++20")
 add_library(ivio::ivio ALIAS ivio)
 
 target_include_directories(ivio
