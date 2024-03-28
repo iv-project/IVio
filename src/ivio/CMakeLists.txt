@@ -16,7 +16,6 @@ add_library(ivio bam/reader.cpp
                  sam/writer.cpp
                  vcf/reader.cpp
                  vcf/writer.cpp)
-
 add_library(ivio::ivio ALIAS ivio)
 
 target_include_directories(ivio
