@@ -53,7 +53,7 @@ jobs:
           vcpkg integrate install
           vcpkg install zlib zlib:x64-windows
       - name: Standard IV-project testing
-        uses: iv-project/IVaction@v9.7
+        uses: iv-project/IVaction@v9.8
         with:
           compiler: ${{ matrix.compiler }}
           threads: 2
