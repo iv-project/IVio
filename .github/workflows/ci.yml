@@ -47,6 +47,11 @@ jobs:
           - {os: windows-2022, compiler: msvc-cpp20-release}
           - {os: windows-2022, compiler: msvc-cpp20-debug}
     steps:
+      - name: install zlib
+        if: runner.os == 'Windows'
+        run: |
+          vcpkg integrate install
+          vcpkg install zlib zlib:x64-windows
       - name: Standard IV-project testing
         uses: iv-project/IVaction@v9.6
         with:
