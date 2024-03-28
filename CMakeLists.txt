@@ -7,7 +7,14 @@
 #       In this case we assume this project is compiled for packaging or testing.
 # 2. scenario: another project is adding this directory via "add_subdirectory".
 #       In this case we don't want any tests to be included.
-cmake_minimum_required (VERSION 3.29)
+cmake_minimum_required (VERSION 3.25)
+
+# !TODO this can be removed if cmake is changed to version 3.29
+if (NOT DEFINED PROJECT_NAME)
+    set(PROJECT_IS_TOP_LEVEL TRUE)
+else()
+    set(PROJECT_IS_TOP_LEVEL FALSE)
+endif()
 
 project(ivio LANGUAGES CXX VERSION "${IVIO_PROJECT_VERSION}"
             DESCRIPTION "ivio -- IO library for file formats used in bioinformatics")
@@ -27,8 +34,7 @@ endif()
 include(cmake/CPM.cmake)
 include(ivio-config.cmake)
 
-if (${ROOT_PROJECT})
-
+if (PROJECT_IS_TOP_LEVEL)
     CPMaddPackage("gh:fmtlib/fmt#10.1.1")
     CPMaddPackage("gh:catchorg/Catch2#v3.4.0")
 
