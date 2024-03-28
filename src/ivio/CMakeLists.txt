@@ -26,3 +26,4 @@ target_include_directories(ivio
 target_link_libraries(ivio
     ZLIB::ZLIB
 )
+target_compile_features(ivio PUBLIC cxx_std_20)

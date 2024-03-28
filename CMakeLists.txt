@@ -19,12 +19,6 @@ endif()
 project(ivio LANGUAGES CXX VERSION "${IVIO_PROJECT_VERSION}"
             DESCRIPTION "ivio -- IO library for file formats used in bioinformatics")
 
-if (PROJECT_IS_TOP_LEVEL)
-    set(CMAKE_CXX_STANDARD 20)
-    set(CMAKE_CXX_EXTENSIONS OFF)
-endif()
-
-
 include(cmake/CPM.cmake)
 include(ivio-config.cmake)
 
