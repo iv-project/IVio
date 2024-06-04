@@ -28,6 +28,7 @@ struct zlib_writer_impl {
         return stream;
     }();
 
+    zlib_writer_impl() = delete;
     zlib_writer_impl(writer&& name)
         : file{std::move(name)}
     {
@@ -35,6 +36,8 @@ struct zlib_writer_impl {
             throw std::runtime_error{"error initializing zlib/deflateInit2"};
         }
     }
+
+    zlib_writer_impl(zlib_writer_impl const& _other) = delete;
     zlib_writer_impl(zlib_writer_impl&& _other)
         : file{std::move(_other.file)}
     {
@@ -46,6 +49,9 @@ struct zlib_writer_impl {
     ~zlib_writer_impl() {
         close();
     }
+
+    auto operator=(zlib_writer_impl&&) = delete;
+    auto operator=(zlib_writer_impl const&) = delete;
 
     auto write(std::span<char> buffer) -> size_t {
         auto outBuffer = std::array<char, 2<<16>{};
