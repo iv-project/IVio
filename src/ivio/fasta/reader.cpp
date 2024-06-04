@@ -147,7 +147,11 @@ void reader::seek_faidx(faidx::record const& faidx) {
     }
     bool lfcrEnding = (faidx.linebases + 2 == faidx.linewidth);
     if (faidx.offset < faidx.id.size() + 2 + (lfcrEnding?1:0)) {
-        throw std::runtime_error("Invalid faidx seek index, offset: " + std::to_string(faidx.offset) + ", id size: " + faidx.id);
+        throw std::runtime_error{
+            "Invalid faidx seek index, offset: " + std::to_string(faidx.offset)
+            + ", id: " + faidx.id
+            + ", lineEnding: " + std::to_string(lfcrEnding)
+        };
     }
 
     seek(faidx.offset - faidx.id.size() - 2 - (lfcrEnding?1:0));
