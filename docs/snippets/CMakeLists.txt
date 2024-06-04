@@ -4,6 +4,9 @@
 cmake_minimum_required (VERSION 3.14)
 
 function(test_snippet file_base_name params)
+    if (EMSCRIPTEN)
+        return()
+    endif()
     add_executable(snippet_${file_base_name} ${file_base_name})
     target_link_libraries(snippet_${file_base_name} ivio::ivio fmt::fmt)
 
