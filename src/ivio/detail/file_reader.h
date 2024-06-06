@@ -37,7 +37,7 @@ public:
             }
             return r;
         }()}
-        , filesize_{file_size(path)}
+        , filesize_{static_cast<size_t>(file_size(path))}
     {}
 
     file_reader() = delete;
