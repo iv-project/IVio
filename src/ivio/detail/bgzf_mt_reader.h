@@ -16,7 +16,8 @@ namespace ivio {
 // libstdc++ defines `__GLIBCXX__` -> Has jthread
 // libstd++ defines `_LIBCPP_VERSION` -> jthread since 18
 // msvc defines `_MSC_VER` -> jthread since 19.28
-#if defined(__GLIBCXX__) || _LIBCPP_VERSION >= 180000 || _MSC_VER >= 1928
+// !TODO this should work, but emcc can't find std::jthread
+#if (defined(__GLIBCXX__) || _LIBCPP_VERSION >= 180000 || _MSC_VER >= 1928) && !defined(__EMSCRIPTEN__)
 
 namespace bgzf_mt {
 
