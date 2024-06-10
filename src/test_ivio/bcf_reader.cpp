@@ -160,10 +160,10 @@ TEST_CASE("reading bcf files", "[bcf][reader]") {
             CHECK(vec[i].n_fmt == expected[i].n_fmt);
             CHECK(vec[i].id == expected[i].id);
             CHECK(vec[i].ref == expected[i].ref);
-            CHECK(vec[i].alt.size() == expected[i].alt.size());
-            CHECK(vec[i].filter.size() == expected[i].filter.size());
-            CHECK(vec[i].info.size() == expected[i].info.size());
-            CHECK(vec[i].format.size() == expected[i].format.size());
+            REQUIRE(vec[i].alt.size() == expected[i].alt.size());
+            REQUIRE(vec[i].filter.size() == expected[i].filter.size());
+            REQUIRE(vec[i].info.size() == expected[i].info.size());
+            REQUIRE(vec[i].format.size() == expected[i].format.size());
 
             for (size_t j{0}; j < vec[i].alt.size(); ++j) {
                 INFO("j: " << j);
