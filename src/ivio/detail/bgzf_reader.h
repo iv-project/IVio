@@ -102,14 +102,19 @@ struct ZlibContext {
         if (in.size() < BlockFooterLength) {
             throw std::runtime_error{"BGZF block too short. " + std::to_string(in.size())};
         }
-
+        if (in.size() > std::numeric_limits<uint32_t>::max()) {
+            throw std::runtime_error{"BGZF block is too long, must fit into 32bit. " + std::to_string(in.size())};
+        }
+        if (out.size() > std::numeric_limits<uint32_t>::max()) {
+            throw std::runtime_error{"output buffer is to long, must fit into 32bits. " + std::to_string(out.size())};
+        }
 //        if (!detail::bgzf_compression::validate_header(std::span{srcBegin, srcLength})) {
 //            throw io_error("Invalid BGZF block header.");
 //        }
         strm.next_in   = (Bytef *)in.data();
         strm.next_out  = (Bytef *)out.data();
-        strm.avail_in  = in.size() - BlockFooterLength;
-        strm.avail_out = out.size();
+        strm.avail_in  = static_cast<uint32_t>(in.size()) - BlockFooterLength;
+        strm.avail_out = static_cast<uint32_t>(out.size());
 
         auto status = inflate(&strm, Z_FINISH);
         if (status != Z_STREAM_END) {
@@ -117,7 +122,7 @@ struct ZlibContext {
         }
 
         // Compute and check checksum
-        unsigned crc = crc32(crc32(0, nullptr, 0), (Bytef *)out.data(), out.size() - strm.avail_out);
+        unsigned crc = crc32(crc32(0, nullptr, 0), (Bytef *)out.data(), static_cast<uint32_t>(out.size() - strm.avail_out));
         unsigned ecrc = bgzfUnpack<uint32_t>(in.data() + in.size() - 8);
         if (ecrc != crc)
             throw std::runtime_error{"BGZF wrong checksum." + std::to_string(ecrc) + " " + std::to_string(crc)};

@@ -65,12 +65,12 @@ writer::writer(config config_)
         }
         // write heading of the body
         {
-            auto ss = std::string{"#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT"};
+            auto _ss = std::string{"#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT"};
             for (auto const& s : config_.header.genotypes) {
-                ss += '\t' + s;
+                _ss += '\t' + s;
             }
-            ss += '\n';
-            writer.write(ss);
+            _ss += '\n';
+            writer.write(_ss);
         }
     }, pimpl_->writer);
 }
@@ -127,6 +127,5 @@ void writer::close() {
 }
 
 static_assert(record_writer_c<writer>);
-
 
 }

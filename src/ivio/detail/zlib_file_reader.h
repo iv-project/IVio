@@ -17,14 +17,14 @@ struct zlib_reader {
     VarBufferedReader reader;
 
     z_stream stream = []() {
-        auto stream = z_stream{};
-        stream.next_in   = Z_NULL;
-        stream.avail_in  = 0;
-        stream.total_out = 0;
-        stream.zalloc    = Z_NULL;
-        stream.zfree     = Z_NULL;
-        stream.opaque    = Z_NULL;
-        return stream;
+        auto _stream = z_stream{};
+        _stream.next_in   = Z_NULL;
+        _stream.avail_in  = 0;
+        _stream.total_out = 0;
+        _stream.zalloc    = Z_NULL;
+        _stream.zfree     = Z_NULL;
+        _stream.opaque    = Z_NULL;
+        return _stream;
     }();
 
     zlib_reader(VarBufferedReader reader)
@@ -50,10 +50,12 @@ struct zlib_reader {
         static_assert(std::same_as<std::ranges::range_value_t<decltype(range)>, char>);
         while(true) {
             auto [ptr, avail_in] = reader.read(range.size());
+            avail_in = std::min<size_t>(std::numeric_limits<uint32_t>::max(), avail_in);
+            auto avail_out = std::min<size_t>(std::numeric_limits<uint32_t>::max(), range.size());
 
             stream.next_in  = (unsigned char*)(ptr);
-            stream.avail_in = avail_in;
-            stream.avail_out = range.size();
+            stream.avail_in = static_cast<uint32_t>(avail_in);
+            stream.avail_out = static_cast<uint32_t>(avail_out);
             stream.next_out  = (unsigned char*)range.data();
             auto ret = inflate(&stream, Z_NO_FLUSH);
             auto diff = avail_in - stream.avail_in;

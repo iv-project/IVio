@@ -8,6 +8,7 @@
 #include "stream_writer.h"
 
 #include <array>
+#include <cassert>
 #include <ranges>
 #include <zlib.h>
 
@@ -18,14 +19,14 @@ struct zlib_writer_impl {
     writer file;
 
     z_stream stream = []() {
-        auto stream = z_stream{};
-        stream.next_in   = Z_NULL;
-        stream.avail_in  = 0;
-        stream.total_out = 0;
-        stream.zalloc    = Z_NULL;
-        stream.zfree     = Z_NULL;
-        stream.opaque    = Z_NULL;
-        return stream;
+        auto _stream = z_stream{};
+        _stream.next_in   = Z_NULL;
+        _stream.avail_in  = 0;
+        _stream.total_out = 0;
+        _stream.zalloc    = Z_NULL;
+        _stream.zfree     = Z_NULL;
+        _stream.opaque    = Z_NULL;
+        return _stream;
     }();
 
     zlib_writer_impl() = delete;
@@ -54,12 +55,13 @@ struct zlib_writer_impl {
     auto operator=(zlib_writer_impl const&) = delete;
 
     auto write(std::span<char> buffer) -> size_t {
+        assert(buffer.size() <= std::numeric_limits<uint32_t>::max());
         auto outBuffer = std::array<char, 2<<16>{};
 
         stream.next_in = (unsigned char*)buffer.data();
-        stream.avail_in = buffer.size();
+        stream.avail_in = static_cast<uint32_t>(buffer.size());
         stream.next_out  = (unsigned char*)&outBuffer[0];
-        stream.avail_out = outBuffer.size();
+        stream.avail_out = static_cast<uint32_t>(outBuffer.size());
 
         auto ret = deflate(&stream, Z_NO_FLUSH);
         if (ret != Z_OK && ret != Z_STREAM_END) {
@@ -75,7 +77,7 @@ struct zlib_writer_impl {
 
             do {
                 stream.next_out  = (unsigned char*)&outBuffer[0];
-                stream.avail_out = outBuffer.size();
+                stream.avail_out = static_cast<uint32_t>(outBuffer.size());
 
                 auto ret = deflate(&stream, Z_FINISH);
                 if (ret != Z_OK && ret != Z_STREAM_END) {
@@ -95,6 +97,5 @@ using zlib_stream_writer = zlib_writer_impl<stream_writer>;
 
 static_assert(writer_c<zlib_file_writer>);
 static_assert(writer_c<zlib_stream_writer>);
-
 
 }

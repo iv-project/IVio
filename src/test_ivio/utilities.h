@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 #pragma once
 
+#include <cassert>
 #include <filesystem>
 #include <fstream>
 #include <stdexcept>
@@ -22,7 +23,8 @@ inline auto read_file(std::filesystem::path p) -> std::string {
     do {
         auto oldSize = buffer.size();
         buffer.resize(oldSize + 65535);
-        bytes_read = gzread(f, buffer.data(), buffer.size());
+        assert(buffer.size() <= std::numeric_limits<uint32_t>::max());
+        bytes_read = gzread(f, buffer.data(), static_cast<uint32_t>(buffer.size()));
         if (bytes_read < 0) {
             throw std::runtime_error{"reading file failed"};
         }
