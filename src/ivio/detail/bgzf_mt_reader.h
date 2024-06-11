@@ -27,8 +27,8 @@ struct job_queue {
         Job job;
         std::mutex mutex;
         std::condition_variable cv;
-        std::atomic_bool processing{};
-        std::atomic_bool doneflag{};
+        bool processing{};
+        bool doneflag{};
 
         void reset() {
             auto g = std::unique_lock{mutex};
@@ -41,10 +41,13 @@ struct job_queue {
             doneflag = true;
             cv.notify_one();
         };
+
         void await() {
             auto g = std::unique_lock{mutex};
-            if (doneflag) return;
-            cv.wait(g);
+//            if (doneflag) return;
+            cv.wait(g, [this]() {
+                return doneflag;
+            });
         }
     };
 
@@ -57,15 +60,13 @@ struct job_queue {
     job_queue() = default;
     job_queue(job_queue const&) = delete;
     job_queue(job_queue&& _other) {
-        auto g1 = std::unique_lock(mutex);
-        auto g2 = std::unique_lock(_other.mutex);
+        auto g = std::scoped_lock(mutex, _other.mutex);
 
         jobs = std::move(_other.jobs);
     }
     auto operator=(job_queue const&) -> job_queue& = delete;
     auto operator=(job_queue&& _other) -> job_queue& {
-        auto g1 = std::unique_lock(mutex);
-        auto g2 = std::unique_lock(_other.mutex);
+        auto g = std::scoped_lock(mutex, _other.mutex);
 
         jobs = std::move(_other.jobs);
         return *this;
@@ -206,7 +207,7 @@ struct bgzf_mt_reader {
     size_t read(std::ranges::contiguous_range auto&& range) {
         static_assert(std::same_as<std::ranges::range_value_t<decltype(range)>, char>);
         auto next = jobs.begin();
-        if (!next) return 0; // abort, nothing todo, finished everything
+        if (!next) return 0; // abort, nothing to do, finished everything
         next->await();
 
         auto& output_view = next->job.output_view;
