@@ -19,6 +19,12 @@ endif()
 project(ivio LANGUAGES CXX VERSION "${IVIO_PROJECT_VERSION}"
             DESCRIPTION "ivio -- IO library for file formats used in bioinformatics")
 
+if (PROJECT_IS_TOP_LEVEL)
+    if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+        set(CMAKE_CXX_FLAGS /EHsc)
+    endif()
+endif()
+
 include(cmake/CPM.cmake)
 CPMAddPackage("gh:SGSSGene/WrappedCPMAddPackage@0.2.7")
 WrappedCPMAddPackage("https://zlib.net/zlib-1.3.1.tar.gz@1.3.1")
