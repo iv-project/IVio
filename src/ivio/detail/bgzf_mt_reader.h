@@ -54,7 +54,7 @@ struct job_queue {
 
     std::mutex mutex;
     std::list<std::unique_ptr<WrappedJob>> jobs;
-    std::atomic_bool terminate{};
+    bool terminate{};
     std::condition_variable cv;
 
     job_queue() = default;
@@ -153,7 +153,6 @@ struct bgzf_mt_reader {
             if (avail_in < compressedLen) throw std::runtime_error{"failed reading (2)"};
             input.resize(compressedLen-18);
             std::memcpy(input.data(), ptr+18, compressedLen-18);
-
             reader.dropUntil(compressedLen);
             g.unlock();
         }
@@ -168,12 +167,13 @@ struct bgzf_mt_reader {
         return false;
     }
 
-    std::mutex gMutex;
     void startThread(size_t threadNbr) {
         while (threads.size() < threadNbr) {
             threads.emplace_back(std::jthread{[this](std::stop_token stoken) {
                 while(!stoken.stop_requested()) {
-                    if (work()) return;
+                    if (work()) {
+                        return;
+                    }
                 }
             }});
         }
@@ -208,6 +208,7 @@ struct bgzf_mt_reader {
         static_assert(std::same_as<std::ranges::range_value_t<decltype(range)>, char>);
         auto next = jobs.begin();
         if (!next) return 0; // abort, nothing to do, finished everything
+
         next->await();
 
         auto& output_view = next->job.output_view;
@@ -215,9 +216,11 @@ struct bgzf_mt_reader {
         size_t size = std::min(range.size(), output_view.size());
         std::memcpy(range.data(), output_view.data(), size);
         output_view = output_view.substr(size);
+
         if (output_view.empty()) {
             jobs.recycle();
         }
+
         return size;
     }
 };
