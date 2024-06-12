@@ -14,10 +14,10 @@ namespace ivio {
 
 //!WORKAROUND llvm < 18 and MSVC < 19.28 do not provide jthread
 // libstdc++ defines `__GLIBCXX__` -> Has jthread
-// libstd++ defines `_LIBCPP_VERSION` -> jthread since 18
+// libstd++ defines `_LIBCPP_VERSION` -> jthread since 18 but not on macOS? (!TODO not sure why on macos it doesn't work)
 // msvc defines `_MSC_VER` -> jthread since 19.28
 // !TODO this should work, but emcc can't find std::jthread
-#if (defined(__GLIBCXX__) || _LIBCPP_VERSION >= 180000 || _MSC_VER >= 1928) && !defined(__EMSCRIPTEN__)
+#if (defined(__GLIBCXX__) || (_LIBCPP_VERSION >= 180000 && !__APPLE__) || _MSC_VER >= 1928) && !defined(__EMSCRIPTEN__)
 
 namespace bgzf_mt {
 

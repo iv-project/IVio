@@ -38,10 +38,11 @@ jobs:
           - {os: ubuntu-22.04, compiler: gcc14-cpp23-release}
           - {os: ubuntu-22.04, compiler: clang16-cpp20-release}
           - {os: ubuntu-22.04, compiler: clang17-cpp20-release}
+          - {os: ubuntu-22.04, compiler: clang18-cpp20-release}
           - {os: macos-12,     compiler: gcc14-cpp20-release}
-          - {os: macos-12,     compiler: clang15-cpp20-release}
           - {os: macos-12,     compiler: clang16-cpp20-release}
           - {os: macos-12,     compiler: clang17-cpp20-release}
+          - {os: macos-12,     compiler: clang18-cpp20-release}
           - {os: windows-2022, compiler: msvc-cpp20-release}
           - {os: windows-2022, compiler: msvc-cpp20-relwithdebinfo-sanitize}
           - {os: windows-2022, compiler: msvc-cpp20-debug}
@@ -50,7 +51,7 @@ jobs:
 
     steps:
       - name: Standard IV-project testing
-        uses: iv-project/IVaction@v9.13
+        uses: iv-project/IVaction@v9.14
         with:
           compiler: ${{ matrix.compiler }}
           threads: 2
