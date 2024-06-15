@@ -51,10 +51,22 @@ jobs:
 
     steps:
       - name: Standard IV-project testing
-        uses: iv-project/IVaction@v9.14
+        uses: iv-project/IVaction@v9.15
         with:
           compiler: ${{ matrix.compiler }}
           threads: 2
           cmake_flags: ${{ matrix.cmake_flags }}
           cmake_c_flags: ${{ matrix.cmake_c_flags }}
           cmake_cxx_flags: ${{ matrix.cmake_cxx_flags }}
+  final:
+    runs-on: ubuntu-22.04
+    name: final-pass
+    needs: build
+    if: always()
+    steps:
+      - name: Succeeded
+        if: ${{ !(contains(needs.*.result, 'failure')) }}
+        run: exit 0
+      - name: CI failed
+        if: ${{ contains(needs.*.result, 'failure') }}
+        run: exit 1
