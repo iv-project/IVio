@@ -89,6 +89,12 @@ struct ZlibContext {
     size_t compressBlock(std::span<char const> in, std::span<char> out) {
         reset();
 
+        if (in.size() > std::numeric_limits<uint32_t>::max()) {
+            throw std::runtime_error{"input buffer is too long, must fit into 32bit. " + std::to_string(in.size())};
+        }
+        if (out.size() > std::numeric_limits<uint32_t>::max()) {
+            throw std::runtime_error{"output buffer is to long, must fit into 32bits. " + std::to_string(out.size())};
+        }
 /*        if (in.size() < BlockFooterLength) {
             throw "BGZF block too short. " + std::to_string(in.size());
         }*/
@@ -101,18 +107,18 @@ struct ZlibContext {
         }
         stream.next_in   = (Bytef *)in.data();
         stream.next_out  = (Bytef *)out.data()+18;
-        stream.avail_in  = in.size();
-        stream.avail_out = out.size()-18-BlockFooterLength;
+        stream.avail_in  = static_cast<uint32_t>(in.size());
+        stream.avail_out = static_cast<uint32_t>(out.size())-18-BlockFooterLength;
 
         auto status = deflate(&stream, Z_FINISH);
         if (status != Z_STREAM_END) {
-            throw "Deflation failed. compressed BGZF data is too big. " + std::to_string(stream.avail_in) + " " + std::to_string(stream.avail_out);
+            throw std::runtime_error{"Deflation failed. compressed BGZF data is too big. " + std::to_string(stream.avail_in) + " " + std::to_string(stream.avail_out)};
         }
 
         auto length = out.size() - stream.avail_out;
         bgzf_writer::detail::bgzfPack(static_cast<uint16_t>(length-1ul), &out[16]);
 
-        uint32_t crc = crc32(crc32(0, nullptr, 0), (Bytef *)in.data(), in.size());
+        uint32_t crc = crc32(crc32(0, nullptr, 0), (Bytef *)in.data(), static_cast<uint32_t>(in.size()));
 
         bgzf_writer::detail::bgzfPack(static_cast<uint32_t>(crc), &out[length-8ul]);
         bgzf_writer::detail::bgzfPack(static_cast<uint32_t>(in.size()), &out[length-4ul]);

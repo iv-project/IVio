@@ -16,7 +16,7 @@ template <typename Reader, size_t minV = (1<<12)>
 class buffered_reader {
     Reader reader;
     std::vector<char> buf = []() { auto vec = std::vector<char>{}; vec.reserve(minV); return vec; }();
-    int inPos{};
+    size_t inPos{};
 
 public:
     buffered_reader(Reader reader)
@@ -88,8 +88,8 @@ public:
         buf.clear();
         reader.seek(offset);
     }
-
 };
+
 template <size_t minV, typename Reader>
 auto make_buffered_reader(Reader&& reader) {
     return buffered_reader<Reader, minV>{std::forward<Reader>(reader)};
@@ -129,6 +129,8 @@ struct VarBufferedReader {
             if constexpr (Seekable<T>) {
                 sptr->seek(offset);
                 return;
+            } else {
+                (void)offset;
             }
             throw std::runtime_error("this file format does not support tell/seek(2)");
         };
@@ -149,4 +151,5 @@ struct VarBufferedReader {
     std::function<size_t()>                                tell;
     std::function<void(size_t)>                            seek;
 };
+
 }

@@ -3,8 +3,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 cmake_minimum_required (VERSION 3.14)
 
-find_package(ZLIB REQUIRED)
-
 add_library(ivio bam/reader.cpp
                  bcf/reader.cpp
                  bcf/writer.cpp
@@ -24,6 +22,6 @@ target_include_directories(ivio
     $<INSTALL_INTERFACE:include>
 )
 target_link_libraries(ivio
-    ZLIB::ZLIB
+    zlibstatic
 )
 target_compile_features(ivio PUBLIC cxx_std_20)

@@ -35,9 +35,9 @@ struct bcf_buffer {
     void writeInt(T v) {
         auto type = [&]() -> uint8_t {
             if constexpr (std::same_as<T, int8_t>) return 1;
-            if constexpr (std::same_as<T, int16_t>) return 2;
-            if constexpr (std::same_as<T, int32_t>) return 3;
-            throw std::runtime_error{"BCF error, expected an int(2)"};
+            else if constexpr (std::same_as<T, int16_t>) return 2;
+            else if constexpr (std::same_as<T, int32_t>) return 3;
+            else throw std::runtime_error{"BCF error, expected an int(2)"};
         }();
         pack<uint8_t>(type);
         pack(v);
@@ -46,13 +46,13 @@ struct bcf_buffer {
     void writeString(std::string_view v) {
         if (v.size() < 15) { // No overflow
             auto l = (v.size() << 4) | 0x07;
-            pack<uint8_t>(l);
+            pack<uint8_t>(static_cast<uint8_t>(l));
         } else { // overflow
             pack<uint8_t>(0xf7);
             if (v.size() > 127) {
                 throw std::runtime_error{"BCF: string to long"};
             }
-            writeInt<int8_t>(v.size());
+            writeInt<int8_t>(static_cast<int8_t>(v.size()));
         }
         auto oldSize = buffer.size();
         buffer.resize(buffer.size() + v.size());
@@ -63,19 +63,19 @@ struct bcf_buffer {
     void writeVector(std::vector<int32_t> v) {
         if (v.size() < 15) { // No overflow
             auto l = (v.size() << 4) | 0x07;
-            pack<uint8_t>(l);
+            pack<uint8_t>(static_cast<uint8_t>(l));
         } else { // overflow
             pack<uint8_t>(0xf7);
             if (v.size() > 127) {
                 throw std::runtime_error{"BCF: string to long"};
             }
-            writeInt<int8_t>(v.size());
+            writeInt<int8_t>(static_cast<int8_t>(v.size()));
         }
         for (auto e : v) {
-            if ( e >= std::numeric_limits<int8_t>::lowest() and e <= std::numeric_limits<int8_t>::max()) {
-                writeInt<int8_t>(e);
-            } else if ( e >= -std::numeric_limits<int16_t>::lowest() and e <= std::numeric_limits<int16_t>::max()) {
-                writeInt<int16_t>(e);
+            if (e >= std::numeric_limits<int8_t>::lowest() and e <= std::numeric_limits<int8_t>::max()) {
+                writeInt<int8_t>(static_cast<int8_t>(e));
+            } else if (e >= -std::numeric_limits<int16_t>::lowest() and e <= std::numeric_limits<int16_t>::max()) {
+                writeInt<int16_t>(static_cast<int16_t>(e));
             } else {
                 writeInt<int32_t>(e);
             }
@@ -185,9 +185,9 @@ void writer::write(record_view r) {
     buffer.writeData(r.alt);
     buffer.writeData(r.filter);
     buffer.writeData(r.info);
-    l_shared = buffer.buffer.size() - 8;
+    l_shared = static_cast<uint32_t>(buffer.buffer.size()) - 8;
     buffer.writeData(r.format);
-    l_indiv = buffer.buffer.size() - l_shared - 8;
+    l_indiv = static_cast<uint32_t>(buffer.buffer.size()) - l_shared - 8;
 
     // overwrite l_shared with correct data
     bgzfPack<uint32_t>(l_shared, buffer.buffer.data());

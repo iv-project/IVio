@@ -19,11 +19,12 @@ struct record;
 
 struct record_view {
     constexpr static auto rank_to_char = std::string_view{"=ACMGRSVTWYHKDBN"};
+    static_assert(rank_to_char.size() < 256);
     constexpr static auto char_to_rank = []() {
         auto r = std::array<uint8_t, 256>{};
         r.fill(15);
         for (size_t i{0}; i < rank_to_char.size(); ++i) {
-            r[rank_to_char[i]] = i;
+            r[rank_to_char[i]] = static_cast<uint8_t>(i);
         }
         return r;
     }();

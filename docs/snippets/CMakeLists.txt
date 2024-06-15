@@ -4,10 +4,18 @@
 cmake_minimum_required (VERSION 3.14)
 
 function(test_snippet file_base_name params)
+    if (EMSCRIPTEN)
+        return()
+    endif()
     add_executable(snippet_${file_base_name} ${file_base_name})
     target_link_libraries(snippet_${file_base_name} ivio::ivio fmt::fmt)
 
-    add_test(NAME test_snippet_${file_base_name} COMMAND bash -c "$<TARGET_FILE:snippet_${file_base_name}> ${params} > ${file_base_name}.run.out")
+    if (WIN32)
+        add_test(NAME test_snippet_${file_base_name} COMMAND ${CMAKE_COMMAND} -E chdir $<TARGET_FILE_DIR:snippet_${file_base_name}> $ENV{ComSpec} /c "$<TARGET_FILE:snippet_${file_base_name}> ${params} > ${file_base_name}.run.out")
+    else()
+        add_test(NAME test_snippet_${file_base_name} COMMAND bash -c "$<TARGET_FILE:snippet_${file_base_name}> ${params} > ${file_base_name}.run.out")
+    endif()
+
     add_test(test_snippet_${file_base_name}_compare ${CMAKE_COMMAND} -E compare_files --ignore-eol ${file_base_name}.run.out ${CMAKE_CURRENT_SOURCE_DIR}/${file_base_name}.out)
     set_tests_properties(test_snippet_${file_base_name}_compare PROPERTIES DEPENDS test_snippet_${file_base_name})
 endfunction()

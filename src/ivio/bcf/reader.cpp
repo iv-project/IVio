@@ -83,7 +83,11 @@ struct bcf_buffer {
             throw std::runtime_error("BCF error: unexpected type: " + bcf_type(t));
         }
         if (l == 15) {
-           l = readInt();
+            auto v = readInt();
+            if (v <= 0 && v < 256) {
+                throw std::runtime_error{"BCT error: unexpected length (0 <= v < 256): " + std::to_string(v)};
+            }
+            l = static_cast<uint8_t>(v);
         }
         auto value = std::string_view{iter, iter+l};
         iter += l;
@@ -96,7 +100,11 @@ struct bcf_buffer {
             throw std::runtime_error("BCF error: unexpected type: " + bcf_type(t));
         }
         if (l == 15) {
-            l = readInt();
+            auto v = readInt();
+            if (v <= 0 && v < 256) {
+                throw std::runtime_error{"BCT error: unexpected length (0 <= v < 256): " + std::to_string(v)};
+            }
+            l = static_cast<uint8_t>(v);
         }
         auto res = std::vector<int32_t>{};
         res.resize(l);
@@ -112,7 +120,11 @@ struct bcf_buffer {
             throw std::runtime_error("BCF error: unexpected type: " + bcf_type(t));
         }
         if (l == 15) {
-            l = readInt();
+            auto v = readInt();
+            if (v <= 0 && v < 256) {
+                throw std::runtime_error{"BCT error: unexpected length (0 <= v < 256): " + std::to_string(v)};
+            }
+            l = static_cast<uint8_t>(v);
         }
         auto res = std::vector<float>{};
         res.resize(l);
