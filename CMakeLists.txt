@@ -26,7 +26,7 @@ if (PROJECT_IS_TOP_LEVEL)
 endif()
 
 include(cmake/CPM.cmake)
-CPMAddPackage("gh:SGSSGene/WrappedCPMAddPackage@0.2.7")
+CPMAddPackage("gh:SGSSGene/WrappedCPMAddPackage@0.2.9")
 WrappedCPMAddPackage("https://zlib.net/zlib-1.3.1.tar.gz@1.3.1")
 
 include(ivio-config.cmake)
