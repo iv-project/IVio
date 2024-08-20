@@ -15,8 +15,8 @@
 namespace ivio::faidx {
 
 struct reader : public reader_base<reader> {
-    using record      = faidx::record;
-    using record_view = faidx::record_view;
+    using record      = faidx::record;      //!doc: see record_reader_c<reader> concept
+    using record_view = faidx::record_view; //!doc: see record_reader_c<reader> concept
 
     struct config {
         // Source: file or stream

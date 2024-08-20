@@ -17,8 +17,8 @@
 namespace ivio::vcf {
 
 struct reader : public reader_base<reader> {
-    using record      = vcf::record;
-    using record_view = vcf::record_view;
+    using record      = vcf::record;      //!doc: see record_reader_c<reader> concept
+    using record_view = vcf::record_view; //!doc: see record_reader_c<reader> concept
 
     vcf::header header_;
 

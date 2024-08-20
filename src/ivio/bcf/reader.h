@@ -18,8 +18,8 @@
 namespace ivio::bcf {
 
 struct reader : public reader_base<reader> {
-    using record      = bcf::record;
-    using record_view = bcf::record_view;
+    using record      = bcf::record;      //!doc: see record_reader_c<reader> concept
+    using record_view = bcf::record_view; //!doc: see record_reader_c<reader> concept
 
     bcf::header header_;
 

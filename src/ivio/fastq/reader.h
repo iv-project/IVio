@@ -15,8 +15,8 @@
 namespace ivio::fastq {
 
 struct reader : public reader_base<reader> {
-    using record      = fastq::record;
-    using record_view = fastq::record_view;
+    using record      = fastq::record;      //!doc: see record_reader_c<reader> concept
+    using record_view = fastq::record_view; //!doc: see record_reader_c<reader> concept
 
     struct config {
         // Source: file or stream

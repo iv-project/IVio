@@ -18,8 +18,8 @@
 namespace ivio::bam {
 
 struct reader : public reader_base<reader> {
-    using record      = bam::record;
-    using record_view = bam::record_view;
+    using record      = bam::record;      //!doc: see record_reader_c<reader> concept
+    using record_view = bam::record_view; //!doc: see record_reader_c<reader> concept
 
     bam::header header_;
 

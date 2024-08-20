@@ -16,8 +16,8 @@
 namespace ivio::sam {
 
 struct reader : public reader_base<reader> {
-    using record      = sam::record;
-    using record_view = sam::record_view;
+    using record      = sam::record;      //!doc: see record_reader_c<reader> concept
+    using record_view = sam::record_view; //!doc: see record_reader_c<reader> concept
 
     struct config {
         // Source: file or stream
