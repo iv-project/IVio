@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 #pragma once
 
+#include "../detail/concepts.h"
 #include "../detail/reader_base.h"
 #include "../faidx/record.h"
 #include "record.h"
@@ -61,5 +62,7 @@ public:
      */
     void seek_faidx(faidx::record const& offset);
 };
+
+static_assert(record_reader_c<reader>);
 
 }

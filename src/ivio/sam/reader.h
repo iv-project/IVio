@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 #pragma once
 
+#include "../detail/concepts.h"
 #include "../detail/reader_base.h"
 #include "record.h"
 
@@ -32,5 +33,7 @@ public:
     auto next() -> std::optional<record_view>;
     void close();
 };
+
+static_assert(record_reader_c<reader>);
 
 }
