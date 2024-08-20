@@ -22,7 +22,7 @@ struct reader_base {
         auto operator*() const -> record_view {
            return *nextItem;
         }
-        auto operator->() const -> record_view* {
+        auto operator->() const -> record_view const* {
             return &*nextItem;
         }
         auto operator++() -> iter& {
