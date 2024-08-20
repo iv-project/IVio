@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 #pragma once
 
+#include "../detail/concepts.h"
 #include "../detail/reader_base.h"
 #include "record.h"
 
@@ -14,8 +15,8 @@
 namespace ivio::fastq {
 
 struct reader : public reader_base<reader> {
-    using record      = fastq::record;
-    using record_view = fastq::record_view;
+    using record      = fastq::record;      //!doc: see record_reader_c<reader> concept
+    using record_view = fastq::record_view; //!doc: see record_reader_c<reader> concept
 
     struct config {
         // Source: file or stream
@@ -26,8 +27,13 @@ public:
     reader(config const& config_);
     ~reader();
 
+    //!doc: see record_reader_c<reader> concept
     auto next() -> std::optional<record_view>;
+
+    //!doc: see record_reader_c<reader> concept
     void close();
 };
+
+static_assert(record_reader_c<reader>);
 
 }

@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 #pragma once
 
+#include "../detail/concepts.h"
 #include "../detail/writer_base.h"
 #include "record.h"
 
@@ -14,6 +15,8 @@
 namespace ivio::sam {
 
 struct writer : writer_base<writer> {
+    using record_view = sam::record_view; //!doc: see record_writer_c<writer> concept
+
     struct config {
         // Source: file or stream
         std::variant<std::filesystem::path, std::reference_wrapper<std::ostream>> output;
@@ -28,8 +31,13 @@ struct writer : writer_base<writer> {
     writer(config config_);
     ~writer();
 
+    //!doc: see record_writer_c<writer> concept
     void write(record_view record);
+
+    //!doc: see record_writer_c<writer> concept
     void close();
 };
+
+static_assert(record_writer_c<writer>);
 
 }

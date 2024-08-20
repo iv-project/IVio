@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 #pragma once
 
+#include "../detail/concepts.h"
 #include "../detail/reader_base.h"
 #include "../faidx/record.h"
 #include "record.h"
@@ -15,8 +16,8 @@
 namespace ivio::fasta {
 
 struct reader : public reader_base<reader> {
-    using record      = fasta::record;
-    using record_view = fasta::record_view;
+    using record      = fasta::record;      //!doc: see record_reader_c<reader> concept
+    using record_view = fasta::record_view; //!doc: see record_reader_c<reader> concept
 
     struct config {
         // Source: file or stream
@@ -27,17 +28,10 @@ public:
     reader(config const& config_);
     ~reader();
 
-    /**
-     * Reads next record
-     *
-     * \return returns the next record_view if available
-     *         otherwise std::nullopt
-     */
+    //!doc: see record_reader_c<reader> concept
     auto next() -> std::optional<record_view>;
 
-    /**
-     * Closes the underlying stream/file handler
-     */
+    //!doc: see record_reader_c<reader> concept
     void close();
 
     /**
@@ -61,5 +55,7 @@ public:
      */
     void seek_faidx(faidx::record const& offset);
 };
+
+static_assert(record_reader_c<reader>);
 
 }

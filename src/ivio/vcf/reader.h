@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 #pragma once
 
+#include "../detail/concepts.h"
 #include "../detail/reader_base.h"
 #include "header.h"
 #include "record.h"
@@ -16,8 +17,8 @@
 namespace ivio::vcf {
 
 struct reader : public reader_base<reader> {
-    using record      = vcf::record;
-    using record_view = vcf::record_view;
+    using record      = vcf::record;      //!doc: see record_reader_c<reader> concept
+    using record_view = vcf::record_view; //!doc: see record_reader_c<reader> concept
 
     vcf::header header_;
 
@@ -31,8 +32,14 @@ public:
     ~reader();
 
     auto header() const -> vcf::header const& { return header_; }
+
+    //!doc: see record_reader_c<reader> concept
     auto next() -> std::optional<record_view>;
+
+    //!doc: see record_reader_c<reader> concept
     void close();
 };
+
+static_assert(record_reader_c<reader>);
 
 }

@@ -5,6 +5,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <optional>
 #include <span>
 #include <string_view>
 #include <utility>
@@ -52,21 +53,60 @@ concept Seekable = requires(T t) {
  */
 template <typename T>
 concept record_reader_c = requires(T t) {
-    { t.next() };
-    { t.close() };
+    /**
+     * T must have a member type record_view and record
+     */
+    typename T::record;
+    typename T::record_view;
+
+    /**
+     * Reads next record
+     *
+     * \return returns the next record_view if available
+     *         otherwise std::nullopt
+     */
+    { t.next() } -> std::same_as<std::optional<typename T::record_view>>;
+
+    /**
+     * Closes the underlying stream/file handler
+     */
+    { t.close() } -> std::same_as<void>;
+
+    /**
+     * begin and end iterator
+     */
+    { begin(t) };
+    { end(t) };
+
+
 };
 
 
 template <typename T>
 concept writer_c = requires(T t) {
     { t.write(std::declval<std::span<char>>()) } -> std::same_as<size_t>;
+
+    /**
+     * Closes the underlying stream/file handler
+     */
     { t.close() };
-//    { t.write(std::declval<char const*>()) };
 };
 
 template <typename T>
 concept record_writer_c = requires(T t) {
-    { t.write({}) };
+    /**
+     * T must have a member type record_view
+     */
+    typename T::record_view;
+
+    /**
+     * writing a record_view into the target file/stream/...
+     */
+    { t.write(std::declval<typename T::record_view>()) };
+
+    /**
+     * Closes the underlying stream/file handler
+     */
     { t.close() };
 };
 
