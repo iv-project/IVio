@@ -28,17 +28,10 @@ public:
     reader(config const& config_);
     ~reader();
 
-    /**
-     * Reads next record
-     *
-     * \return returns the next record_view if available
-     *         otherwise std::nullopt
-     */
+    //!doc: see record_reader_c<reader> concept
     auto next() -> std::optional<record_view>;
 
-    /**
-     * Closes the underlying stream/file handler
-     */
+    //!doc: see record_reader_c<reader> concept
     void close();
 
     /**

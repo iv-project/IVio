@@ -5,6 +5,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <optional>
 #include <span>
 #include <string_view>
 #include <utility>
@@ -52,8 +53,18 @@ concept Seekable = requires(T t) {
  */
 template <typename T>
 concept record_reader_c = requires(T t) {
-    { t.next() };
-    { t.close() };
+    /**
+     * Reads next record
+     *
+     * \return returns the next record_view if available
+     *         otherwise std::nullopt
+     */
+    { t.next() } -> std::same_as<std::optional<typename T::record_view>>;
+
+    /**
+     * Closes the underlying stream/file handler
+     */
+    { t.close() } -> std::same_as<void>;
 };
 
 

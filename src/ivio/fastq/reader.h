@@ -27,7 +27,10 @@ public:
     reader(config const& config_);
     ~reader();
 
+    //!doc: see record_reader_c<reader> concept
     auto next() -> std::optional<record_view>;
+
+    //!doc: see record_reader_c<reader> concept
     void close();
 };
 

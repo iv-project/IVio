@@ -35,7 +35,11 @@ public:
     ~reader();
 
     auto header() const -> bam::header const& { return header_; }
+
+    //!doc: see record_reader_c<reader> concept
     auto next() -> std::optional<record_view>;
+
+    //!doc: see record_reader_c<reader> concept
     void close();
 };
 
