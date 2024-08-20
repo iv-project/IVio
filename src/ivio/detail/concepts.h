@@ -65,6 +65,14 @@ concept record_reader_c = requires(T t) {
      * Closes the underlying stream/file handler
      */
     { t.close() } -> std::same_as<void>;
+
+    /**
+     * begin and end iterator
+     */
+    { begin(t) };
+    { end(t) };
+
+
 };
 
 

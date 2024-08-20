@@ -17,7 +17,10 @@ struct reader_base {
         using value_type = typename reader::record;
 
         reader* reader_{};
-        std::optional<record_view> nextItem = [this]() -> std::optional<record_view> { if (reader_) return reader_->next(); return std::nullopt; }();
+        std::optional<record_view> nextItem = [this]() -> std::optional<record_view> {
+            if (reader_) return reader_->next();
+            return std::nullopt;
+        }();
 
         auto operator*() const -> record_view {
            return *nextItem;
@@ -49,9 +52,13 @@ public:
     reader_base(std::unique_ptr<pimpl> pimpl_)
         : pimpl_{std::move(pimpl_)}
     {}
+
+    //!doc: see record_reader_c<reader> concept
     friend auto begin(reader& reader_) {
         return iter{&reader_};
     }
+
+    //!doc: see record_reader_c<reader> concept
     friend auto end(reader&) {
         return iter{nullptr};
     }
