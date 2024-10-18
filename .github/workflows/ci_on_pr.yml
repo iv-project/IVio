@@ -27,7 +27,6 @@ jobs:
       matrix:
         include:
           - {os: ubuntu-22.04, compiler: spdx_reuse_lint}
-          - {os: ubuntu-22.04, compiler: cpm_version_check}
           - {os: ubuntu-22.04, compiler: gcc12-cpp20-release}
           - {os: ubuntu-22.04, compiler: gcc13-cpp20-release}
           - {os: ubuntu-22.04, compiler: gcc14-cpp20-release}
@@ -51,7 +50,7 @@ jobs:
 
     steps:
       - name: Standard IV-project testing
-        uses: iv-project/IVaction@v9.16
+        uses: iv-project/IVaction@v9.20
         with:
           compiler: ${{ matrix.compiler }}
           threads: 2
