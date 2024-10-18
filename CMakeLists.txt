@@ -9,13 +9,6 @@
 #       In this case we don't want any tests to be included.
 cmake_minimum_required (VERSION 3.25)
 
-# !TODO this can be removed if cmake is changed to version 3.29
-if (NOT DEFINED PROJECT_NAME)
-    set(PROJECT_IS_TOP_LEVEL TRUE)
-else()
-    set(PROJECT_IS_TOP_LEVEL FALSE)
-endif()
-
 project(ivio LANGUAGES CXX VERSION "${IVIO_PROJECT_VERSION}"
             DESCRIPTION "ivio -- IO library for file formats used in bioinformatics")
 
@@ -26,8 +19,8 @@ if (PROJECT_IS_TOP_LEVEL)
 endif()
 
 include(cmake/CPM.cmake)
-CPMAddPackage("gh:SGSSGene/WrappedCPMAddPackage@0.2.9")
-WrappedCPMAddPackage("https://zlib.net/zlib-1.3.1.tar.gz@1.3.1")
+CPMAddPackage("gh:SGSSGene/cpm.dependencies@1.0.0")
+CPMLoadDependenciesFile("${CMAKE_SOURCE_DIR}/cpm.dependencies")
 
 include(ivio-config.cmake)
 
@@ -39,9 +32,6 @@ if (PROJECT_IS_TOP_LEVEL)
     else()
         target_compile_options(ivio PUBLIC -Wall -Werror -Wpedantic -Wextra -fPIC)
     endif()
-
-    CPMaddPackage("gh:fmtlib/fmt#10.1.1")
-    CPMaddPackage("gh:catchorg/Catch2#v3.4.0")
 
     enable_testing()
     add_subdirectory(docs/snippets)
