@@ -20,7 +20,7 @@ endif()
 
 include(cmake/CPM.cmake)
 CPMAddPackage("gh:SGSSGene/cpm.dependencies@1.0.0")
-CPMLoadDependenciesFile("${CMAKE_SOURCE_DIR}/cpm.dependencies")
+CPMLoadDependenciesFile("${CMAKE_CURRENT_SOURCE_DIR}/cpm.dependencies")
 
 include(ivio-config.cmake)
 
