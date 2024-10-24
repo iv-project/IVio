@@ -9,7 +9,7 @@
         "ZLIB_BUILD_EXAMPLES OFF"
       ],
       "cmake_commands": [
-        "add_library(zlib::zlib ALIAS zlib)"
+        "add_library(zlib::zlib ALIAS zlibstatic)"
       ]
     },
     {
