@@ -6,6 +6,8 @@ cmake_minimum_required (VERSION 3.14)
 add_library(ivio bam/reader.cpp
                  bcf/reader.cpp
                  bcf/writer.cpp
+                 csv/reader.cpp
+                 csv/writer.cpp
                  fasta/reader.cpp
                  fasta/writer.cpp
                  faidx/reader.cpp
