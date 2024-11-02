@@ -6,6 +6,8 @@
 #include "bam/reader.h"
 #include "bcf/reader.h"
 #include "bcf/writer.h"
+#include "csv/reader.h"
+#include "csv/writer.h"
 #include "fasta/reader.h"
 #include "fasta/writer.h"
 #include "faidx/reader.h"

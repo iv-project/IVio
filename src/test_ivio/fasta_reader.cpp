@@ -97,7 +97,7 @@ TEST_CASE("reading fasta files", "[fasta][reader]") {
         }
     }
 
-    SECTION("Tell and Seek over FASAT entries, compatible with faidx") {
+    SECTION("Tell and Seek over FASTA entries, compatible with faidx") {
         auto recordPositions = std::vector<ivio::faidx::record>{};
         auto reader = ivio::fasta::reader{{tmp / "file.fa"}};
         for ([[maybe_unused]] auto r : reader) {
