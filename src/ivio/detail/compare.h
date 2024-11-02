@@ -53,7 +53,13 @@ constexpr auto operator<=>(std::string_view lhs, std::string_view rhs)
 {
     return lexicographical_compare_three_way(lhs.begin(), lhs.end(), rhs.begin(), lhs.end());
 }
+
 #endif
+
+constexpr auto operator<=>(std::span<std::string const> lhs, std::span<std::string const> rhs)
+{
+    return lexicographical_compare_three_way(lhs.begin(), lhs.end(), rhs.begin(), lhs.end());
+}
 
 constexpr auto operator<=>(std::span<uint8_t const> const & lhs, std::span<uint8_t const> const & rhs)
 {
