@@ -24,29 +24,6 @@ struct reader_base<vcf::reader>::pimpl {
     std::vector<std::tuple<std::string, std::string>> header;
     std::vector<std::string> genotypes;
 
-    pimpl(std::filesystem::path file)
-        : ureader {[&]() -> VarBufferedReader {
-            auto reader = mmap_reader{file};
-            auto [buffer, len] = reader.read(2);
-            if (zlib_reader::isGZipHeader({buffer, len})) {
-                return zlib_reader{std::move(reader)};
-            }
-            return reader;
-        }()}
-    {}
-    pimpl(std::istream& file)
-        : ureader {[&]() -> VarBufferedReader {
-            auto reader = stream_reader{file};
-            auto buffer = std::array<char, 2>{};
-            auto len = reader.read(buffer);
-            reader.seek(0);
-            if (zlib_reader::isGZipHeader({buffer.data(), len})) {
-                return zlib_reader{std::move(reader)};
-            }
-            return reader;
-        }()}
-    {}
-
     bool readHeaderLine() {
         auto [buffer, size] = ureader.read(2);
         if (size >= 2 and buffer[0] == '#' and buffer[1] == '#') {
@@ -123,7 +100,7 @@ namespace ivio::vcf {
 
 reader::reader(config const& config_)
     : reader_base{std::visit([&](auto& p) {
-        return std::make_unique<pimpl>(p);
+        return std::make_unique<pimpl>(makeZlibReader(p));
     }, config_.input)}
 {
     pimpl_->readHeader();

@@ -37,35 +37,11 @@ struct reader_mt_pimpl {
 
     std::optional<record_view> next;
     reader_mt_phase phase;
-
-    reader_mt_pimpl(std::filesystem::path file)
-        : reader {[&]() -> VarBufferedReader {
-            auto reader = mmap_reader{file}; // create a reader and peak into the file
-            auto [buffer, len] = reader.read(2);
-            if (zlib_reader::isGZipHeader({buffer, len})) {
-                return zlib_reader{std::move(reader)};
-            }
-            return reader;
-        }()}
-    {}
-    reader_mt_pimpl(std::istream& file)
-        : reader {[&]() -> VarBufferedReader {
-            auto reader = stream_reader{file};
-            auto buffer = std::array<char, 2>{};
-            auto len = reader.read(buffer);
-            reader.seek(0);
-            if (zlib_reader::isGZipHeader({buffer.data(), len})) {
-                return zlib_reader{std::move(reader)};
-            }
-            return reader;
-        }()}
-    {}
-
 };
 
 reader_mt::reader_mt(reader_mt_config config)
     : pimpl{std::visit([&](auto& p) {
-        return std::make_unique<reader_mt_pimpl>(p);
+        return std::make_unique<reader_mt_pimpl>(makeZlibReader(p));
     }, config.input)}
 {
     pimpl->thread = std::jthread{[this](std::stop_token stoken) {
