@@ -5,6 +5,7 @@
 
 #include "concepts.h"
 
+#include <any>
 #include <functional>
 #include <memory>
 #include <stdexcept>
@@ -96,12 +97,16 @@ auto make_buffered_reader(Reader&& reader) {
 }
 
 struct VarBufferedReader {
+    std::any storage;
+
     VarBufferedReader() = default;
     VarBufferedReader(VarBufferedReader const&) = delete;
     VarBufferedReader(VarBufferedReader&&) = default;
 
     template <BufferedReadable T>
-    VarBufferedReader(T&& t) {
+    VarBufferedReader(T&& t, std::any _storage = {})
+        : storage{std::move(_storage)} {
+
         auto sptr = std::make_shared<T>(std::forward<T>(t));
         readUntil = [sptr] (char c, size_t s) {
             return sptr->readUntil(c, s);
@@ -136,8 +141,8 @@ struct VarBufferedReader {
         };
     }
     template <Readable T>
-    VarBufferedReader(T&& t)
-        : VarBufferedReader{buffered_reader{std::forward<T>(t)}}
+    VarBufferedReader(T&& t, std::any _storage = {})
+        : VarBufferedReader{buffered_reader{std::forward<T>(t)}, std::move(_storage)}
     {}
 
     auto operator=(VarBufferedReader const&) -> VarBufferedReader& = delete;

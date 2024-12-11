@@ -8,8 +8,9 @@
 #include "mmap_reader.h"
 #include "stream_reader.h"
 
-#include <zlib.h>
+#include <fstream>
 #include <ranges>
+#include <zlib.h>
 
 namespace ivio {
 
@@ -83,5 +84,35 @@ struct zlib_reader {
 };
 
 static_assert(Readable<zlib_reader>);
+
+inline auto makeZlibReader(std::filesystem::path file) -> VarBufferedReader {
+    if (is_regular_file(file)) {
+        auto reader = mmap_reader{file}; // create a reader and peak into the file
+        auto [buffer, len] = reader.read(2);
+        if (zlib_reader::isGZipHeader({buffer, len})) {
+            return zlib_reader{std::move(reader)};
+        }
+        return reader;
+    } else {
+        auto ifs = std::make_shared<std::ifstream>(file, std::ios::binary);
+
+        auto reader = stream_reader{*ifs}; // create a reader and peak into the file
+        auto buffer = std::array<char, 2>{};
+        auto len = reader.peek(buffer);
+        if (zlib_reader::isGZipHeader({buffer.data(), len})) {
+            return zlib_reader{std::move(reader)};
+        }
+        return {std::move(reader), std::any{ifs}};
+    }
+}
+inline auto makeZlibReader(std::istream& file) -> VarBufferedReader {
+    auto reader = stream_reader{file};
+    auto buffer = std::array<char, 2>{};
+    auto len = reader.peek(buffer);
+    if (zlib_reader::isGZipHeader({buffer.data(), len})) {
+        return zlib_reader{std::move(reader)};
+    }
+    return reader;
+}
 
 }

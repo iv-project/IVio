@@ -1,12 +1,19 @@
 // SPDX-FileCopyrightText: 2006-2023, Knut Reinert & Freie Universität Berlin
 // SPDX-FileCopyrightText: 2016-2023, Knut Reinert & MPI für molekulare Genetik
 // SPDX-License-Identifier: BSD-3-Clause
+#include "generateSequence.h"
+
 #include <catch2/catch_all.hpp>
 #include <filesystem>
 #include <fstream>
 #include <ivio/ivio.h>
+#include <thread>
 
-#include "generateSequence.h"
+#if (defined(unix) || defined(__unix__) || defined(__unix)) && !defined(__EMSCRIPTEN__)
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#endif
 
 TEST_CASE("reading fasta files", "[fasta][reader]") {
     auto tmp = std::filesystem::temp_directory_path() / "ivio_test";
@@ -120,6 +127,47 @@ TEST_CASE("reading fasta files", "[fasta][reader]") {
         static_assert(std::same_as<decltype(vec), decltype(expected)>, "vec and expected should have the exact same type");
         CHECK(expected == vec);
     }
+
+    SECTION("Create a pipe and read from file") {
+#if (defined(unix) || defined(__unix__) || defined(__unix)) && !defined(__EMSCRIPTEN__)
+        auto filename = std::filesystem::path{tmp / "fifo_file.fa"};
+        mkfifo(filename.c_str(), O_CREAT | O_RDWR | S_IRWXU);
+        auto t = std::thread{[&](){
+            auto ofs = std::ofstream{filename, std::ios::binary};
+            ofs << test_data;
+        }};
+        auto reader = ivio::fasta::reader{{filename}};
+
+        auto vec = std::vector(begin(reader), end(reader));
+        static_assert(std::same_as<decltype(vec), decltype(expected)>, "vec and expected should have the exact same type");
+        CHECK(expected == vec);
+        t.join();
+#else
+        SKIP();
+#endif
+    }
+
+
+    SECTION("Create a pipe and read istream") {
+#if (defined(unix) || defined(__unix__) || defined(__unix)) && !defined(__EMSCRIPTEN__)
+        auto filename = std::filesystem::path{tmp / "fifo_file.fa"};
+        mkfifo(filename.c_str(), O_CREAT | O_RDWR | S_IRWXU);
+        auto t = std::thread{[&](){
+            auto ofs = std::ofstream{filename, std::ios::binary};
+            ofs << test_data;
+        }};
+        auto ifs = std::ifstream{filename, std::ios::binary};
+        auto reader = ivio::fasta::reader{{ifs}};
+
+        auto vec = std::vector(begin(reader), end(reader));
+        static_assert(std::same_as<decltype(vec), decltype(expected)>, "vec and expected should have the exact same type");
+        CHECK(expected == vec);
+        t.join();
+#else
+        SKIP();
+#endif
+    }
+
 
     SECTION("cleanup - deleting temp folder") {
         std::filesystem::remove_all(tmp);

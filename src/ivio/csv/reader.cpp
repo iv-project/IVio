@@ -20,31 +20,6 @@ struct reader_base<csv::reader>::pimpl {
     char delimiter;
     size_t lastUsed{};
     std::vector<std::string> entries;
-
-    pimpl(std::filesystem::path file, char _delimiter)
-        : ureader {[&]() -> VarBufferedReader {
-            auto reader = mmap_reader{file}; // create a reader and peak into the file
-            auto [buffer, len] = reader.read(2);
-            if (zlib_reader::isGZipHeader({buffer, len})) {
-                return zlib_reader{std::move(reader)};
-            }
-            return reader;
-        }()}
-        , delimiter{_delimiter}
-    {}
-    pimpl(std::istream& file, char _delimiter)
-        : ureader {[&]() -> VarBufferedReader {
-            auto reader = stream_reader{file};
-            auto buffer = std::array<char, 2>{};
-            auto len = reader.read(buffer);
-            reader.seek(0);
-            if (zlib_reader::isGZipHeader({buffer.data(), len})) {
-                return zlib_reader{std::move(reader)};
-            }
-            return reader;
-        }()}
-        , delimiter{_delimiter}
-    {}
 };
 }
 
@@ -52,7 +27,7 @@ namespace ivio::csv {
 
 reader::reader(config const& config_)
     : reader_base{std::visit([&](auto& p) {
-        return std::make_unique<pimpl>(p, config_.delimiter);
+        return std::make_unique<pimpl>(makeZlibReader(p), config_.delimiter);
     }, config_.input)}
 {}
 

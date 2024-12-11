@@ -6,6 +6,7 @@
 #include "concepts.h"
 
 #include <istream>
+#include <limits>
 #include <ranges>
 
 namespace ivio {
@@ -30,6 +31,20 @@ public:
     size_t read(std::ranges::contiguous_range auto&& range) const {
         static_assert(std::same_as<std::ranges::range_value_t<decltype(range)>, char>);
         return stream.rdbuf()->sgetn(std::ranges::data(range), std::ranges::size(range));
+    }
+
+    // like read, but does not advance internal pointers
+    size_t peek(std::ranges::contiguous_range auto&& range) const {
+        size_t pos = tell();
+        auto len = read(range);
+        if (pos != std::numeric_limits<size_t>::max()) { // check if seeking is supported
+            stream.seekg(pos);
+        } else { // put the stuff back!
+            for (size_t i{0}; i < len; ++i) {
+                stream.putback(range[len-i-1]);
+            }
+        }
+        return len;
     }
 
     auto tell() const -> size_t {
