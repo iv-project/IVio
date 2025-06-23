@@ -35,8 +35,21 @@ Each file type consist of different parts. Here we discuss it for the fasta form
  - `fasta::record`
  - `fasta::record_view`
 
-## Integration CMake
-Easiest way to use this repository is to clone this as a sub-repo into your project, for example to
+## Integration CMake via CPM
+Easiest way is using CPM by adding to your CMakeLists.txt
+
+```cmake
+CPMAddPackage("gh:SGSSGene/iv-project/IVio@1.0.0")
+
+#...
+target_link_libraries(your_lib_or_exec PUBLIC ivio::ivio)
+```
+
+Thats it.
+
+
+## Integration CMake via subdirectory
+Another way to use this repository is to clone this as a sub-repo into your project, for example to
 `lib/IVio`, and then edit your `CMakeLists.txt`:
 
 ```cmake

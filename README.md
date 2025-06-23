@@ -15,6 +15,14 @@ See [documentation](https://iv-project.github.io/IVio/) for detailed information
 ## Usage CMake
 To use this package with cmake you must add this repository via `find_package` and add a `target_link_libraries`.
 e.g:
+### Variant 1 via CPM
+```cmake
+CPMAddPackage("gh:SGSSGene/iv-project/IVio@1.0.0")
+...
+target_link_libraries(your_lib_or_exec PUBLIC ivio::ivio)
+```
+
+### Variant 2 via subdirectory
 ```cmake
 find_package(ivio PATHS lib/IVio)
 add_executable(your_exec file1.cpp)
