@@ -18,6 +18,7 @@ template <>
 struct reader_base<csv::reader>::pimpl {
     VarBufferedReader ureader;
     char delimiter;
+    bool trim;
     size_t lastUsed{};
     std::vector<std::string> entries;
 };
@@ -27,7 +28,7 @@ namespace ivio::csv {
 
 reader::reader(config const& config_)
     : reader_base{std::visit([&](auto& p) {
-        return std::make_unique<pimpl>(makeZlibReader(p), config_.delimiter);
+        return std::make_unique<pimpl>(makeZlibReader(p), config_.delimiter, config_.trim);
     }, config_.input)}
 {}
 
@@ -40,6 +41,7 @@ auto reader::next() -> std::optional<record_view> {
     auto& lastUsed  = pimpl_->lastUsed;
     auto& entries   = pimpl_->entries;
     auto& delimiter = pimpl_->delimiter;
+    auto& trim      = pimpl_->trim;
 
     ureader.dropUntil(lastUsed);
     auto lineEnd = ureader.readUntil('\n', 0);
@@ -58,6 +60,15 @@ auto reader::next() -> std::optional<record_view> {
         auto pos = line.find(delimiter);
         if (pos != std::string::npos) {
             auto entry = line.substr(0, pos);
+            // trim white spaces
+            if (trim) {
+                while (entry.size() && (entry[0] == ' ' || entry[0] == '\t')) {
+                    entry = entry.substr(1);
+                }
+                while (entry.size() && (entry.back() == ' ' || entry.back() == '\t')) {
+                    entry = entry.substr(0, entry.size()-1);
+                }
+            }
             entries.emplace_back(entry);
             line = line.substr(pos+1);
         } else {

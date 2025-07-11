@@ -23,6 +23,7 @@ struct reader : public reader_base<reader> {
         // Source: file or stream
         std::variant<std::filesystem::path, std::reference_wrapper<std::istream>> input;
         char delimiter{','};
+        bool trim{false}; // trim whitespaces
     };
 
 public:
