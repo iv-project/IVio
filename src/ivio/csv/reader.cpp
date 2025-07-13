@@ -58,22 +58,24 @@ auto reader::next() -> std::optional<record_view> {
     entries.clear();
     while (line.size()) {
         auto pos = line.find(delimiter);
-        if (pos != std::string::npos) {
-            auto entry = line.substr(0, pos);
-            // trim white spaces
-            if (trim) {
-                while (entry.size() && (entry[0] == ' ' || entry[0] == '\t')) {
-                    entry = entry.substr(1);
-                }
-                while (entry.size() && (entry.back() == ' ' || entry.back() == '\t')) {
-                    entry = entry.substr(0, entry.size()-1);
-                }
+        if (pos == std::string::npos) {
+            pos = line.size();
+        }
+        auto entry = line.substr(0, pos);
+        // remove white spaces at end and beginning of entry
+        if (trim) {
+            while (entry.size() && (entry[0] == ' ' || entry[0] == '\t')) {
+                entry = entry.substr(1);
             }
-            entries.emplace_back(entry);
+            while (entry.size() && (entry.back() == ' ' || entry.back() == '\t')) {
+                entry = entry.substr(0, entry.size()-1);
+            }
+        }
+        entries.emplace_back(entry);
+        if (pos < line.size()) {
             line = line.substr(pos+1);
         } else {
-            entries.emplace_back(line);
-            break;
+            line = {};
         }
     }
 
