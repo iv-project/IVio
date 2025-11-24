@@ -15,14 +15,14 @@
     {
       "if": "PROJECT_IS_TOP_LEVEL",
       "name": "fmt",
-      "version": "11.2.0",
+      "version": "12.1.0",
       "github_repository": "fmtlib/fmt",
       "git_tag": "{VERSION}"
     },
     {
       "if": "PROJECT_IS_TOP_LEVEL",
       "name": "Catch2",
-      "version": "3.8.1",
+      "version": "3.11.0",
       "github_repository": "catchorg/Catch2"
     }
   ]
