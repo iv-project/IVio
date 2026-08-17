@@ -19,8 +19,8 @@ if (PROJECT_IS_TOP_LEVEL)
 endif()
 
 include(cmake/CPM.cmake)
-CPMAddPackage("gh:SGSSGene/cpm.dependencies@1.0.2")
-CPMLoadDependenciesFile("${CMAKE_CURRENT_SOURCE_DIR}/cpm.dependencies")
+CPMAddPackage("gh:SGSSGene/cpmpack@1.1.4")
+loadCPMPack("${CMAKE_CURRENT_SOURCE_DIR}/cpmpack.json")
 
 include(ivio-config.cmake)
 
