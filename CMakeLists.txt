@@ -29,7 +29,7 @@ if (PROJECT_IS_TOP_LEVEL)
         target_compile_options(ivio PUBLIC /bigobj /EHsc -DNOMINMAX)
     elseif (CMAKE_CXX_COMPILER_ID STREQUAL "IntelLLVM")
         target_compile_options(ivio PUBLIC -Wall -Werror -Wpedantic -Wextra -fPIC -fp-model=strict)
-    else()
+    elseif(LINUX)
         target_compile_options(ivio PUBLIC -Wall -Werror -Wpedantic -Wextra -fPIC)
     endif()
 
