@@ -19,8 +19,8 @@ if (PROJECT_IS_TOP_LEVEL)
 endif()
 
 include(cmake/CPM.cmake)
-CPMAddPackage("gh:SGSSGene/cpm.dependencies@1.0.2")
-CPMLoadDependenciesFile("${CMAKE_CURRENT_SOURCE_DIR}/cpm.dependencies")
+CPMAddPackage("gh:SGSSGene/cpmpack@1.1.4")
+loadCPMPack("${CMAKE_CURRENT_SOURCE_DIR}/cpmpack.json")
 
 include(ivio-config.cmake)
 
@@ -29,7 +29,7 @@ if (PROJECT_IS_TOP_LEVEL)
         target_compile_options(ivio PUBLIC /bigobj /EHsc -DNOMINMAX)
     elseif (CMAKE_CXX_COMPILER_ID STREQUAL "IntelLLVM")
         target_compile_options(ivio PUBLIC -Wall -Werror -Wpedantic -Wextra -fPIC -fp-model=strict)
-    else()
+    elseif(LINUX)
         target_compile_options(ivio PUBLIC -Wall -Werror -Wpedantic -Wextra -fPIC)
     endif()
 
