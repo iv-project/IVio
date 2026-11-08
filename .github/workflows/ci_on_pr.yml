@@ -42,8 +42,8 @@ jobs:
           - {os: macos-15-intel, compiler: clang-third-latest-cpp20-release}
           - {os: macos-15-intel, compiler: clang-second-latest-cpp20-release}
           - {os: macos-15-intel, compiler: clang-latest-cpp20-release}
-          - {os: macos-14,       compiler: gcc-latest-cpp20-release}
-          - {os: macos-14,       compiler: clang-latest-cpp20-release}
+          - {os: macos-15,       compiler: gcc-latest-cpp20-release}
+          - {os: macos-15,       compiler: clang-latest-cpp20-release}
           - {os: windows-2022,   compiler: msvc-cpp20-release}
           - {os: windows-2022,   compiler: msvc-cpp20-debug}
           - {os: windows-11-arm, compiler: msvc-cpp20-debug}
